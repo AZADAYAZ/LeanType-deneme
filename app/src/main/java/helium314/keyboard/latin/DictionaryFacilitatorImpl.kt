@@ -28,6 +28,7 @@ import helium314.keyboard.latin.dictionary.DictionaryStats
 import helium314.keyboard.latin.dictionary.ExpandableBinaryDictionary
 import helium314.keyboard.latin.dictionary.UserBinaryDictionary
 import helium314.keyboard.latin.permissions.PermissionsUtil
+import helium314.keyboard.latin.personalization.SessionWordBoost
 import helium314.keyboard.latin.personalization.UserHistoryDictionary
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
@@ -101,6 +102,15 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         for (dictGroup in dictionaryGroups) {
             DictionaryFacilitator.ALL_DICTIONARY_TYPES.forEach { dictGroup.getDict(it)?.onFinishInput() }
         }
+        // Persist session word boost data on input finish
+        sessionWordBoost?.flushIfDirty()
+    }
+
+    private var sessionWordBoost: SessionWordBoost? = null
+
+    /** Lazily initialize SessionWordBoost when context is available */
+    private fun getSessionWordBoost(context: Context): SessionWordBoost {
+        return sessionWordBoost ?: SessionWordBoost.getInstance(context).also { sessionWordBoost = it }
     }
 
     override fun isActive(): Boolean {
@@ -137,6 +147,11 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         listener: DictionaryInitializationListener?
     ) {
         Log.i(TAG, "resetDictionaries, force reloading main dictionary: $forceReloadMainDictionary")
+
+        // Initialize session word boost with context if not yet done
+        if (sessionWordBoost == null) {
+            sessionWordBoost = SessionWordBoost.getInstance(context)
+        }
 
         val locales = getUsedLocales(newLocale, context)
 
@@ -297,6 +312,9 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         // Update the spelling cache before learning. Words that are not yet added to user history
         // and appear in no other language model are not considered valid.
         putWordIntoValidSpellingWordCache("addToUserHistory", suggestion)
+
+        // Record in session boost for personalized ranking across restarts
+        sessionWordBoost?.recordWord(suggestion)
 
         val words = suggestion.splitOnWhitespace().dropLastWhile { it.isEmpty() }
 
@@ -506,6 +524,12 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             suggestionResults.mRawSuggestions?.addAll(it)
         }
 
+        // Apply session word boost to suggestion scores
+        val boost = sessionWordBoost
+        if (boost != null && composedData.mTypedWord.isNotEmpty()) {
+            applySessionBoost(suggestionResults, boost)
+        }
+
         includeAtLeastTwoWordSuggestions(suggestionResults, suggestionsArray, composedData.mTypedWord)
 
         return suggestionResults
@@ -552,6 +576,36 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             }
         }
         return suggestions
+    }
+
+    /**
+     * Apply session word boost to suggestion results.
+     * Creates new SuggestedWordInfo objects with boosted scores for words
+     * that the user has typed recently. Since mScore is final, we must
+     * remove and re-add entries with adjusted scores.
+     */
+    private fun applySessionBoost(results: SuggestionResults, boost: SessionWordBoost) {
+        val boosted = mutableListOf<SuggestedWordInfo>()
+        val toRemove = mutableListOf<SuggestedWordInfo>()
+        for (info in results) {
+            val boostAmount = boost.getBoost(info.mWord)
+            if (boostAmount > 0f) {
+                toRemove.add(info)
+                boosted.add(SuggestedWordInfo(
+                    info.mWord, info.mPrevWordsContext,
+                    info.mScore + (boostAmount * BOOST_SCORE_MULTIPLIER).toInt(),
+                    info.mKindAndFlags, info.mSourceDict,
+                    info.mIndexOfTouchPointOfSecondWord,
+                    info.mAutoCommitFirstWordConfidence
+                ))
+            }
+        }
+        for (item in toRemove) {
+            results.remove(item)
+        }
+        for (item in boosted) {
+            results.add(item)
+        }
     }
 
     // Spell checker is using this, and has its own instance of DictionaryFacilitatorImpl,
@@ -615,6 +669,9 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
 
         // HACK: This threshold is being used when adding a capitalized entry in the User History dictionary.
         private const val CAPITALIZED_FORM_MAX_PROBABILITY_FOR_INSERT = 140
+
+        // Multiplier to convert session boost values into score-space (native scores are ~1_000_000)
+        private const val BOOST_SCORE_MULTIPLIER = 1000f
 
         private fun createSubDict(
             dictType: String, context: Context, locale: Locale, dictFile: File?, dictNamePrefix: String

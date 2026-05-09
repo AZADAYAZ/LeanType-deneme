@@ -238,9 +238,21 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 return true to true
             }
             if (!AutoCorrectionUtils.suggestionExceedsThreshold(firstSuggestion, consideredWord, mAutoCorrectionThreshold)) {
-                // Score is too low for autocorrect
-                // todo: maybe also do something here depending on ngram context?
-                return true to false
+                // Score is too low for autocorrect — but for long words, the normalized score
+                // formula penalizes proportionally (weight = 1 - editDist/len), so a single typo
+                // in a 12-char word gets unfairly suppressed. Use a relaxed threshold for long words.
+                if (consideredWord.length > 6 && firstSuggestion.mScore > scoreLimit / 2) {
+                    val normalizedScore = BinaryDictionaryUtils.calcNormalizedScore(
+                        consideredWord, firstSuggestion.mWord, firstSuggestion.mScore)
+                    val adjustedThreshold = mAutoCorrectionThreshold *
+                        (6f / consideredWord.length.coerceAtMost(15))
+                    if (normalizedScore < adjustedThreshold) {
+                        return true to false
+                    }
+                    // Falls through with adjusted threshold — allow autocorrection
+                } else {
+                    return true to false
+                }
             }
             // We have a high score, so we need to check if this suggestion is in the correct
             // form to allow auto-correcting to it in this language. For details of how this
@@ -262,10 +274,15 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 val firstWordBonusScore =
                     ((if (firstSuggestion.isKindOf(SuggestedWordInfo.KIND_WHITELIST)) 20 else 0) // large bonus because it's wanted by dictionary
                             + (if (StringUtils.isLowerCaseAscii(typedWordString)) 5 else 0) // small bonus because typically only lower case ascii is typed (applies to latin keyboards only)
-                            + if (firstSuggestion.mScore > typedWordInfo.mScore) 5 else 0) // small bonus if score is higher
+                            + (if (firstSuggestion.mScore > typedWordInfo.mScore) 5 else 0) // small bonus if score is higher
+                            + getLongWordCorrectionBonus(typedWordString, firstSuggestion)) // boost corrections for long words with proportionally small edit distance
                 val firstScoreForEmpty = firstAndTypedEmptyInfos.first?.mScore ?: 0
                 val typedScoreForEmpty = firstAndTypedEmptyInfos.second?.mScore ?: 0
-                if (firstScoreForEmpty + firstWordBonusScore >= typedScoreForEmpty + 20) {
+                // For long words, a single typo is proportionally less significant —
+                // reduce the margin needed for the correction to win over the typed word
+                val contextMargin = if (typedWordString.length > 6)
+                    (20 * 6 / typedWordString.length) else 20
+                if (firstScoreForEmpty + firstWordBonusScore >= typedScoreForEmpty + contextMargin) {
                     // first word is clearly better match for this ngram context
                     return true to true
                 }
@@ -275,6 +292,21 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             }
         }
         return allowsToBeAutoCorrected to hasAutoCorrection
+    }
+
+    /**
+     * For long words (>6 chars), a correction candidate deserves a bonus because
+     * a single typo in a 12-char word is proportionally less significant than in a 4-char word.
+     * This compensates for the native calcNormalizedScore formula which penalizes longer words.
+     */
+    private fun getLongWordCorrectionBonus(typed: String, suggestion: SuggestedWordInfo): Int {
+        if (typed.length <= 6) return 0
+        if (suggestion.isKindOf(SuggestedWordInfo.KIND_CORRECTION)
+            || suggestion.isKindOf(SuggestedWordInfo.KIND_WHITELIST)) {
+            // Bonus scales with length: 7 chars → 2, 8 → 4, ... 16+ → 20
+            return (typed.length - 6).coerceAtMost(10) * 2
+        }
+        return 0
     }
 
     // Retrieves suggestions for the batch input
