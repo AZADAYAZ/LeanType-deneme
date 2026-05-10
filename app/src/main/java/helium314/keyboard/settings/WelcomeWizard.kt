@@ -103,21 +103,22 @@ fun WelcomeWizard(
     val appName = stringResource(ctx.applicationInfo.labelRes)
     @Composable fun bigText() {
         val resource = if (step == 0) R.string.setup_welcome_title else R.string.setup_steps_title
-        Column(Modifier.padding(bottom = 36.dp)) {
+        Column(Modifier.padding(bottom = 36.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 stringResource(resource, appName),
                 style = MaterialTheme.typography.displayMedium,
                 textAlign = TextAlign.Center,
-                color = titleColor,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            if (JniUtils.sHaveGestureLib)
+            if (JniUtils.sHaveGestureLib && step == 0) {
                 Text(
                     stringResource(R.string.setup_welcome_additional_description),
                     style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.End,
-                    color = titleColor,
-                    modifier = Modifier.fillMaxWidth()
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
+            }
         }
     }
     @Composable
@@ -452,6 +453,10 @@ private fun WidePreview() {
     Theme(previewDark) {
         Surface {
             WelcomeWizard({}) {  }
+        }
+    }
+}
+eWizard({}) {  }
         }
     }
 }
