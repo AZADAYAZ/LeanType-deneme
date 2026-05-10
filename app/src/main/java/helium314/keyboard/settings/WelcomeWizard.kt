@@ -28,32 +28,28 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import helium314.keyboard.latin.BuildConfig
 import helium314.keyboard.latin.R
@@ -86,8 +82,9 @@ fun WelcomeWizard(
     }
     var step by rememberSaveable { mutableIntStateOf(determineStep()) }
     var requiresRestart by rememberSaveable { mutableStateOf(false) }
-    var refreshTrigger by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var refreshTrigger by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
+    
     LaunchedEffect(step) {
         if (step == 2)
             scope.launch {
@@ -99,6 +96,7 @@ fun WelcomeWizard(
     }
     val useWideLayout = isWideScreen()
     val appName = stringResource(ctx.applicationInfo.labelRes)
+    
     @Composable fun bigText() {
         val resource = if (step == 0) R.string.setup_welcome_title else R.string.setup_steps_title
         Column(Modifier.padding(bottom = 36.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -119,8 +117,18 @@ fun WelcomeWizard(
             }
         }
     }
+
     @Composable
-    fun ColumnScope.Step(currentStep: Int, title: String, instruction: String, actionText: String, icon: Painter, action: () -> Unit, onSkip: (() -> Unit)? = null, onBack: (() -> Unit)? = null, content: @Composable () -> Unit = {}) {
+    fun ColumnScope.Step(
+        currentStep: Int, 
+        title: String, 
+        instruction: String, 
+        actionText: String, 
+        icon: Painter, 
+        action: () -> Unit, 
+        onBack: (() -> Unit)? = null, 
+        content: @Composable () -> Unit = {}
+    ) {
         // Progress indicator
         Row(Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
             for (i in 1..8) {
@@ -158,17 +166,11 @@ fun WelcomeWizard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     if (onBack != null) {
-                        androidx.compose.material3.TextButton(onClick = onBack) {
-                            Text("Back")
+                        androidx.compose.material3.FilledTonalButton(onClick = onBack) {
+                            Text("Previous")
                         }
                     } else {
                         Spacer(Modifier.weight(0.1f)) // Placeholder to maintain spacing
-                    }
-                    
-                    if (onSkip != null) {
-                        androidx.compose.material3.TextButton(onClick = onSkip) {
-                            Text("Skip", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
                     }
                     
                     Spacer(Modifier.weight(1f))
@@ -181,6 +183,7 @@ fun WelcomeWizard(
             }
         }
     }
+
     @Composable fun steps() {
         if (step == 0)
             Step0 { step = 1 }
@@ -202,7 +205,6 @@ fun WelcomeWizard(
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             launcher.launch(intent)
                         },
-                        null,
                         null
                     )
                 } else if (step == 2) {
@@ -213,7 +215,6 @@ fun WelcomeWizard(
                         stringResource(R.string.setup_step2_action),
                         painterResource(R.drawable.ic_setup_select),
                         { imm.showInputMethodPicker() },
-                        null,
                         null
                     )
                 } else if (step == 3) {
@@ -224,12 +225,12 @@ fun WelcomeWizard(
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
                         { step++ },
-                        { step++ },
                         null
                     ) {
+                        val trigger = refreshTrigger // Force recomposition
                         val locale = helium314.keyboard.latin.RichInputMethodManager.getInstance().currentSubtype.locale
                         val emojiLibInstalled = java.io.File(helium314.keyboard.latin.utils.DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx), "emoji_${locale.language}.dict").exists()
-                        val gestureLibInstalled = java.io.File(ctx.filesDir, "libjni_latinime.so").exists() || helium314.keyboard.latin.utils.JniUtils.sHaveGestureLib
+                        val gestureLibInstalled = java.io.File(ctx.filesDir, "libjni_latinime.so").exists() || JniUtils.sHaveGestureLib
 
                         Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
                             LoadEmojiLibPreference("Emoji Dictionary")
@@ -242,7 +243,10 @@ fun WelcomeWizard(
                             LoadGestureLibPreference(
                                 title = "Gesture Typing Library",
                                 restartOnSuccess = false,
-                                onSuccess = { requiresRestart = true }
+                                onSuccess = { 
+                                    requiresRestart = true
+                                    refreshTrigger++ 
+                                }
                             )
                             if (gestureLibInstalled) {
                                 Icon(painterResource(R.drawable.ic_setup_check), null, Modifier.align(Alignment.CenterEnd).padding(end = 16.dp), tint = MaterialTheme.colorScheme.primary)
@@ -256,7 +260,6 @@ fun WelcomeWizard(
                         "Select an AI service and provide your API key for advanced proofreading features.",
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
-                        { step++ },
                         { step++ },
                         { step-- }
                     ) {
@@ -294,11 +297,11 @@ fun WelcomeWizard(
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
                         { step++ },
-                        { step++ },
                         { step-- }
                     ) {
+                        val trigger = refreshTrigger
                         val canDrawOverlays = AndroidSettings.canDrawOverlays(ctx)
-                        val overlayLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
+                        val overlayLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { refreshTrigger++ }
                         Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium).clickable {
                             if (!canDrawOverlays) {
                                 val intent = Intent(AndroidSettings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${ctx.packageName}"))
@@ -322,7 +325,6 @@ fun WelcomeWizard(
                         "Suggest recently taken screenshots in the suggestion strip. Note: This permission also allows saving screenshots to the clipboard.",
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
-                        { step++ },
                         { step++ },
                         { step-- }
                     ) {
@@ -352,10 +354,6 @@ fun WelcomeWizard(
                                     } else true
                                 })
                             }.Preference()
-                            
-                            if (granted && screenshotsEnabled) {
-                                Icon(painterResource(R.drawable.ic_setup_check), null, Modifier.align(Alignment.CenterEnd).padding(end = 64.dp), tint = MaterialTheme.colorScheme.primary)
-                            }
                         }
                     }
                 } else if (step == 7) {
@@ -365,7 +363,6 @@ fun WelcomeWizard(
                         "Adjust the height of the keyboard. Recommended: 77% for more square keys, 100% for taller keys.",
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
-                        { step++ },
                         { step++ },
                         { step-- }
                     ) {
@@ -401,7 +398,6 @@ fun WelcomeWizard(
                                 Runtime.getRuntime().exit(0)
                             }
                         },
-                        null,
                         { step-- }
                     )
                 }
@@ -434,15 +430,16 @@ fun WelcomeWizard(
 fun Step0(onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxSize()
     ) {
         Image(
             painterResource(R.drawable.setup_welcome_image), 
             contentDescription = null,
-            modifier = Modifier.padding(bottom = 32.dp).fillMaxWidth()
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.padding(bottom = 32.dp).fillMaxWidth().weight(1f)
         )
         
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(16.dp))
         
         androidx.compose.material3.Button(
             onClick = onClick,
@@ -468,7 +465,6 @@ private fun Preview() {
 }
 
 @Preview(
-    // content cut off on real device, but not here... great?
     device = "spec:orientation=landscape,width=400dp,height=780dp"
 )
 @Composable
