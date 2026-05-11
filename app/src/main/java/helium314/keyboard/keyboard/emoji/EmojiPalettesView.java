@@ -859,13 +859,17 @@ public final class EmojiPalettesView extends LinearLayout
             // We do not want to log recent keys while being in incognito
             return;
         }
-        if (mEmojiCategory.isInRecentTab()) {
+        final boolean split = Settings.getValues().mSplitToolbar;
+        if (mEmojiCategory.isInRecentTab() && !split) {
             getRecentsKeyboard().addPendingKey(key);
             return;
         }
         getRecentsKeyboard().addKeyFirst(key);
         if (mPager != null && mPager.getAdapter() != null) {
             mPager.getAdapter().notifyItemChanged(mEmojiCategory.getRecentTabId());
+        }
+        if (split) {
+            populateSuggestionBarWithRecents();
         }
     }
 
@@ -875,13 +879,17 @@ public final class EmojiPalettesView extends LinearLayout
             // We do not want to log recent keys while being in incognito
             return;
         }
-        if (mEmojiCategory.isInRecentTab()) {
+        final boolean split = Settings.getValues().mSplitToolbar;
+        if (mEmojiCategory.isInRecentTab() && !split) {
             getRecentsKeyboard().addPendingStringKey(emoji);
             return;
         }
         getRecentsKeyboard().addStringKeyFirst(emoji);
         if (mPager != null && mPager.getAdapter() != null) {
             mPager.getAdapter().notifyItemChanged(mEmojiCategory.getRecentTabId());
+        }
+        if (split) {
+            populateSuggestionBarWithRecents();
         }
     }
 
@@ -960,9 +968,7 @@ public final class EmojiPalettesView extends LinearLayout
 
         stripView.setEmojiSuggestions(emojis, emoji -> {
             mKeyboardActionListener.onTextInput(emoji);
-            // Also add to recents
-            // Re-populate to show the newly used emoji at front
-            populateSuggestionBarWithRecents();
+            addRecentKey(emoji);
         });
     }
 
