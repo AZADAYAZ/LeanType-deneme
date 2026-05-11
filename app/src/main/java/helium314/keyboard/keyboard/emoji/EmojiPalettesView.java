@@ -947,12 +947,17 @@ public final class EmojiPalettesView extends LinearLayout
             return;
 
         java.util.List<String> recentEmojis = new java.util.ArrayList<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
         for (Key key : getRecentsKeyboard().getSortedKeys()) {
             String output = key.getOutputText();
+            String emojiStr = null;
             if (output != null) {
-                recentEmojis.add(output);
+                emojiStr = output;
             } else if (key.getCode() > 0) {
-                recentEmojis.add(new String(Character.toChars(key.getCode())));
+                emojiStr = new String(Character.toChars(key.getCode()));
+            }
+            if (emojiStr != null && seen.add(emojiStr)) {
+                recentEmojis.add(emojiStr);
             }
         }
         pushEmojisToSuggestionBar(recentEmojis);
