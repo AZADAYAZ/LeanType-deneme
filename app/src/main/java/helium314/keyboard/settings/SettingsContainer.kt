@@ -33,14 +33,22 @@ class SettingsContainer(context: Context) {
     //  show, but change will not do anything because another setting needs to be enabled first -> probably best
     fun filter(searchTerm: String): List<Setting> {
         val term = searchTerm.lowercase()
-        val results = mutableSetOf<Setting>()
-        list.forEach { setting -> if (setting.title.lowercase().startsWith(term)) results.add(setting) }
-        list.forEach { setting -> if (setting.title.lowercase().split(' ').any { it.startsWith(term) }) results.add(setting) }
+        val titleMatch = mutableListOf<Setting>()
+        val titleWordMatch = mutableListOf<Setting>()
+        val descriptionMatch = mutableListOf<Setting>()
+
         list.forEach { setting ->
-            if (setting.description?.lowercase()?.split(' ')?.any { it.startsWith(term) } == true)
-                results.add(setting)
+            val titleLower = setting.titleLower
+            if (titleLower.startsWith(term)) {
+                titleMatch.add(setting)
+            } else if (setting.titleWords.any { it.startsWith(term) }) {
+                titleWordMatch.add(setting)
+            } else if (setting.descriptionWords?.any { it.startsWith(term) } == true) {
+                descriptionMatch.add(setting)
+            }
         }
-        return results.toList()
+
+        return titleMatch + titleWordMatch + descriptionMatch
     }
 }
 
@@ -53,7 +61,10 @@ class Setting(
     private val content: @Composable (Setting) -> Unit
 ) {
     val title = context.getString(titleId)
+    val titleLower = title.lowercase()
+    val titleWords = titleLower.split(' ')
     val description = descriptionId?.let { context.getString(it) }
+    val descriptionWords = description?.lowercase()?.split(' ')
 
     @Composable
     fun Preference() {
