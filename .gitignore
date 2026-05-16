@@ -10,9 +10,22 @@ app/release/
 app/.cxx/
 app/.attach_*/
 tools/make-emoji-keys/build/
+tools/make-emoji-keys/bin/
 
 # OS Specific
 .DS_Store
+
+# IDE
+.vscode/
+
+# Scratch/test files
+test_*.java
+test_*.kt
+test_*.class
+
+# NPM (not used by project)
+package.json
+package-lock.json
 
 # Ruby/Fastlane
 Gemfile
