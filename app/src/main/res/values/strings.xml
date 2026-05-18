@@ -969,6 +969,10 @@ New dictionary:
     <string name="version">Version</string>
     <!-- github repo link for about screen -->
     <string name="about_github_link">View on GitHub</string>
+    <!-- sponsor link for about screen -->
+    <string name="about_sponsor_link">Sponsor project</string>
+    <!-- description for sponsor link -->
+    <string name="about_sponsor_link_description">Support the development of LeanType</string>
     <!-- link to the wiki for about screen -->
     <string name="about_wiki_link">Go to Wiki</string>
     <!-- description for wiki link -->
