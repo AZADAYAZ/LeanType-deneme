@@ -1189,4 +1189,6 @@ New dictionary:
     <string name="clear_emoji_history_message">Are you sure you want to clear your recently used emojis?</string>
     <string name="floating_keyboard_drag_handle">Drag to move keyboard</string>
     <string name="floating_keyboard_resize_handle">Drag to resize keyboard</string>
+    <string name="persist_floating_keyboard_title">Persist floating keyboard</string>
+    <string name="persist_floating_keyboard_summary">Do not hide floating keyboard when input finishes</string>
 </resources>
