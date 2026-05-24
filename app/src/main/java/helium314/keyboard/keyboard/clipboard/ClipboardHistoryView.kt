@@ -579,20 +579,26 @@ class ClipboardHistoryView @JvmOverloads constructor(
 
 
     override fun onClipInserted(position: Int) {
-        clipboardAdapter.refresh()
-        if (!clipboardAdapter.isFiltering) {
-             clipboardRecyclerView.smoothScrollToPosition(0)
+        confirmationHandler.post {
+            clipboardAdapter.refresh()
+            if (!clipboardAdapter.isFiltering) {
+                 clipboardRecyclerView.smoothScrollToPosition(0)
+            }
+            updateEmptyView(clipboardAdapter.isFiltering)
         }
-        updateEmptyView(clipboardAdapter.isFiltering)
     }
 
     override fun onClipsRemoved(position: Int, count: Int) {
-        clipboardAdapter.refresh()
-        updateEmptyView(clipboardAdapter.isFiltering)
+        confirmationHandler.post {
+            clipboardAdapter.refresh()
+            updateEmptyView(clipboardAdapter.isFiltering)
+        }
     }
 
     override fun onClipMoved(oldPosition: Int, newPosition: Int) {
-        clipboardAdapter.refresh()
+        confirmationHandler.post {
+            clipboardAdapter.refresh()
+        }
     }
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
@@ -603,7 +609,9 @@ class ClipboardHistoryView @JvmOverloads constructor(
             // Ensure settings are reloaded first
             Settings.getInstance().onSharedPreferenceChanged(prefs, key)
             clipboardHistoryManager.sortHistoryEntries()
-            clipboardAdapter.refresh()
+            confirmationHandler.post {
+                clipboardAdapter.refresh()
+            }
         }
     }
 }
