@@ -509,7 +509,7 @@
     <string name="libraries_hub_emoji_title">Библиотеки эмодзи</string>
 	<string name="libraries_status_active">Активен</string>
     <string name="libraries_status_not_installed">Не установлен</string>
-	<string name="load_gesture_library_button_download">Загрузить библиотеку</string>
+	<string name="load_gesture_library_button_download">Загрузить библиотеку</string>
 	<string name="split_toolbar">Разделять панель инструментов</string>
 	<string name="split_toolbar_summary">Отделять подсказки от панели инструментов</string>
 	<string name="auto_show_toolbar_open">Показывать панель инструментов при открытии автоматически</string>
@@ -546,7 +546,7 @@
     <string name="sponsor_dialog_never_show_again">Больше не показывать</string>
     <string name="sponsor_dialog_sponsor">Поддержать</string>
     <string name="sponsor_dialog_not_now">Не сейчас</string>
-	<string name="clipboard_clear_all_confirmation">Вы уверены, что хотите очистить всю историю?</string>
+	<string name="clipboard_clear_all_confirmation">Вы уверены, что хотите очистить всю историю?</string>
     <string name="clear_all">Очистить всё</string>
 	<string name="load_gesture_library_downloading">Загрузка библиотеки жестов…</string>
 	<string name="load_gesture_library_download_success">Загрузка завершена! Перезапуск…</string>
