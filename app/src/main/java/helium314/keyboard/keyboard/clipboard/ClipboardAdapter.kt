@@ -112,6 +112,7 @@ class ClipboardAdapter(
                 gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
                 setPadding(36, 24, 36, 24)
             }
+            clipboardLayoutParams.setItemProperties(textView)
             HeaderViewHolder(textView)
         } else {
             val view = LayoutInflater.from(parent.context)
@@ -127,7 +128,7 @@ class ClipboardAdapter(
         }
     }
 
-    private fun getItem(position: Int): ClipboardHistoryEntry? {
+    fun getItem(position: Int): ClipboardHistoryEntry? {
         val item = displayList.getOrNull(position)
         return if (item is ClipboardDisplayItem.Clip) item.entry else null
     }
@@ -139,7 +140,7 @@ class ClipboardAdapter(
     inner class HeaderViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView) {
         fun bind(header: ClipboardDisplayItem.Header) {
             textView.apply {
-                typeface = Typeface.create(itemTypeFace, Typeface.BOLD)
+                typeface = itemTypeFace
                 setTextColor(itemTextColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, itemTextSize)
                 setBackgroundResource(itemBackgroundId)
