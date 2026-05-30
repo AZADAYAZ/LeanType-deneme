@@ -3,6 +3,9 @@ package helium314.keyboard.settings.dialogs
 
 import android.graphics.drawable.VectorDrawable
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -146,13 +149,32 @@ fun CustomizeIconsDialog(
                 ) {
                     items(icons, key = { it }) { resId ->
                         val drawable = ContextCompat.getDrawable(ctx, resId)?.mutate() ?: return@items
-                        val color = if (resId == selectedIcon) MaterialTheme.colorScheme.primary
+                        val isSelected = resId == selectedIcon
+                        val color = if (isSelected) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurface
                         CompositionLocalProvider(
                             LocalContentColor provides color
                         ) {
                             Box(
-                                Modifier.size(40.dp).clickable { selectedIcon = resId },
+                                Modifier
+                                    .size(48.dp)
+                                    .then(
+                                        if (isSelected) {
+                                            Modifier
+                                                .background(
+                                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                                .border(
+                                                    width = 2.dp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .clickable { selectedIcon = resId },
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (drawable is VectorDrawable)
