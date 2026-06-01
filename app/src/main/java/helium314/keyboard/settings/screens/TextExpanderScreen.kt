@@ -258,25 +258,6 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                                     }
 
                                     HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-
-                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Text(
-                                            text = "How Template Placeholders Work:",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "Placeholders are special tags you can write in your templates. When you type the shortcut, the keyboard automatically replaces them with real-time values (like the current date, time, or your clipboard content) before inserting the text.\n\n" +
-                                                    "Example Template: 'Hi, let's meet on %day% at %time%! My clipboard says: %clipboard%'\n" +
-                                                    "Expands to: 'Hi, let's meet on Monday at 14:30! My clipboard says: [copied text]'",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.2f,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                                     
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(
