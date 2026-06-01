@@ -306,7 +306,18 @@ class ClipboardHistoryManager(
 
     fun removeEntry(index: Int): ClipboardHistoryEntry? {
         if (!canRemove(index)) return null
-        return clipboardDao?.deleteClipAt(index)
+        val entry = clipboardDao?.deleteClipAt(index)
+        if (entry != null) {
+            try {
+                val primaryText = retrieveClipboardContent().toString()
+                if (primaryText == entry.text || (entry.text == "[Screenshot]" && entry.imageUri != null)) {
+                    ClipboardManagerCompat.clearPrimaryClip(clipboardManager)
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+        return entry
     }
 
     fun restoreEntry(entry: ClipboardHistoryEntry) {
