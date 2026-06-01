@@ -133,6 +133,13 @@ class ClipboardAdapter(
         return if (item is ClipboardDisplayItem.Clip) item.entry else null
     }
 
+    fun removeDisplayItem(position: Int): ClipboardDisplayItem? {
+        if (position in 0 until displayList.size) {
+            return displayList.removeAt(position)
+        }
+        return null
+    }
+
     override fun getItemCount(): Int {
         return displayList.size
     }

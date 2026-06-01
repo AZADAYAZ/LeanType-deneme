@@ -51,8 +51,9 @@ class ClipboardHistoryRecyclerView @JvmOverloads constructor(
                 val cacheIndex = historyManager?.getClips()?.indexOfFirst { it.id == entry.id } ?: -1
                 if (cacheIndex != -1) {
                     val deletedEntry = historyManager?.removeEntry(cacheIndex)
-                    adapter?.notifyItemRemoved(position)
                     if (deletedEntry != null) {
+                        (adapter as? ClipboardAdapter)?.removeDisplayItem(position)
+                        adapter?.notifyItemRemoved(position)
                         showUndoBar(deletedEntry)
                     }
                     return
