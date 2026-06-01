@@ -32,6 +32,11 @@ class ClipboardHistoryManager(
 ) : ClipboardManager.OnPrimaryClipChangedListener {
 
     private lateinit var clipboardManager: ClipboardManager
+    // Cache the main-thread Handler. ClipboardHistoryManager is a
+    // singleton scoped to the IME service, so a single Handler bound
+    // to the main Looper is fine for the whole process. This avoids
+    // allocating a fresh Handler on every postDelayed().
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var clipboardSuggestionView: View? = null
     private var clipboardDao: ClipboardDao? = null
     private var dontShowCurrentSuggestion: Boolean = false
@@ -148,11 +153,11 @@ class ClipboardHistoryManager(
 
     private fun registerMediaStoreObserver() {
         if (mediaStoreObserver == null) {
-            mediaStoreObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            mediaStoreObserver = object : ContentObserver(mainHandler) {
                 override fun onChange(selfChange: Boolean, uri: Uri?) {
                     super.onChange(selfChange, uri)
                     if (latinIME.mSettings.current.mSuggestScreenshots) {
-                        Handler(Looper.getMainLooper()).postDelayed({
+                        mainHandler.postDelayed({
                             updateLatestScreenshotCache {
                                 dontShowCurrentSuggestion = false
                                 latinIME.setNeutralSuggestionStrip()
@@ -523,7 +528,7 @@ class ClipboardHistoryManager(
         }
         
         // Restore original clip after a tiny delay to allow paste process to complete
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        mainHandler.postDelayed({
             try {
                 if (primaryClip != null) {
                     clipboardManager.setPrimaryClip(primaryClip)
