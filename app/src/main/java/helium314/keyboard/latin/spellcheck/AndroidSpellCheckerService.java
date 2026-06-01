@@ -90,6 +90,12 @@ public final class AndroidSpellCheckerService extends SpellCheckerService
         mSettingsValuesForSuggestion = new SettingsValuesForSuggestion(blockOffensive, false);
     }
 
+    @Override
+    public void onDestroy() {
+        KtxKt.prefs(this).unregisterOnSharedPreferenceChangeListener(this);
+        super.onDestroy();
+    }
+
     public float getRecommendedThreshold() {
         return mRecommendedThreshold;
     }
