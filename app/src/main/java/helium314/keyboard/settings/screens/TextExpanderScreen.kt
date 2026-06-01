@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -53,6 +54,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.content.edit
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.utils.TextExpanderUtils
@@ -84,7 +86,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editingShortcut by remember { mutableStateOf("") }
-    var editingTemplate by remember { mutableStateOf("") }
+    var editingTemplate by remember { mutableStateOf(TextFieldValue("")) }
     var originalShortcutToEdit by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -98,8 +100,35 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
             },
-            filteredItems = { emptyList<Int>() },
-            itemContent = { },
+            filteredItems = { term ->
+                shortcutsMap.entries
+                    .filter { (shortcut, template) ->
+                        shortcut.contains(term, ignoreCase = true) ||
+                        template.contains(term, ignoreCase = true)
+                    }
+                    .map { Pair(it.key, it.value) }
+            },
+            itemContent = { (shortcut, template) ->
+                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    ShortcutItem(
+                        shortcut = shortcut,
+                        template = template,
+                        prefix = prefixText,
+                        onEdit = {
+                            editingShortcut = shortcut
+                            editingTemplate = TextFieldValue(template)
+                            originalShortcutToEdit = shortcut
+                            showAddDialog = true
+                        },
+                        onDelete = {
+                            val updated = shortcutsMap.toMutableMap()
+                            updated.remove(shortcut)
+                            shortcutsMap = updated
+                            TextExpanderUtils.saveShortcuts(context, updated)
+                        }
+                    )
+                }
+            },
             content = {
                 Column(
                     modifier = Modifier
@@ -289,7 +318,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                                 prefix = prefixText,
                                 onEdit = {
                                     editingShortcut = shortcut
-                                    editingTemplate = template
+                                    editingTemplate = TextFieldValue(template)
                                     originalShortcutToEdit = shortcut
                                     showAddDialog = true
                                 },
@@ -313,7 +342,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
             ExtendedFloatingActionButton(
                 onClick = {
                     editingShortcut = ""
-                    editingTemplate = ""
+                    editingTemplate = TextFieldValue("")
                     originalShortcutToEdit = null
                     showAddDialog = true
                 },
@@ -339,12 +368,12 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                 if (isEditMode && originalShortcutToEdit != editingShortcut) {
                     updated.remove(originalShortcutToEdit)
                 }
-                updated[editingShortcut.trim()] = editingTemplate
+                updated[editingShortcut.trim()] = editingTemplate.text
                 shortcutsMap = updated
                 TextExpanderUtils.saveShortcuts(context, updated)
                 showAddDialog = false
             },
-            checkOk = { editingShortcut.trim().isNotEmpty() && editingTemplate.isNotEmpty() },
+            checkOk = { editingShortcut.trim().isNotEmpty() && editingTemplate.text.isNotEmpty() },
             confirmButtonText = if (isEditMode) "Save" else "Add",
             neutralButtonText = if (isEditMode) "Delete" else null,
             onNeutral = {
@@ -383,6 +412,51 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                         label = { Text("Template Expansion") },
                         placeholder = { Text("Be right back! or My email is %clipboard%") }
                     )
+
+                    Text(
+                        text = "Quick Placeholders (tap to insert at cursor):",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val tags = listOf(
+                            "%date%", "%time%", "%time12%",
+                            "%clipboard%", "%day%", "%day_short%"
+                        )
+                        tags.forEach { tag ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                                    .clickable {
+                                        val text = editingTemplate.text
+                                        val selection = editingTemplate.selection
+                                        val start = selection.start
+                                        val end = selection.end
+                                        val newText = text.substring(0, start) + tag + text.substring(end)
+                                        val newSelectionRange = androidx.compose.ui.text.TextRange(start + tag.length)
+                                        editingTemplate = TextFieldValue(text = newText, selection = newSelectionRange)
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                )
+                            }
+                        }
+                    }
                 }
             }
         )
