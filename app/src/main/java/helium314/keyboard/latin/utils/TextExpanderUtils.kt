@@ -143,6 +143,15 @@ object TextExpanderUtils {
             result = result.replace("%android%", androidStr)
         }
 
+        // Resolve %language%
+        if (result.contains("%language%")) {
+            val imeManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+            val activeSubtype = imeManager?.currentInputMethodSubtype
+            val languageStr = activeSubtype?.getDisplayName(context, context.packageName, context.applicationInfo)?.toString()
+                ?: Locale.getDefault().getDisplayName(Locale.getDefault())
+            result = result.replace("%language%", languageStr)
+        }
+
         return result
     }
 

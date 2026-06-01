@@ -286,6 +286,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                                                 PlaceholderChip(tag = "%month%", desc = "Month (e.g. June)")
                                                 PlaceholderChip(tag = "%month_short%", desc = "Month short (e.g. Jun)")
                                                 PlaceholderChip(tag = "%android%", desc = "Android OS (e.g. 14)")
+                                                PlaceholderChip(tag = "%language%", desc = "Keyboard language (e.g. English)")
                                             }
                                         }
                                     }
@@ -493,7 +494,8 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                         val tags = listOf(
                             "%date%", "%time%", "%time12%", "%clipboard%",
                             "%day%", "%day_short%", "%month%", "%month_short%",
-                            "%year%", "%week%", "%battery%", "%device%", "%android%"
+                            "%year%", "%week%", "%battery%", "%device%", "%android%",
+                            "%language%"
                         )
                         tags.forEach { tag ->
                             Box(
