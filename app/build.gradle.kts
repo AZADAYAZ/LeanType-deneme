@@ -39,6 +39,10 @@ android {
         create("standard") {
             dimension = "privacy"
         }
+        create("standardOptimised") {
+            dimension = "privacy"
+            applicationIdSuffix = ".optimised"
+        }
         create("offline") {
             dimension = "privacy"
             applicationIdSuffix = ".offline"
@@ -56,12 +60,9 @@ android {
                 keyPassword = keystoreProperties["keyPassword"] as String
                 storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
-                // Disable v2/v3 signing to avoid CHUNKED_SHA256 mismatch caused by
-                // AGP injecting META-INF files after signature computation.
-                // v1 (JAR) signing only verifies individual entry integrity.
                 enableV1Signing = true
-                enableV2Signing = false
-                enableV3Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
@@ -107,6 +108,7 @@ android {
                 "standard" -> "1"
                 "offline" -> "2"
                 "offlinelite" -> "3"
+                "standardOptimised" -> "4"
                 else -> ""
             }
             if (number.isNotEmpty()) {
@@ -115,6 +117,7 @@ android {
                     output?.outputFileName = "$number-LeanType_${defaultConfig.versionName}-${flavor}-${buildType.name}.apk"
                 }
             }
+
         }
         // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
         androidComponents.onVariants { variant: ApplicationVariant ->
@@ -149,6 +152,17 @@ android {
         resources {
             excludes += "assets/dexopt/baseline.prof"
             excludes += "assets/dexopt/baseline.profm"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/ASL2.0"
+            excludes += "META-INF/*.kotlin_module"
+            excludes += "META-INF/kotlin-project-structure-metadata.json"
+            excludes += "**/*.proto"
         }
     }
 
@@ -182,6 +196,14 @@ android {
         // these orphaned strings are harmlessly stripped by R8 during minification.
         disable += "ExtraTranslation"
     }
+
+    sourceSets {
+        getByName("standardOptimised") {
+            java.srcDirs("src/standard/java")
+            res.srcDirs("src/standard/res")
+            manifest.srcFile("src/standard/AndroidManifest.xml")
+        }
+    }
 }
 
 dependencies {
@@ -210,6 +232,8 @@ dependencies {
     // gemini ai proofreading
     "standardImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
     "standardImplementation"("androidx.security:security-crypto:1.1.0-alpha06") // for encrypted API key storage
+    "standardOptimisedImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
+    "standardOptimisedImplementation"("androidx.security:security-crypto:1.1.0-alpha06")
 
     // local llm proofreading (offline)
     // ONNX Runtime for T5 encoder-decoder grammar models
@@ -229,9 +253,11 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
-// Disable baseline/ART profile tasks to guarantee deterministic reproducible builds
+// Disable baseline/ART profile tasks to guarantee deterministic reproducible builds (except for standardOptimised)
 tasks.configureEach {
     if (name.contains("ArtProfile", ignoreCase = true)) {
-        enabled = false
+        if (!name.contains("StandardOptimised", ignoreCase = true)) {
+            enabled = false
+        }
     }
 }

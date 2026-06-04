@@ -263,7 +263,7 @@ fun WelcomeWizard(
                         { step++ },
                         { step-- }
                     ) {
-                        if (BuildConfig.FLAVOR == "standard") {
+                        if (BuildConfig.FLAVOR == "standard" || BuildConfig.FLAVOR == "standardOptimised") {
                             val service = remember { helium314.keyboard.latin.utils.ProofreadService(ctx) }
                             var currentProvider by remember { mutableStateOf(service.getProvider()) }
                             val aiConfigured = when (currentProvider) {

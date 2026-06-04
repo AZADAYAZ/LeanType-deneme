@@ -534,7 +534,7 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
             )
         }
     },
-    if (BuildConfig.FLAVOR == "standard") Setting(context, SettingsWithoutKey.CUSTOM_AI_KEYS, R.string.custom_ai_keys_title, R.string.custom_ai_keys_summary) {
+    if (BuildConfig.FLAVOR == "standard" || BuildConfig.FLAVOR == "standardOptimised") Setting(context, SettingsWithoutKey.CUSTOM_AI_KEYS, R.string.custom_ai_keys_title, R.string.custom_ai_keys_summary) {
         Preference(
             name = it.title,
             description = it.description,
