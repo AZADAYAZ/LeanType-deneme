@@ -1,0 +1,2 @@
+- Fix toolbar key customization toggles not persisting
+- Allow enabling or disabling individual dictionaries (built-in and custom) in settings
