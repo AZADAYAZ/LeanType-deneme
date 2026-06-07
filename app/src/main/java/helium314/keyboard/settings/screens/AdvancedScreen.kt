@@ -547,12 +547,10 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
     if (BuildConfig.FLAVOR == "offline") Setting(context, SettingsWithoutKey.OFFLINE_MODEL_PATH, R.string.offline_model_title, R.string.offline_model_summary) { setting ->
         val context = LocalContext.current
         val service = remember { helium314.keyboard.latin.utils.ProofreadService(context) }
-        var encoderPath by remember { mutableStateOf(service.getModelPath()) }
-        var decoderPath by remember { mutableStateOf(service.getDecoderPath()) }
-        var tokenizerPath by remember { mutableStateOf(service.getTokenizerPath()) }
+        var modelPath by remember { mutableStateOf(service.getModelPath()) }
         
-        // Encoder file picker
-        val encoderLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        // GGUF Model file picker
+        val modelLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
             contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
         ) { uri ->
             uri?.let {
@@ -562,77 +560,26 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
                      Log.e("AdvancedScreen", "Failed to take persistable permission", e)
                 }
                 service.setModelPath(it.toString())
-                encoderPath = it.toString()
-                FeedbackManager.message(context, "Encoder selected")
-            }
-        }
-        
-        // Decoder file picker
-        val decoderLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-            contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
-        ) { uri ->
-            uri?.let {
-                try {
-                     context.contentResolver.takePersistableUriPermission(it, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                } catch (e: Exception) {
-                     Log.e("AdvancedScreen", "Failed to take persistable permission", e)
-                }
-                service.setDecoderPath(it.toString())
-                decoderPath = it.toString()
-                FeedbackManager.message(context, "Decoder selected")
-            }
-        }
-        
-        // Tokenizer file picker
-        val tokenizerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-            contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
-        ) { uri ->
-            uri?.let {
-                try {
-                     context.contentResolver.takePersistableUriPermission(it, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                } catch (e: Exception) {
-                     Log.e("AdvancedScreen", "Failed to take persistable permission", e)
-                }
-                service.setTokenizerPath(it.toString())
-                tokenizerPath = it.toString()
-                FeedbackManager.message(context, "Tokenizer selected")
+                modelPath = it.toString()
+                FeedbackManager.message(context, "Model selected")
             }
         }
 
         androidx.compose.foundation.layout.Column {
-            // Encoder (required)
             Preference(
-                name = "Encoder Model (.onnx)", 
-                description = if (encoderPath != null) service.getModelName() else "Required - select encoder ONNX file",
-                onClick = { encoderLauncher.launch(arrayOf("application/octet-stream", "*/*")) }
-            )
-            
-            // Decoder (required for generation)
-            Preference(
-                name = "Decoder Model (.onnx)", 
-                description = if (decoderPath != null) "Selected" else "Required - select decoder ONNX file",
-                onClick = { decoderLauncher.launch(arrayOf("application/octet-stream", "*/*")) }
-            )
-            
-            // Tokenizer (required for proper tokenization)
-            Preference(
-                name = "Tokenizer (tokenizer.json)", 
-                description = if (tokenizerPath != null) "Selected" else "Required - select tokenizer.json",
-                onClick = { tokenizerLauncher.launch(arrayOf("application/json", "*/*")) }
+                name = "GGUF Model (.gguf)", 
+                description = if (modelPath != null) service.getModelName() else "Required - select local GGUF model file",
+                onClick = { modelLauncher.launch(arrayOf("application/octet-stream", "*/*")) }
             )
 
-            if (encoderPath != null || decoderPath != null || tokenizerPath != null) {
+            if (modelPath != null) {
                 Preference(
-                    name = "Remove All Models",
-                    description = "Unload models and free memory",
+                    name = "Remove Model",
+                    description = "Unload model and free memory",
                     onClick = { 
                         service.unloadModel()
                         service.setModelPath(null)
-                        service.setDecoderPath(null)
-                        service.setTokenizerPath(null)
-                        encoderPath = null
-                        decoderPath = null
-                        tokenizerPath = null
+                        modelPath = null
                     }
                 )
             }

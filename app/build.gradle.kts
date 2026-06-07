@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.leanbitlab.leantype"
@@ -45,6 +45,7 @@ android {
         create("offline") {
             dimension = "privacy"
             applicationIdSuffix = ".offline"
+            minSdk = 26
         }
         create("offlinelite") {
             dimension = "privacy"
@@ -141,7 +142,7 @@ android {
             path = File("src/main/jni/Android.mk")
         }
     }
-//    ndkVersion = "28.0.13004108"
+    ndkVersion = "28.0.13004108"
 
     packaging {
         jniLibs {
@@ -235,8 +236,10 @@ dependencies {
     "standardOptimisedImplementation"("androidx.security:security-crypto:1.1.0-alpha06")
 
     // local llm proofreading (offline)
-    // ONNX Runtime for T5 encoder-decoder grammar models
-    "offlineImplementation"("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
+    "offlineImplementation"("io.github.ljcamargo:llamacpp-kotlin:0.4.0")
+
+    // Force 16 KB page-aligned version of graphics-path
+    implementation("androidx.graphics:graphics-path:1.1.0")
 
     // test
     testImplementation(kotlin("test"))
