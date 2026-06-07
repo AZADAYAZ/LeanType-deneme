@@ -60,7 +60,7 @@ private fun loadBlockedWords(context: Context): List<BlockedWord> {
             val locale = Locale.forLanguageTag(localeTag)
             try {
                 file.readLines().forEach { line ->
-                    val trimmed = line.trim()
+                    val trimmed = line.trim().lowercase(locale)
                     if (trimmed.isNotEmpty()) {
                         list.add(BlockedWord(trimmed, locale))
                     }
@@ -70,14 +70,16 @@ private fun loadBlockedWords(context: Context): List<BlockedWord> {
             }
         }
     }
-    return list.sortedWith(compareBy({ it.word.lowercase() }, { it.locale.toLanguageTag() }))
+    val uniqueList = list.distinct()
+    return uniqueList.sortedWith(compareBy({ it.word.lowercase() }, { it.locale.toLanguageTag() }))
 }
 
 private fun addBlockedWord(context: Context, word: String, locale: Locale) {
     val file = getBlacklistFile(context, locale)
+    val lowercaseWord = word.trim().lowercase(locale)
     try {
-        val existing = if (file.exists()) file.readLines().map { it.trim() }.filter { it.isNotEmpty() }.toMutableSet() else mutableSetOf()
-        if (existing.add(word)) {
+        val existing = if (file.exists()) file.readLines().map { it.trim().lowercase(locale) }.filter { it.isNotEmpty() }.toMutableSet() else mutableSetOf()
+        if (existing.add(lowercaseWord)) {
             file.writeText(existing.joinToString("\n") + "\n")
         }
     } catch (e: Exception) {
@@ -87,10 +89,11 @@ private fun addBlockedWord(context: Context, word: String, locale: Locale) {
 
 private fun removeBlockedWord(context: Context, word: String, locale: Locale) {
     val file = getBlacklistFile(context, locale)
+    val lowercaseWord = word.trim().lowercase(locale)
     try {
         if (file.exists()) {
-            val existing = file.readLines().map { it.trim() }.filter { it.isNotEmpty() }.toMutableSet()
-            if (existing.remove(word)) {
+            val existing = file.readLines().map { it.trim().lowercase(locale) }.filter { it.isNotEmpty() }.toMutableSet()
+            if (existing.remove(lowercaseWord)) {
                 if (existing.isEmpty()) {
                     file.delete()
                 } else {
@@ -210,17 +213,20 @@ private fun EditBlockedWordDialog(
         if (wordText.isBlank()) false
         else {
             val file = File(ctx.filesDir, "blacklists/${wordLocale.toLanguageTag()}.txt")
-            if (file.exists()) file.readLines().map { it.trim() }.contains(wordText.trim()) else false
+            if (file.exists()) {
+                val cleanLower = wordText.trim().lowercase(wordLocale)
+                file.readLines().map { it.trim().lowercase(wordLocale) }.contains(cleanLower)
+            } else false
         }
     }
 
     val isNew = blockedWord.word.isEmpty()
-    val isSaveEnabled = wordText.isNotBlank() && (!alreadyExists || (!isNew && wordText == blockedWord.word && wordLocale == blockedWord.locale))
+    val isSaveEnabled = wordText.isNotBlank() && (!alreadyExists || (!isNew && wordText.trim().lowercase(wordLocale) == blockedWord.word.lowercase(blockedWord.locale) && wordLocale == blockedWord.locale))
 
     fun save() {
         if (wordText.isNotBlank()) {
             val cleanWord = wordText.trim()
-            if (!isNew && (blockedWord.word != cleanWord || blockedWord.locale != wordLocale)) {
+            if (!isNew && (blockedWord.word.lowercase(blockedWord.locale) != cleanWord.lowercase(wordLocale) || blockedWord.locale != wordLocale)) {
                 removeBlockedWord(ctx, blockedWord.word, blockedWord.locale)
             }
             addBlockedWord(ctx, cleanWord, wordLocale)
