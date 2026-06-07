@@ -182,6 +182,7 @@ public class LatinIME extends InputMethodService implements
     private GestureConsumer mGestureConsumer = GestureConsumer.NULL_GESTURE_CONSUMER;
 
     private final ClipboardHistoryManager mClipboardHistoryManager = new ClipboardHistoryManager(this);
+    private final OtpSuggestionManager mOtpSuggestionManager = new OtpSuggestionManager(this);
 
     private FloatingKeyboardManager mFloatingKeyboardManager;
 
@@ -711,6 +712,7 @@ public class LatinIME extends InputMethodService implements
             mFloatingKeyboardManager.destroy();
         }
         mClipboardHistoryManager.onDestroy();
+        mOtpSuggestionManager.stop();
         mDictionaryFacilitator.closeDictionaries();
         mSettings.onDestroy();
         unregisterReceiver(mRingerModeChangeReceiver);
@@ -1093,6 +1095,10 @@ public class LatinIME extends InputMethodService implements
 
         if (TRACE)
             Debug.startMethodTracing("/data/trace/latinime");
+
+        // Listen for incoming SMS OTPs only while the keyboard is shown, and only if the
+        // user has opted in and granted the permission (handled inside the manager).
+        mOtpSuggestionManager.start();
     }
 
     @Override
@@ -1130,6 +1136,7 @@ public class LatinIME extends InputMethodService implements
     void onFinishInputViewInternal(final boolean finishingInput) {
         super.onFinishInputView(finishingInput);
         Log.i(TAG, "onFinishInputView");
+        mOtpSuggestionManager.stop();
         cleanupInternalStateForFinishInput();
     }
 
@@ -1718,6 +1725,21 @@ public class LatinIME extends InputMethodService implements
      * in suggestion strip.
      * returns whether a clipboard suggestion has been set.
      */
+    /**
+     * Checks if a recent SMS OTP suggestion is available. If so, it is set in the suggestion strip.
+     * Returns whether an OTP suggestion has been set.
+     */
+    public boolean tryShowOtpSuggestion() {
+        if (!hasSuggestionStripView()) return false;
+        final View otpView = mOtpSuggestionManager.getOtpSuggestionView(mSuggestionStripView);
+        if (otpView != null) {
+            // false: the OTP chip layout already has its own close button (wired in the manager)
+            mSuggestionStripView.setExternalSuggestionView(otpView, false);
+            return true;
+        }
+        return false;
+    }
+
     public boolean tryShowClipboardSuggestion() {
         final View clipboardView = mClipboardHistoryManager.getClipboardSuggestionView(getCurrentInputEditorInfo(),
                 mSuggestionStripView);
@@ -1743,8 +1765,8 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void setNeutralSuggestionStrip() {
         final SettingsValues currentSettings = mSettings.getCurrent();
-        if (tryShowClipboardSuggestion()) {
-            // clipboard suggestion has been set
+        if (tryShowOtpSuggestion() || tryShowClipboardSuggestion()) {
+            // an external (OTP or clipboard) suggestion has been set
             if (hasSuggestionStripView() && currentSettings.mAutoHideToolbar)
                 mSuggestionStripView.setToolbarVisibility(false);
             return;
