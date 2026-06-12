@@ -7,6 +7,11 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.core.content.edit
+import android.view.View
+import android.view.MotionEvent
+import android.os.Handler
+import android.os.Looper
+import android.annotation.SuppressLint
 import androidx.core.view.forEach
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode
@@ -409,3 +414,54 @@ fun clearCustomToolbarKeyCodes() {
 }
 
 private var customToolbarKeyCodes: EnumMap<ToolbarKey, Pair<Int?, Int?>>? = null
+
+fun isRepeatableToolbarKey(key: ToolbarKey): Boolean {
+    return when (key) {
+        LEFT, RIGHT, UP, DOWN,
+        WORD_LEFT, WORD_RIGHT,
+        PAGE_UP, PAGE_DOWN -> true
+        else -> false
+    }
+}
+
+class RepeatableKeyTouchListener(
+    private val onClick: (repeatCount: Int) -> Unit
+) : View.OnTouchListener {
+    private val handler = Handler(Looper.getMainLooper())
+    private var repeatCount = 0
+    private val runnable = object : Runnable {
+        override fun run() {
+            repeatCount++
+            onClick(repeatCount)
+            handler.postDelayed(this, 50L)
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View, event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                repeatCount = 0
+                onClick(0)
+                handler.postDelayed(runnable, 400L)
+                v.isPressed = true
+                return true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                handler.removeCallbacks(runnable)
+                v.isPressed = false
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val x = event.x
+                val y = event.y
+                if (x < 0 || x > v.width || y < 0 || y > v.height) {
+                    handler.removeCallbacks(runnable)
+                    v.isPressed = false
+                }
+                return true
+            }
+        }
+        return false
+    }
+}

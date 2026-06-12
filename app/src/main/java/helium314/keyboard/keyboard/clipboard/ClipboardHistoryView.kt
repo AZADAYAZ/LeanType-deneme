@@ -34,6 +34,8 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.ResourceUtils
 import helium314.keyboard.latin.utils.ToolbarKey
 import helium314.keyboard.latin.utils.createToolbarKey
+import helium314.keyboard.latin.utils.isRepeatableToolbarKey
+import helium314.keyboard.latin.utils.RepeatableKeyTouchListener
 import helium314.keyboard.latin.utils.getCodeForToolbarKey
 import helium314.keyboard.latin.utils.getCodeForToolbarKeyLongClick
 import helium314.keyboard.latin.utils.getEnabledClipboardToolbarKeys
@@ -196,8 +198,21 @@ class ClipboardHistoryView @JvmOverloads constructor(
         val clipboardStrip = KeyboardSwitcher.getInstance().clipboardStrip
         toolbarKeys.forEach {
             clipboardStrip.addView(it)
-            it.setOnClickListener(this@ClipboardHistoryView)
-            it.setOnLongClickListener(this@ClipboardHistoryView)
+            val tag = it.tag
+            if (tag is ToolbarKey && isRepeatableToolbarKey(tag)) {
+                it.setOnTouchListener(RepeatableKeyTouchListener { repeatCount ->
+                    if (repeatCount == 0 || repeatCount % 4 == 0) {
+                        AudioAndHapticFeedbackManager.getInstance().performHapticAndAudioFeedback(KeyCode.NOT_SPECIFIED, it, HapticEvent.KEY_PRESS)
+                    }
+                    val code = getCodeForToolbarKey(tag)
+                    if (code != KeyCode.UNSPECIFIED) {
+                        keyboardActionListener.onCodeInput(code, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, repeatCount > 0)
+                    }
+                })
+            } else {
+                it.setOnClickListener(this@ClipboardHistoryView)
+                it.setOnLongClickListener(this@ClipboardHistoryView)
+            }
             colors.setColor(it, ColorType.TOOL_BAR_KEY)
             it.setBackgroundResource(R.drawable.toolbar_key_background)
             colors.setColor(it.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
