@@ -1450,6 +1450,32 @@ public final class InputLogic {
                 mWordComposer.setCapitalizedModeAtStartComposingTime(inputTransaction.getShiftState());
             }
             setComposingTextInternal(getTextWithUnderline(mWordComposer.getTypedWord()), 1);
+            if (helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isEnabled(mLatinIME)
+                    && helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isImmediateEnabled(mLatinIME)) {
+                final String typedWord = mWordComposer.getTypedWord();
+                final String prefix = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getPrefix(mLatinIME);
+                if (prefix.isEmpty()) {
+                    final String expanded = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWord(typedWord, mLatinIME);
+                    if (expanded != null) {
+                        commitExpandedText(typedWord, expanded);
+                        resetComposingState(true);
+                    }
+                } else {
+                    final CharSequence textBefore = mConnection.getTextBeforeCursor(50, 0);
+                    if (textBefore != null) {
+                        final String textStr = textBefore.toString();
+                        final String targetSuffix = prefix + typedWord;
+                        if (textStr.toLowerCase(java.util.Locale.US).endsWith(targetSuffix.toLowerCase(java.util.Locale.US))) {
+                            final String expanded = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWord(targetSuffix, mLatinIME);
+                            if (expanded != null) {
+                                mConnection.deleteTextBeforeCursor(prefix.length());
+                                commitExpandedText(targetSuffix, expanded);
+                                resetComposingState(true);
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             final boolean swapWeakSpace = tryStripSpaceAndReturnWhetherShouldSwapInstead(event, inputTransaction);
 
@@ -1640,7 +1666,7 @@ public final class InputLogic {
                 final String expectedAfter = mLastExpandedText.substring(beforeLen);
                 if (textBefore != null && textBefore.toString().equals(expectedBefore)
                         && textAfter != null && textAfter.toString().equals(expectedAfter)) {
-                    mConnection.deleteSurroundingText(beforeLen, afterLen);
+                    mConnection.setSelection(expectedCursor - beforeLen, expectedCursor + afterLen);
                     mConnection.commitText(mLastShortcutText, 1);
                     mLastExpandedText = null;
                     mLastShortcutText = null;

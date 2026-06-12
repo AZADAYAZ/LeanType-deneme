@@ -79,6 +79,10 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
         mutableStateOf(TextExpanderUtils.isEnabled(context))
     }
 
+    var isImmediateEnabled by remember {
+        mutableStateOf(TextExpanderUtils.isImmediateEnabled(context))
+    }
+
     var shortcutsMap by remember {
         mutableStateOf(TextExpanderUtils.getShortcuts(context))
     }
@@ -309,6 +313,15 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                         default = false,
                         description = "Auto-expand shortcuts on space or punctuation natively and securely.",
                         onCheckedChange = { isExpanderEnabled = it }
+                    )
+
+                    SwitchPreference(
+                        name = "Expand immediately",
+                        key = TextExpanderUtils.PREF_IMMEDIATE,
+                        default = false,
+                        description = "Expand shortcuts immediately without pressing space.",
+                        enabled = isExpanderEnabled,
+                        onCheckedChange = { isImmediateEnabled = it }
                     )
 
                     // 2. Custom Prefix Configuration

@@ -15,11 +15,16 @@ import java.util.Locale
 object TextExpanderUtils {
     const val PREF_ENABLED = "pref_text_expander_enabled"
     const val PREF_PREFIX = "pref_text_expander_prefix"
+    const val PREF_IMMEDIATE = "pref_text_expander_immediate"
     const val PREF_DATA = "pref_text_expander_data"
     const val REGEX_PREFIX = "__regex__:"
 
     fun isEnabled(context: Context): Boolean {
         return context.prefs().getBoolean(PREF_ENABLED, false)
+    }
+
+    fun isImmediateEnabled(context: Context): Boolean {
+        return context.prefs().getBoolean(PREF_IMMEDIATE, false)
     }
 
     fun getPrefix(context: Context): String {
