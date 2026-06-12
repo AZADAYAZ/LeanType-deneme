@@ -332,13 +332,18 @@ class ProofreadService(private val context: Context) {
         val target = sharedPrefs.getString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, Defaults.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE) ?: Defaults.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE
         val systemPromptTemplate = getTranslateSystemPrompt().takeIf { it.isNotBlank() } ?: Defaults.PREF_OFFLINE_TRANSLATE_SYSTEM_PROMPT
         val prompt = systemPromptTemplate.replace("{lang}", target)
-        return proofread(text, overridePrompt = prompt)
+        return proofread(text, overridePrompt = prompt, targetLanguage = target)
     }
 
     /**
      * Run llamacpp inference for proofreading/text correction.
      */
-    suspend fun proofread(text: String, overridePrompt: String? = null, showThinking: Boolean? = null): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun proofread(
+        text: String,
+        overridePrompt: String? = null,
+        showThinking: Boolean? = null,
+        targetLanguage: String? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
         val modelPath = getModelPath()
         if (modelPath.isNullOrBlank()) {
             return@withContext Result.failure(ProofreadException("Model not loaded. Please select a GGUF model file."))
@@ -367,7 +372,17 @@ class ProofreadService(private val context: Context) {
                 systemPrompt.replace("{text}", text)
             } else if (overridePrompt != null) {
                 // Translation or specific override
-                "Instruction: ${systemPrompt.trim()}\nInput: $text\nOutput:"
+                val examples = targetLanguage?.let { getTranslationFewShot(it) } ?: emptyList()
+                if (examples.isNotEmpty()) {
+                    var builder = "Instruction: ${systemPrompt.trim()}\n\n"
+                    for (ex in examples) {
+                        builder += "Input: ${ex.first}\nOutput: ${ex.second}\n\n"
+                    }
+                    builder += "Input: $text\nOutput:"
+                    builder
+                } else {
+                    "Instruction: ${systemPrompt.trim()}\nInput: $text\nOutput:"
+                }
             } else {
                 // Default proofreading with few-shot examples for better local model guidance
                 val instruction = systemPrompt.ifBlank { "Correct the grammar and spelling of the input text. Output only the corrected text, nothing else." }
@@ -570,6 +585,53 @@ class ProofreadService(private val context: Context) {
             .replace(Regex("<reasoning>[\\s\\S]*?</reasoning>", RegexOption.IGNORE_CASE), "")
             .replace(Regex("<details>[\\s\\S]*?</details>", RegexOption.IGNORE_CASE), "")
             .trim()
+    }
+
+    private fun getTranslationFewShot(targetLanguage: String): List<Pair<String, String>> {
+        val lang = targetLanguage.trim().lowercase()
+        return when {
+            lang.contains("french") || lang.contains("français") -> listOf(
+                "Hello, how are you?" to "Bonjour, comment allez-vous?",
+                "My name is Alex." to "Je m'appelle Alex."
+            )
+            lang.contains("spanish") || lang.contains("español") -> listOf(
+                "Hello, how are you?" to "Hola, ¿cómo estás?",
+                "My name is Alex." to "Mi nombre es Alex."
+            )
+            lang.contains("german") || lang.contains("deutsch") -> listOf(
+                "Hello, how are you?" to "Hallo, wie geht es dir?",
+                "My name is Alex." to "Mein Name ist Alex."
+            )
+            lang.contains("italian") || lang.contains("italiano") -> listOf(
+                "Hello, how are you?" to "Ciao, come stai?",
+                "My name is Alex." to "Il mio nome è Alex."
+            )
+            lang.contains("portuguese") || lang.contains("português") -> listOf(
+                "Hello, how are you?" to "Olá, como você está?",
+                "My name is Alex." to "Meu nome é Alex."
+            )
+            lang.contains("dutch") || lang.contains("nederlands") -> listOf(
+                "Hello, how are you?" to "Hallo, hoe gaat het met je?",
+                "My name is Alex." to "Mijn naam is Alex."
+            )
+            lang.contains("russian") || lang.contains("русский") -> listOf(
+                "Hello, how are you?" to "Привет, как дела?",
+                "My name is Alex." to "Меня зовут Алекс."
+            )
+            lang.contains("chinese") || lang.contains("中文") || lang.contains("汉语") -> listOf(
+                "Hello, how are you?" to "你好，你好吗？",
+                "My name is Alex." to "我的名字是亚历克斯。"
+            )
+            lang.contains("japanese") || lang.contains("日本語") -> listOf(
+                "Hello, how are you?" to "こんにちは、お元気ですか？",
+                "My name is Alex." to "私の名前はアレックスです。"
+            )
+            lang.contains("hindi") || lang.contains("हिन्दी") -> listOf(
+                "Hello, how are you?" to "नमस्ते, आप कैसे हैं?",
+                "My name is Alex." to "मेरा नाम एलेक्स है।"
+            )
+            else -> emptyList()
+        }
     }
 
     class ProofreadException(message: String) : Exception(message)
