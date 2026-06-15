@@ -26,6 +26,15 @@ object HandwritingLoader {
         }
 
         try {
+            val md5 = java.security.MessageDigest.getInstance("MD5")
+            val bytes = apkFile.readBytes()
+            val hash = md5.digest(bytes).joinToString("") { "%02x".format(it) }
+            Log.i("HandwritingLoader", "Loaded plugin APK path: ${apkFile.absolutePath}, size: ${bytes.size}, md5: $hash")
+        } catch (e: Exception) {
+            Log.e("HandwritingLoader", "Failed to calculate MD5", e)
+        }
+
+        try {
             val classLoader = DexClassLoader(
                 apkFile.absolutePath,
                 context.codeCacheDir.absolutePath,
