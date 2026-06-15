@@ -558,6 +558,39 @@ class ProofreadService(private val context: Context) {
                 val firstChoice = choices.getJSONObject(0)
                 val message = firstChoice.optJSONObject("message")
                 var content = message?.optString("content", "") ?: ""
+
+                if (message != null) {
+                    val contentArray = message.optJSONArray("content")
+                    if (contentArray != null) {
+                        val parts = mutableListOf<String>()
+                        for (i in 0 until contentArray.length()) {
+                            when (val part = contentArray.opt(i)) {
+                                is String -> if (part.isNotBlank()) parts.add(part)
+                                is JSONObject -> {
+                                    val type = part.optString("type", "")
+                                    val text = part.optString("text", "").ifBlank {
+                                        part.optString("content", "")
+                                    }
+                                    if (text.isNotBlank() && (showThinking || type != "reasoning")) {
+                                        parts.add(text)
+                                    }
+                                }
+                            }
+                        }
+                        content = parts.joinToString("\n")
+                    }
+
+                    content = content.trim()
+                    if (content.isBlank() && showThinking) {
+                        content = message.optString("reasoning_content", "").trim().ifBlank {
+                            message.optString("reasoning", "").trim()
+                        }
+                    }
+                }
+
+                if (content.isBlank()) {
+                    content = firstChoice.optString("text", "").trim()
+                }
                 
                 if (!showThinking && content.isNotBlank()) {
                     // Filter out <think>...</think> blocks
