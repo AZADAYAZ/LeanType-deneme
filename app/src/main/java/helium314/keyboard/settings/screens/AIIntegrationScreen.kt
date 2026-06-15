@@ -79,6 +79,7 @@ private fun StandardAIIntegrationScreen(onClickBack: () -> Unit) {
                 add(SettingsWithoutKey.HUGGINGFACE_TOKEN)
                 add(SettingsWithoutKey.HUGGINGFACE_MODEL)
                 add(SettingsWithoutKey.HUGGINGFACE_ENDPOINT)
+                add(SettingsWithoutKey.AI_ALLOW_INSECURE_CONNECTIONS)
                 add(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE)
                 add(SettingsWithoutKey.TRANSLATE_HUGGINGFACE_MODEL)
             }

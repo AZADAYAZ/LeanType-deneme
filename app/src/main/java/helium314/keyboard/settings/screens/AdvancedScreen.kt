@@ -455,6 +455,9 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
             )
         }
     },
+    Setting(context, SettingsWithoutKey.AI_ALLOW_INSECURE_CONNECTIONS, R.string.ai_allow_insecure_connections_title, R.string.ai_allow_insecure_connections_summary) { setting ->
+        SwitchPreference(setting, Defaults.PREF_AI_ALLOW_INSECURE_CONNECTIONS)
+    },
     Setting(context, SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, R.string.translate_target_language_title, R.string.translate_target_language_summary) { setting ->
         val ctx = LocalContext.current
         val service = remember { helium314.keyboard.latin.utils.ProofreadService(ctx) }
