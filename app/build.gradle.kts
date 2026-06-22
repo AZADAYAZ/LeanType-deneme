@@ -22,8 +22,8 @@ android {
         applicationId = "com.leanbitlab.leantype"
         minSdk = 21
         targetSdk = 35
-        versionCode = 3860
-        versionName = "3.8.6"
+        versionCode = 3870
+        versionName = "3.8.7"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         
@@ -38,9 +38,11 @@ android {
     productFlavors {
         create("standard") {
             dimension = "privacy"
+            minSdk = 23
         }
         create("standardOptimised") {
             dimension = "privacy"
+            minSdk = 23
         }
         create("offline") {
             dimension = "privacy"
