@@ -2,6 +2,7 @@
 package helium314.keyboard.settings.dialogs
 
 import android.content.Intent
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,6 +46,10 @@ import java.io.File
 import java.util.Locale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalResources
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DictionaryDialog(
@@ -52,7 +57,8 @@ fun DictionaryDialog(
     locale: Locale,
 ) {
     val ctx = LocalContext.current
-    val (dictionaries, hasInternal) = getUserAndInternalDictionaries(ctx, locale)
+    var refreshTrigger by remember { mutableStateOf(0) }
+    val (dictionaries, hasInternal) = remember(refreshTrigger) { getUserAndInternalDictionaries(ctx, locale) }
     val mainDict = dictionaries.firstOrNull { it.name == Dictionary.TYPE_MAIN + "_" + DictionaryInfoUtils.USER_DICTIONARY_SUFFIX }
     val addonDicts = dictionaries.filterNot { it == mainDict }
     val picker = dictionaryFilePicker(locale)
@@ -112,23 +118,41 @@ fun DictionaryDialog(
                     }
                 }
                 if (mainDict != null)
-                    DictionaryDetails(mainDict)
+                    DictionaryDetails(mainDict) { refreshTrigger++ }
                 if (addonDicts.isNotEmpty()) {
                     HorizontalDivider()
                     Text(stringResource(R.string.dictionary_category_title),
                         modifier = Modifier.padding(vertical = 12.dp),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    addonDicts.forEach { DictionaryDetails(it) }
+                    addonDicts.forEach { DictionaryDetails(it) { refreshTrigger++ } }
                 }
-                val dictString = createDictionaryTextAnnotated(locale)
-                if (dictString.isNotEmpty()) {
+                val knownDicts = remember {
+                    if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard") {
+                        helium314.keyboard.latin.utils.getKnownDictionariesForLocale(locale, ctx)
+                    } else emptyList()
+                }
+                if (knownDicts.isNotEmpty()) {
                     HorizontalDivider()
                     Text(stringResource(R.string.dictionary_available),
                         modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Text(dictString, style = LocalTextStyle.current.merge(lineHeight = 1.8.em))
+                    knownDicts.forEach { (desc, link) ->
+                        DownloadableDictionaryRow(locale, desc, link) {
+                            refreshTrigger++
+                        }
+                    }
+                } else {
+                    val dictString = createDictionaryTextAnnotated(locale)
+                    if (dictString.isNotEmpty()) {
+                        HorizontalDivider()
+                        Text(stringResource(R.string.dictionary_available),
+                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(dictString, style = LocalTextStyle.current.merge(lineHeight = 1.8.em))
+                    }
                 }
             }
         },
@@ -144,7 +168,7 @@ fun DictionaryDialog(
 }
 
 @Composable
-private fun DictionaryDetails(dict: File) {
+private fun DictionaryDetails(dict: File, onDelete: () -> Unit) {
     val header = DictionaryInfoUtils.getDictionaryFileHeaderOrNull(dict) ?: return
     val type = header.mIdString.substringBefore(":")
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -185,9 +209,81 @@ private fun DictionaryDetails(dict: File) {
         ConfirmationDialog(
             onDismissRequest = { showDeleteDialog = false },
             confirmButtonText = stringResource(R.string.remove),
-            onConfirmed = { dict.delete() },
+            onConfirmed = { 
+                dict.delete()
+                onDelete()
+            },
             content = { Text(stringResource(R.string.remove_dictionary_message, type))}
         )
+}
+
+// ponytail: Dynamic dictionary downloader using HTTP URL connection.
+private fun downloadDictionary(context: Context, locale: Locale, type: String, linkUrl: String, onComplete: (Boolean) -> Unit) {
+    val cacheDir = DictionaryInfoUtils.getCacheDirectoryForLocale(locale, context) ?: return onComplete(false)
+    val targetFile = File(cacheDir, "${type}.dict")
+    CoroutineScope(Dispatchers.IO).launch {
+        var success = false
+        try {
+            java.net.URL(linkUrl).openStream().use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            success = true
+        } catch (e: Exception) {
+            helium314.keyboard.latin.utils.Log.e("DictionaryDialog", "Failed to download dictionary", e)
+        }
+        withContext(Dispatchers.Main) {
+            onComplete(success)
+        }
+    }
+}
+
+@Composable
+private fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefresh: () -> Unit) {
+    val ctx = LocalContext.current
+    val type = remember(link) { link.substringAfterLast("/").substringBefore("_") }
+    val cacheDir = remember(locale) { DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx) }
+    val file = remember(cacheDir, type) { cacheDir?.let { File(it, "$type.dict") } }
+    var downloading by remember { mutableStateOf(false) }
+    var exists by remember(file, downloading) { mutableStateOf(file?.exists() == true) }
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Text(desc, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        if (exists) {
+            Text(
+                stringResource(R.string.installed),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        } else if (downloading) {
+            Text(
+                stringResource(R.string.downloading),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        } else {
+            androidx.compose.material3.TextButton(onClick = {
+                downloading = true
+                downloadDictionary(ctx, locale, type, link) { success ->
+                    downloading = false
+                    if (success) {
+                        exists = true
+                        onRefresh()
+                    } else {
+                        android.widget.Toast.makeText(ctx, ctx.getString(R.string.download_failed), android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }) {
+                Text(stringResource(R.string.download))
+            }
+        }
+    }
 }
 
 @Preview
