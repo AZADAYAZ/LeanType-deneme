@@ -10,4 +10,6 @@
 - Fix recently used emojis getting stuck on split toolbar
 - Close emoji search automatically when dictionary download completes
 - Show emoji dictionary download button on split toolbar when missing
+- Show handwriting plugin download button on canvas when missing
+
 
