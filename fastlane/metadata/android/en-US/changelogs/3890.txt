@@ -4,3 +4,4 @@
 - Fix suggestion word long-press to target entire word for deletion
 - Enable active next-word predictions on empty input in split mode
 - Make split mode fallback suggestions clickable and active
+- Fix popup keys pressed text/icon contrast-aware colors on amoled black theme
