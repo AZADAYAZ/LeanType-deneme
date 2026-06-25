@@ -1453,26 +1453,17 @@ public final class InputLogic {
             if (helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isEnabled(mLatinIME)
                     && helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isImmediateEnabled(mLatinIME)) {
                 final String typedWord = mWordComposer.getTypedWord();
-                final String prefix = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getPrefix(mLatinIME);
-                if (prefix.isEmpty()) {
-                    final String expanded = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWord(typedWord, mLatinIME);
-                    if (expanded != null) {
-                        commitExpandedText(typedWord, expanded);
-                        resetComposingState(true);
-                    }
-                } else {
-                    final CharSequence textBefore = mConnection.getTextBeforeCursor(50, 0);
-                    if (textBefore != null) {
-                        final String textStr = textBefore.toString();
-                        final String targetSuffix = prefix + typedWord;
-                        if (textStr.toLowerCase(java.util.Locale.US).endsWith(targetSuffix.toLowerCase(java.util.Locale.US))) {
-                            final String expanded = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWord(targetSuffix, mLatinIME);
-                            if (expanded != null) {
-                                mConnection.deleteTextBeforeCursor(prefix.length());
-                                commitExpandedText(targetSuffix, expanded);
-                                resetComposingState(true);
-                            }
+                final CharSequence textBefore = mConnection.getTextBeforeCursor(50, 0);
+                if (textBefore != null) {
+                    final String textStr = textBefore.toString();
+                    final helium314.keyboard.latin.utils.TextExpanderUtils.ExpandedResult result =
+                            helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWordForTyped(typedWord, textStr, mLatinIME);
+                    if (result != null) {
+                        if (result.getPrefixLength() > 0) {
+                            mConnection.deleteTextBeforeCursor(result.getPrefixLength());
                         }
+                        commitExpandedText(result.getMatchedString(), result.getExpandedText());
+                        resetComposingState(true);
                     }
                 }
             }
@@ -3058,29 +3049,16 @@ public final class InputLogic {
         // can't find any drawback (performance, neither when setting nor when reading)
         final boolean isEnabled = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isEnabled(mLatinIME);
         if (isEnabled) {
-            final String prefix = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getPrefix(mLatinIME);
-            if (prefix.isEmpty()) {
-                final String expanded = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWord(chosenWord, mLatinIME);
-                if (expanded != null) {
+            final CharSequence textBefore = mConnection.getTextBeforeCursor(50, 0);
+            if (textBefore != null) {
+                final String textStr = textBefore.toString();
+                final helium314.keyboard.latin.utils.TextExpanderUtils.ExpandedResult result =
+                        helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWordForTyped(chosenWord, textStr, mLatinIME);
+                if (result != null) {
                     mConnection.commitText(getTextWithSuggestionSpan(mLatinIME, chosenWord, mSuggestedWords, getDictionaryFacilitatorLocale()), 1);
-                    mConnection.deleteTextBeforeCursor(chosenWord.length());
-                    commitExpandedText(chosenWord, expanded);
+                    mConnection.deleteTextBeforeCursor(result.getPrefixLength() + chosenWord.length());
+                    commitExpandedText(result.getMatchedString(), result.getExpandedText());
                     return;
-                }
-            } else {
-                final CharSequence textBefore = mConnection.getTextBeforeCursor(50, 0);
-                if (textBefore != null) {
-                    final String textStr = textBefore.toString();
-                    final String targetSuffix = prefix + chosenWord;
-                    if (textStr.toLowerCase(java.util.Locale.US).endsWith(targetSuffix.toLowerCase(java.util.Locale.US))) {
-                        final String expanded = helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWord(targetSuffix, mLatinIME);
-                        if (expanded != null) {
-                            mConnection.commitText(getTextWithSuggestionSpan(mLatinIME, chosenWord, mSuggestedWords, getDictionaryFacilitatorLocale()), 1);
-                            mConnection.deleteTextBeforeCursor(prefix.length() + chosenWord.length());
-                            commitExpandedText(targetSuffix, expanded);
-                            return;
-                        }
-                    }
                 }
             }
         }
