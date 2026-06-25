@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -49,3 +51,14 @@ jobs:
           path: |
             app/build/outputs/apk/**/*.apk
             docs/releasenote/release_notes_v*.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          body_path: docs/releasenote/release_notes_temp.md
+          files: |
+            app/build/outputs/apk/standard/release/*.apk
+            app/build/outputs/apk/standardfull/release/*.apk
+            app/build/outputs/apk/offline/release/*.apk
+            app/build/outputs/apk/offlinelite/release/*.apk

@@ -53,8 +53,11 @@ def main():
     out_path = os.path.join(out_dir, f'release_notes_v{version_name}.md')
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(release_notes_content)
+    temp_path = os.path.join(out_dir, 'release_notes_temp.md')
+    with open(temp_path, 'w', encoding='utf-8') as f:
+        f.write(release_notes_content)
         
-    print(f"Successfully generated {out_path}")
+    print(f"Successfully generated {out_path} and {temp_path}")
 
 if __name__ == '__main__':
     # ponytail: minimal release notes generator using standard library

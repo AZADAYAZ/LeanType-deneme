@@ -9,6 +9,8 @@
 - Enable active next-word predictions on empty input in split mode
 - Make split mode fallback suggestions clickable and active
 - Fix popup keys pressed text/icon contrast-aware colors on amoled black theme
+- Support dynamic next-word bigram predictions via space-separated personal dictionary entries
+- Support shortcut-specific prefixes for text expander
 
 ## 📦 Downloads (Choose Your Flavor)
 
