@@ -635,6 +635,10 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             override fun onThreeFingerSwipeDown() {
                 onCodeInput(KeyCode.REDO, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
             }
+            override fun onClose() {
+                PointerTracker.sPersistentTouchpadModeActive = false
+                keyboardSwitcher.hideTouchpadView()
+            }
         })
     }
 
