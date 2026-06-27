@@ -6,59 +6,49 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(script_dir))
     
-    # 1. Parse app/build.gradle.kts
-    gradle_path = os.path.join(project_root, 'app', 'build.gradle.kts')
-    with open(gradle_path, 'r', encoding='utf-8') as f:
-        gradle_content = f.read()
+    # 1. Try to get version from tag name (if running in GitHub Actions)
+    ref_name = os.environ.get('GITHUB_REF_NAME')
+    version_name = None
+    if ref_name and ref_name.startswith('v'):
+        version_name = ref_name[1:]
+        print(f"Detected version name from GITHUB_REF_NAME: {version_name}")
         
-    version_name_match = re.search(r'versionName\s*=\s*"([^"]+)"', gradle_content)
-    version_code_match = re.search(r'versionCode\s*=\s*(\d+)', gradle_content)
-    
-    if not version_name_match or not version_code_match:
-        print("Error: Could not parse versionName or versionCode from build.gradle.kts")
+    # 2. Fall back to build.gradle.kts if not running in action or tag not matching
+    if not version_name:
+        gradle_path = os.path.join(project_root, 'app', 'build.gradle.kts')
+        if os.path.exists(gradle_path):
+            with open(gradle_path, 'r', encoding='utf-8') as f:
+                gradle_content = f.read()
+            version_name_match = re.search(r'versionName\s*=\s*"([^"]+)"', gradle_content)
+            if version_name_match:
+                version_name = version_name_match.group(1)
+                print(f"Parsed version name from build.gradle.kts: {version_name}")
+
+    if not version_name:
+        print("Error: Could not determine version name")
         return
-        
-    version_name = version_name_match.group(1)
-    version_code = version_code_match.group(1)
-    
-    # 2. Read changelog
-    changelog_path = os.path.join(project_root, 'fastlane', 'metadata', 'android', 'en-US', 'changelogs', f'{version_code}.txt')
-    if not os.path.exists(changelog_path):
-        print(f"Error: Changelog file {changelog_path} not found")
+
+    # 3. Locate the existing release notes file
+    releasenote_dir = os.path.join(project_root, 'docs', 'releasenote')
+    source_path = os.path.join(releasenote_dir, f'release_notes_v{version_name}.md')
+    temp_path = os.path.join(releasenote_dir, 'release_notes_temp.md')
+
+    if not os.path.exists(source_path):
+        print(f"Error: Release note file {source_path} not found")
+        # Write a fallback file so the build/release step doesn't fail
+        with open(temp_path, 'w', encoding='utf-8') as f:
+            f.write(f"Release notes for version {version_name}")
         return
-        
-    with open(changelog_path, 'r', encoding='utf-8') as f:
-        changelog = f.read().strip()
-        
-    # 3. Create formatted release notes content
-    release_notes_content = f"""### 💖 Support Our Work
-*   We are committed to making our apps as powerful and polished as possible. As an entirely community-funded project, we rely on your support to keep going, please consider becoming a [sponsor](https://github.com/sponsors/LeanBitLab). A huge thank you to all our current supporters!
 
-## 🚀 What's New
-{changelog}
+    # 4. Copy to release_notes_temp.md
+    with open(source_path, 'r', encoding='utf-8') as sf:
+        content = sf.read()
 
-## 📦 Downloads (Choose Your Flavor)
+    with open(temp_path, 'w', encoding='utf-8') as df:
+        df.write(content)
 
-| File | Description | Permissions |
-| :--- | :--- | :--- |
-| **`1-LeanType_{version_name}-standardfull-release.apk`** | **Recommended**. Cloud AI | Internet | 
-| **`2-LeanType_{version_name}-standard-release.apk`** | **Fdroid Build**. Standard + No Handwrite | Internet |
-| **`3-LeanType_{version_name}-offline-release.apk`** | **Privacy Focused**. No Internet. Offline AI Only. | No Internet |
-| **`4-LeanType_{version_name}-offlinelite-release.apk`** | **Minimalist**. Pure FOSS. No AI code. | No Internet |
-"""
-
-    # 4. Write to docs/releasenote/release_notes_v{version_name}.md
-    out_dir = os.path.join(project_root, 'docs', 'releasenote')
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f'release_notes_v{version_name}.md')
-    with open(out_path, 'w', encoding='utf-8') as f:
-        f.write(release_notes_content)
-    temp_path = os.path.join(out_dir, 'release_notes_temp.md')
-    with open(temp_path, 'w', encoding='utf-8') as f:
-        f.write(release_notes_content)
-        
-    print(f"Successfully generated {out_path} and {temp_path}")
+    print(f"Successfully copied {source_path} to {temp_path}")
 
 if __name__ == '__main__':
-    # ponytail: minimal release notes generator using standard library
+    # ponytail: copy pre-generated release notes file to temp.md
     main()
