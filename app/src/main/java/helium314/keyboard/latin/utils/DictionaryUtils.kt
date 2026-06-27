@@ -53,13 +53,31 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 fun getDictionaryLocales(context: Context): MutableSet<Locale> {
     val locales = HashSet<Locale>()
 
+    // ponytail: migrate legacy incorrectly-named dictionary folders (gb, au, ca) to en-GB, en-AU, en-CA
+    val dictDir = File(DictionaryInfoUtils.getWordListCacheDirectory(context))
+    if (dictDir.exists() && dictDir.isDirectory) {
+        val legacyMap = mapOf("gb" to "en-GB", "au" to "en-AU", "ca" to "en-CA")
+        legacyMap.forEach { (legacy, correct) ->
+            val legacyFolder = File(dictDir, legacy)
+            if (legacyFolder.exists() && legacyFolder.isDirectory) {
+                val correctFolder = File(dictDir, correct)
+                if (!correctFolder.exists()) {
+                    legacyFolder.renameTo(correctFolder)
+                } else {
+                    legacyFolder.deleteRecursively()
+                }
+            }
+        }
+    }
+
     // ponytail: include enabled locales and multilingual secondary locales
-    val enabled = SubtypeSettings.getEnabledSubtypes()
+    val enabled = SubtypeSettings.getEnabledSubtypes(true)
     val enabledLocales = HashSet<Locale>()
     enabled.forEach { subtype ->
         enabledLocales.add(subtype.locale())
         getSecondaryLocales(subtype.extraValue).forEach { enabledLocales.add(it) }
     }
+    android.util.Log.i("DictionaryUtils", "getDictionaryLocales: enabledLocales=$enabledLocales")
 
     // ponytail: get cached dictionaries: extracted or user-added/downloaded dictionaries
     DictionaryInfoUtils.getCacheDirectories(context).forEach { directory ->
@@ -67,6 +85,7 @@ fun getDictionaryLocales(context: Context): MutableSet<Locale> {
         val locale = DictionaryInfoUtils.getWordListIdFromFileName(directory.name).constructLocale()
         val isEnabled = enabledLocales.contains(locale)
         val hasEnabledLanguage = enabledLocales.any { it.language == locale.language }
+        android.util.Log.i("DictionaryUtils", "Cache loop: locale=$locale, isEnabled=$isEnabled, hasEnabledLanguage=$hasEnabledLanguage")
         if (!isEnabled && hasEnabledLanguage) return@forEach
         locales.add(locale)
     }
@@ -248,7 +267,10 @@ fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefr
     val ctx = LocalContext.current
     val type = remember(link) { link.substringAfterLast("/").substringBefore("_") }
     // ponytail: extract the specific dictionary locale from the download link to avoid directory collision
-    val dictLocale = remember(link) { link.substringAfterLast("_").substringBefore(".dict").constructLocale() }
+    val dictLocale = remember(link) {
+        val fileName = link.substringAfterLast("/")
+        fileName.substringAfter("_").substringBefore(".dict").constructLocale()
+    }
     val cacheDir = remember(dictLocale) { DictionaryInfoUtils.getCacheDirectoryForLocale(dictLocale, ctx) }
     val file = remember(cacheDir, type) { cacheDir?.let { File(it, "$type.dict") } }
     var downloading by remember { mutableStateOf(false) }
