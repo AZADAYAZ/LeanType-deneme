@@ -980,78 +980,11 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         }
         suggestionsStrip.isVisible = true
         
+        // ponytail: no fallback suggestions to keep it clean and minimal
         val PLACEHOLDER_TAG = "PLACEHOLDER_VIEW"
         val placeholder = suggestionsStrip.findViewWithTag<View>(PLACEHOLDER_TAG)
-        
-        // Check if there are any visible suggestions with actual text content
-        var hasRealSuggestions = false
-        for (i in 0 until suggestionsStrip.childCount) {
-            val child = suggestionsStrip.getChildAt(i)
-            if (child.tag != PLACEHOLDER_TAG && child is TextView && !child.text.isNullOrEmpty()) {
-                hasRealSuggestions = true
-                break
-            }
-        }
-
-        if (hasRealSuggestions) {
-            // Real suggestions exist, remove placeholder
-            if (placeholder != null) suggestionsStrip.removeView(placeholder)
-        } else {
-            // No suggestions, show random placeholder suggestions
-            if (placeholder == null) {
-                 val placeholderContainer = LinearLayout(context)
-                 placeholderContainer.tag = PLACEHOLDER_TAG
-                 placeholderContainer.orientation = LinearLayout.HORIZONTAL
-                 placeholderContainer.layoutParams = LinearLayout.LayoutParams(
-                     LinearLayout.LayoutParams.MATCH_PARENT, 
-                     LinearLayout.LayoutParams.MATCH_PARENT
-                 )
-                 
-                 // Random suggestion words to display
-                 val randomSuggestions = listOf(
-                     "the", "and", "for", "you", "with",
-                     "have", "this", "from", "will", "can",
-                     "hello", "thanks", "please", "okay", "good"
-                 ).shuffled().take(5)
-                 
-                 val colors = Settings.getValues().mColors
-                 val customTypeface = Settings.getInstance().customTypeface
-                 
-                 randomSuggestions.forEach { word ->
-                     val suggestionView = TextView(context, null, R.attr.suggestionWordStyle)
-                     suggestionView.text = word
-                     suggestionView.gravity = android.view.Gravity.CENTER
-                     suggestionView.alpha = 0.6f // Muted to show they are fallback, but clickable
-                     if (customTypeface != null)
-                         suggestionView.typeface = customTypeface
-                     colors.setBackground(suggestionView, ColorType.STRIP_BACKGROUND)
-                     suggestionView.setTextColor(colors.get(ColorType.KEY_TEXT))
-
-                     // ponytail: make fallback active and clickable
-                     suggestionView.setOnClickListener {
-                         val wordInfo = SuggestedWordInfo(
-                             word,
-                             "",
-                             SuggestedWordInfo.MAX_SCORE,
-                             SuggestedWordInfo.KIND_TYPED,
-                             Dictionary.DICTIONARY_USER_TYPED,
-                             SuggestedWordInfo.NOT_AN_INDEX,
-                             SuggestedWordInfo.NOT_A_CONFIDENCE
-                         )
-                         listener.pickSuggestionManually(wordInfo)
-                     }
-                     
-                     val params = LinearLayout.LayoutParams(
-                         0,
-                         LinearLayout.LayoutParams.MATCH_PARENT,
-                         1f
-                     )
-                     suggestionView.layoutParams = params
-                     placeholderContainer.addView(suggestionView)
-                 }
-                 
-                 suggestionsStrip.addView(placeholderContainer)
-            }
+        if (placeholder != null) {
+            suggestionsStrip.removeView(placeholder)
         }
     }
 
