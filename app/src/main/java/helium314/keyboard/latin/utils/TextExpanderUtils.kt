@@ -221,7 +221,7 @@ object TextExpanderUtils {
             
             if (isRegex) {
                 val prefix = entry.prefix
-                val patternStr = if (prefix.isNotEmpty()) Regex.escape(prefix) + cleanKey else cleanKey
+                val patternStr = cleanKey
                 try {
                     val regex = Regex(patternStr, RegexOption.IGNORE_CASE)
                     val expectedSuffix = prefix + word
@@ -236,7 +236,7 @@ object TextExpanderUtils {
                 }
             } else {
                 val prefix = entry.prefix
-                val expectedSuffix = prefix + cleanKey
+                val expectedSuffix = cleanKey
                 if (expectedSuffix.equals(prefix + word, ignoreCase = true)) {
                     if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
                         return ExpandedResult(expand(entry.template, context), prefix.length, expectedSuffix)
