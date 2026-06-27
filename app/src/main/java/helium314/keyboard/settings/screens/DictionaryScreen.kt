@@ -277,9 +277,17 @@ fun DictionaryScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             val (dicts, hasInternal) = getUserAndInternalDictionaries(ctx, locale)
-                            val types = dicts.mapTo(mutableListOf()) { it.name.substringBefore("_${DictionaryInfoUtils.USER_DICTIONARY_SUFFIX}") }
-                            if (hasInternal && !types.contains(Dictionary.TYPE_MAIN))
-                                types.add(0, stringResource(R.string.internal_dictionary_summary))
+                            val mainDictLabel = stringResource(R.string.main_dictionary)
+                            val internalDictLabel = stringResource(R.string.internal_dictionary_summary)
+                            val types = dicts.mapTo(mutableListOf()) { file ->
+                                if (file.name == DictionaryInfoUtils.MAIN_DICT_FILE_NAME) {
+                                    mainDictLabel
+                                } else {
+                                    file.name.substringBefore("_${DictionaryInfoUtils.USER_DICTIONARY_SUFFIX}")
+                                }
+                            }
+                            if (hasInternal && !types.contains(Dictionary.TYPE_MAIN) && !types.contains(mainDictLabel))
+                                types.add(0, internalDictLabel)
                             
                             // Render active dictionaries as stylized badges
                             Row(
@@ -295,12 +303,12 @@ fun DictionaryScreen(
                                 } else {
                                     types.forEach { type ->
                                         val badgeColor = when (type.lowercase()) {
-                                            "main", stringResource(R.string.internal_dictionary_summary).lowercase() -> MaterialTheme.colorScheme.primaryContainer
+                                            "main", internalDictLabel.lowercase(), mainDictLabel.lowercase() -> MaterialTheme.colorScheme.primaryContainer
                                             "user" -> MaterialTheme.colorScheme.secondaryContainer
                                             else -> MaterialTheme.colorScheme.tertiaryContainer
                                         }
                                         val badgeTextColor = when (type.lowercase()) {
-                                            "main", stringResource(R.string.internal_dictionary_summary).lowercase() -> MaterialTheme.colorScheme.onPrimaryContainer
+                                            "main", internalDictLabel.lowercase(), mainDictLabel.lowercase() -> MaterialTheme.colorScheme.onPrimaryContainer
                                             "user" -> MaterialTheme.colorScheme.onSecondaryContainer
                                             else -> MaterialTheme.colorScheme.onTertiaryContainer
                                         }
