@@ -54,7 +54,7 @@ import helium314.keyboard.latin.settings.Settings
 @Composable
 fun SponsorDialog(
     onDismissRequest: () -> Unit,
-    onSponsor: () -> Unit,
+    onSponsor: (isKofi: Boolean) -> Unit,
     prefs: SharedPreferences
 ) {
     var neverShowAgain by remember { mutableStateOf(false) }
@@ -169,12 +169,56 @@ fun SponsorDialog(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Buttons Row
-                    Row(
+                    // Buttons Column
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Button(
+                            onClick = {
+                                if (neverShowAgain)
+                                    prefs.edit { putBoolean(Settings.PREF_DONT_SHOW_SPONSOR_DIALOG, true) }
+                                onSponsor(true)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Text("☕", modifier = Modifier.padding(end = 8.dp))
+                            Text(
+                                text = "Support on Ko-fi",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Button(
+                            onClick = {
+                                if (neverShowAgain)
+                                    prefs.edit { putBoolean(Settings.PREF_DONT_SHOW_SPONSOR_DIALOG, true) }
+                                onSponsor(false)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            ),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Text("💖", modifier = Modifier.padding(end = 8.dp))
+                            Text(
+                                text = "Sponsor on GitHub",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
                         TextButton(
                             onClick = {
                                 if (neverShowAgain)
@@ -188,27 +232,6 @@ fun SponsorDialog(
                             Text(
                                 text = stringResource(R.string.sponsor_dialog_not_now),
                                 fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        Button(
-                            onClick = {
-                                if (neverShowAgain)
-                                    prefs.edit { putBoolean(Settings.PREF_DONT_SHOW_SPONSOR_DIALOG, true) }
-                                onSponsor()
-                            },
-                            shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-                        ) {
-                            Text("💖", modifier = Modifier.padding(end = 6.dp))
-                            Text(
-                                text = stringResource(R.string.sponsor_dialog_sponsor),
-                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
