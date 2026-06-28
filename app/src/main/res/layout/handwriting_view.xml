@@ -47,7 +47,7 @@
                 android:layout_alignParentEnd="true"
                 android:src="@drawable/ic_close"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Close" />
+                android:contentDescription="Clear" />
         </RelativeLayout>
 
         <FrameLayout
