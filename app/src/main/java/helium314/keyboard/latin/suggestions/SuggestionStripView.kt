@@ -173,6 +173,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         toolbarExpandKey.layoutParams.height = toolbarHeight
         toolbarExpandKey.layoutParams.width = toolbarHeight // we want it square
         toolbarExpandKey.setBackgroundResource(R.drawable.toolbar_key_background)
+        val expandPadding = 9.dpToPx(resources)
+        toolbarExpandKey.setPadding(expandPadding, expandPadding, expandPadding, expandPadding)
         colors.setColor(toolbarExpandKey, ColorType.TOOL_BAR_EXPAND_KEY)
         colors.setColor(toolbarExpandKey.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
 
@@ -795,6 +797,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         // Setup close button
         translateLanguageCloseButton.isVisible = true
         translateLanguageCloseButton.setBackgroundResource(R.drawable.toolbar_key_background)
+        val closePadding = 9.dpToPx(resources)
+        translateLanguageCloseButton.setPadding(closePadding, closePadding, closePadding, closePadding)
         translateLanguageCloseButton.setImageDrawable(KeyboardIconsSet.instance.getNewDrawable(ToolbarKey.CLOSE_HISTORY.name, context))
         val colors = Settings.getValues().mColors
         colors.setColor(translateLanguageCloseButton, ColorType.TOOL_BAR_EXPAND_KEY)
