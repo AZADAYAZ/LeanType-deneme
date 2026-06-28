@@ -72,12 +72,10 @@ fun ToolbarScreen(
         Settings.PREF_TOOLBAR_MODE,
         Settings.PREF_SPLIT_TOOLBAR,
         if (toolbarMode == ToolbarMode.HIDDEN) Settings.PREF_TOOLBAR_HIDING_GLOBAL else null,
-        if (toolbarMode in listOf(ToolbarMode.EXPANDABLE, ToolbarMode.TOOLBAR_KEYS))
-            Settings.PREF_TOOLBAR_KEYS else null,
-        if (toolbarMode in listOf(ToolbarMode.EXPANDABLE, ToolbarMode.SUGGESTION_STRIP) && !isSplitToolbar)
-            Settings.PREF_PINNED_TOOLBAR_KEYS else null,
-        if (clipboardToolbarVisible) Settings.PREF_CLIPBOARD_TOOLBAR_KEYS else null,
-        if (clipboardToolbarVisible) Settings.PREF_TOOLBAR_CUSTOM_KEY_CODES else null,
+        Settings.PREF_TOOLBAR_KEYS,
+        if (!isSplitToolbar) Settings.PREF_PINNED_TOOLBAR_KEYS else null,
+        Settings.PREF_CLIPBOARD_TOOLBAR_KEYS,
+        Settings.PREF_TOOLBAR_CUSTOM_KEY_CODES,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_QUICK_PIN_TOOLBAR_KEYS else null,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_AUTO_SHOW_TOOLBAR else null,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_AUTO_SHOW_TOOLBAR_ON_SELECT else null,

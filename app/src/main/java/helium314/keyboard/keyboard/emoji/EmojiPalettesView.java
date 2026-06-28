@@ -1172,6 +1172,10 @@ public final class EmojiPalettesView extends LinearLayout
             try {
                 java.net.URL url = new java.net.URL(urlStr);
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestProperty("User-Agent", "HeliboardL/3.8.9 (Android)");
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
+                conn.setInstanceFollowRedirects(true);
                 conn.connect();
 
                 if (conn.getResponseCode() != java.net.HttpURLConnection.HTTP_OK) {
