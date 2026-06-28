@@ -266,8 +266,12 @@ public class TextEditView extends LinearLayout {
     }
 
     private int getContrastingColor(int bgColor) {
-        double luminance = androidx.core.graphics.ColorUtils.calculateLuminance(bgColor);
-        return luminance > 0.5 ? 0xFF222222 : 0xFFFAFAFA;
+        double Lbg = androidx.core.graphics.ColorUtils.calculateLuminance(bgColor);
+        double Lwhite = 0.95;
+        double Lblack = 0.015;
+        double ratioWhite = Lbg > Lwhite ? (Lbg + 0.05) / (Lwhite + 0.05) : (Lwhite + 0.05) / (Lbg + 0.05);
+        double ratioBlack = Lbg > Lblack ? (Lbg + 0.05) / (Lblack + 0.05) : (Lblack + 0.05) / (Lbg + 0.05);
+        return ratioWhite > ratioBlack ? 0xFFFAFAFA : 0xFF222222;
     }
 
     public void applyColors(Colors colors) {
