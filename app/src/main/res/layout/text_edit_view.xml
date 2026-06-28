@@ -18,12 +18,12 @@
         android:gravity="center">
         
         <TextView
-            android:id="@+id/btn_select_all"
+            android:id="@+id/btn_undo"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1.2"
+            android:layout_weight="1"
             android:layout_margin="3dp"
-            android:text="Select All"
+            android:text="Undo"
             android:gravity="center"
             android:textAlignment="center"
             android:textSize="13sp"
