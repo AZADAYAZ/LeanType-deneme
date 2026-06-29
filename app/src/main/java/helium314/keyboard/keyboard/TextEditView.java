@@ -110,7 +110,7 @@ public class TextEditView extends LinearLayout {
                 @Override
                 public void run() {
                     action.run();
-                    handler.postDelayed(this, 50);
+                    handler.postDelayed(this, 80);
                 }
             };
 
@@ -195,6 +195,7 @@ public class TextEditView extends LinearLayout {
 
         setTouchHandler(mBtnSelect, false, () -> {
             mSelectionMode = !mSelectionMode;
+            KeyboardActionListenerImpl.sPersistentSelectionModeActive = mSelectionMode;
             applyColors(Settings.getValues().mColors);
         }, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.CLIPBOARD_SELECT_ALL);
@@ -224,15 +225,15 @@ public class TextEditView extends LinearLayout {
             if (mListener != null) mListener.onCodeInput(KeyCode.MOVE_START_OF_PAGE);
         }, null);
 
-        setTouchHandler(mBtnWordLeft, false, () -> {
+        setTouchHandler(mBtnWordLeft, true, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.WORD_LEFT);
         }, null);
 
         setTouchHandler(mBtnArrowUp, true, () -> {
-            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_UP, mSelectionMode);
+            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_UP, mSelectionMode || KeyboardActionListenerImpl.sPersistentSelectionModeActive);
         }, null);
 
-        setTouchHandler(mBtnWordRight, false, () -> {
+        setTouchHandler(mBtnWordRight, true, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.WORD_RIGHT);
         }, null);
 
@@ -245,15 +246,15 @@ public class TextEditView extends LinearLayout {
         }, null);
 
         setTouchHandler(mBtnArrowLeft, true, () -> {
-            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_LEFT, mSelectionMode);
+            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_LEFT, mSelectionMode || KeyboardActionListenerImpl.sPersistentSelectionModeActive);
         }, null);
 
         setTouchHandler(mBtnArrowDown, true, () -> {
-            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_DOWN, mSelectionMode);
+            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_DOWN, mSelectionMode || KeyboardActionListenerImpl.sPersistentSelectionModeActive);
         }, null);
 
         setTouchHandler(mBtnArrowRight, true, () -> {
-            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_RIGHT, mSelectionMode);
+            if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_RIGHT, mSelectionMode || KeyboardActionListenerImpl.sPersistentSelectionModeActive);
         }, null);
 
         setTouchHandler(mBtnSpace, false, () -> {
@@ -307,7 +308,7 @@ public class TextEditView extends LinearLayout {
         // Compute custom color variants for different types of functions
         // 1. Clipboard operations (Select, Cut, Copy, Paste): Blue-tinted functional background
         int clipboardBg = androidx.core.graphics.ColorUtils.blendARGB(baseBg, 0xFF2196F3, 0.15f);
-        int selectBg = mSelectionMode ? actionBg : clipboardBg;
+        int selectBg = (mSelectionMode || KeyboardActionListenerImpl.sPersistentSelectionModeActive) ? actionBg : clipboardBg;
         int clipboardTextColor = getContrastingColor(clipboardBg, colors);
         int selectTextColor = getContrastingColor(selectBg, colors);
 

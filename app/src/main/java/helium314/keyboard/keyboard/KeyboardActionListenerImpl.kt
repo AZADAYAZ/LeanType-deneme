@@ -102,7 +102,37 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
     }
 
     override fun onCodeInput(primaryCode: Int, x: Int, y: Int, isKeyRepeat: Boolean) {
+        val isArrow = primaryCode == KeyCode.ARROW_LEFT || primaryCode == KeyCode.ARROW_RIGHT || primaryCode == KeyCode.ARROW_UP || primaryCode == KeyCode.ARROW_DOWN
+        if (isArrow) {
+            val isSelecting = keyboardSwitcher.keyboard?.mId?.isAlphabetShifted == true || sPersistentSelectionModeActive
+            if (isSelecting) {
+                val androidKeyCode = when (primaryCode) {
+                    KeyCode.ARROW_LEFT -> KeyEvent.KEYCODE_DPAD_LEFT
+                    KeyCode.ARROW_RIGHT -> KeyEvent.KEYCODE_DPAD_RIGHT
+                    KeyCode.ARROW_UP -> KeyEvent.KEYCODE_DPAD_UP
+                    KeyCode.ARROW_DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
+                    else -> 0
+                }
+                if (androidKeyCode != 0) {
+                    val eventTime = android.os.SystemClock.uptimeMillis()
+                    connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT, 0, 0))
+                    connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, androidKeyCode, 0, KeyEvent.META_SHIFT_ON))
+                    connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, androidKeyCode, 0, KeyEvent.META_SHIFT_ON))
+                    connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT, 0, 0))
+                }
+                return
+            }
+        }
         when (primaryCode) {
+            KeyCode.TOGGLE_SELECTION_MODE -> {
+                sPersistentSelectionModeActive = !sPersistentSelectionModeActive
+                keyboardSwitcher.mainKeyboardView?.invalidateAllKeys()
+                keyboardSwitcher.textEditView?.applyColors(Settings.getValues().mColors)
+                keyboardSwitcher.suggestionStripView?.findViewById<android.view.ViewGroup>(R.id.toolbar)?.let {
+                    helium314.keyboard.latin.utils.setToolbarButtonsActivatedStateOnPrefChange(it, Settings.PREF_AUTO_CORRECTION)
+                }
+                return
+            }
             KeyCode.HANDWRITING -> {
                 if (keyboardSwitcher.isHandwritingShowing) {
                     keyboardSwitcher.setAlphabetKeyboard()
@@ -331,6 +361,21 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         // for RTL languages we want to invert pointer movement
         val rtl = RichInputMethodManager.getInstance().currentSubtype.isRtlSubtype
         val steps = if (rtl) -rawSteps else rawSteps
+
+        val isSelecting = keyboardSwitcher.keyboard?.mId?.isAlphabetShifted == true || sPersistentSelectionModeActive
+        if (isSelecting) {
+            val code = if (steps < 0) {
+                gestureMoveBackHaptics()
+                if (rtl) KeyCode.ARROW_RIGHT else KeyCode.ARROW_LEFT
+            } else {
+                gestureMoveForwardHaptics(true)
+                if (rtl) KeyCode.ARROW_LEFT else KeyCode.ARROW_RIGHT
+            }
+            repeat(abs(steps)) {
+                onCodeInput(code, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
+            }
+            return true
+        }
 
         // Web editors (Chromium, Firefox, etc.) handle direct setSelection badly during fast swipes,
         // often resulting in focus loss, caret hiding, or composition desynchronization.
@@ -679,6 +724,8 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
     companion object {
         @JvmField
         var sPersistentTextEditModeActive = false
+        @JvmField
+        var sPersistentSelectionModeActive = false
         private enum class MetaPressState {
             UNSET, // default state, not active
             SET, // enabled without onPressKey (e.g. in popup)

@@ -339,6 +339,7 @@
     <string name="incognito">Force incognito mode</string>
     <string name="touchpad">Touchpad</string>
     <string name="text_edit">Text editing</string>
+    <string name="select_mode">Select mode</string>
     <string name="touchpad_fullscreen">Full-screen touchpad</string>
     <string name="touchpad_fullscreen_summary">Hide suggestion strip and toolbar when touchpad mode is active</string>
     <!-- Description for "prefs_force_incognito_mode" option. -->

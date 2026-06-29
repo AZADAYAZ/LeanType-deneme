@@ -96,6 +96,7 @@ object KeyCode {
 
     const val SETTINGS =                    -301
     const val TOGGLE_TEXT_EDIT_MODE =       -305
+    const val TOGGLE_SELECTION_MODE =       -306
 
     const val CURRENCY_SLOT_1 =             -801
     const val CURRENCY_SLOT_2 =             -802
