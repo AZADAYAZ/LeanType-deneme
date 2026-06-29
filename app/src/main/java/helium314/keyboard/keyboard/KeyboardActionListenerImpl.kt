@@ -127,7 +127,6 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             KeyCode.TOGGLE_SELECTION_MODE -> {
                 sPersistentSelectionModeActive = !sPersistentSelectionModeActive
                 keyboardSwitcher.mainKeyboardView?.invalidateAllKeys()
-                keyboardSwitcher.textEditView?.applyColors(Settings.getValues().mColors)
                 keyboardSwitcher.suggestionStripView?.findViewById<android.view.ViewGroup>(R.id.toolbar)?.let {
                     helium314.keyboard.latin.utils.setToolbarButtonsActivatedStateOnPrefChange(it, Settings.PREF_AUTO_CORRECTION)
                 }
@@ -169,12 +168,7 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
                 if (sPersistentTextEditModeActive) {
                     PointerTracker.sPersistentTouchpadModeActive = false
                     keyboardSwitcher.hideTouchpadView()
-                    
-                    val textEditView = keyboardSwitcher.textEditView
-                    if (textEditView != null) {
-                        setupTextEditListener(textEditView)
-                        keyboardSwitcher.showTextEditView()
-                    }
+                    keyboardSwitcher.showTextEditView()
                 } else {
                     keyboardSwitcher.hideTextEditView()
                 }
@@ -691,39 +685,7 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         })
     }
 
-    fun setupTextEditListener(textEditView: TextEditView) {
-        textEditView.setTextEditListener(object : TextEditView.TextEditListener {
-            override fun onCursorMove(keyCode: Int, isSelecting: Boolean) {
-                if (isSelecting) {
-                    val androidKeyCode = when (keyCode) {
-                        KeyCode.ARROW_UP -> KeyEvent.KEYCODE_DPAD_UP
-                        KeyCode.ARROW_DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
-                        KeyCode.ARROW_LEFT -> KeyEvent.KEYCODE_DPAD_LEFT
-                        KeyCode.ARROW_RIGHT -> KeyEvent.KEYCODE_DPAD_RIGHT
-                        else -> 0
-                    }
-                    if (androidKeyCode != 0) {
-                        val eventTime = android.os.SystemClock.uptimeMillis()
-                        connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT, 0, 0))
-                        connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, androidKeyCode, 0, KeyEvent.META_SHIFT_ON))
-                        connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, androidKeyCode, 0, KeyEvent.META_SHIFT_ON))
-                        connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT, 0, 0))
-                    }
-                } else {
-                    onCodeInput(keyCode, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
-                }
-            }
 
-            override fun onCodeInput(keyCode: Int) {
-                onCodeInput(keyCode, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
-            }
-
-            override fun onClose() {
-                sPersistentTextEditModeActive = false
-                keyboardSwitcher.hideTextEditView()
-            }
-        })
-    }
 
     companion object {
         @JvmField

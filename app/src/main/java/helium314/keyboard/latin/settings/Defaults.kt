@@ -39,6 +39,7 @@ object Defaults {
         LayoutType.EMOJI_BOTTOM -> "emoji_bottom_row"
         LayoutType.CLIPBOARD_BOTTOM -> "clip_bottom_row"
         LayoutType.HANDWRITING_BOTTOM -> "handwriting_bottom_row"
+        LayoutType.EDITING -> "editing"
     }
     
     const val PREF_SPLIT_TOOLBAR = false

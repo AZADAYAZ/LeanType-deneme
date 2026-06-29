@@ -1,0 +1,31 @@
+[
+  [
+    { "code": -131, "label": "Undo", "type": "function", "width": 0.16 },
+    { "code": -132, "label": "Redo", "type": "function", "width": 0.16 },
+    { "code": -34, "label": "Select All", "type": "function", "width": 0.2 },
+    { "code": -305, "label": "Select Word", "type": "function", "width": 0.2 },
+    { "code": -306, "label": "Select Mode", "type": "function", "width": 0.28 }
+  ],
+  [
+    { "code": -124, "label": "Start Line", "type": "function", "width": 0.2 },
+    { "code": -241, "label": "Word Left", "type": "function", "width": 0.2 },
+    { "code": -21, "label": "Up", "type": "function", "width": 0.2 },
+    { "code": -242, "label": "Word Right", "type": "function", "width": 0.2 },
+    { "code": -125, "label": "End Line", "type": "function", "width": 0.2 }
+  ],
+  [
+    { "code": -122, "label": "Start Doc", "type": "function", "width": 0.2 },
+    { "code": -24, "label": "Left", "type": "function", "width": 0.2 },
+    { "code": -22, "label": "Down", "type": "function", "width": 0.2 },
+    { "code": -23, "label": "Right", "type": "function", "width": 0.2 },
+    { "code": -123, "label": "End Doc", "type": "function", "width": 0.2 }
+  ],
+  [
+    { "code": -201, "label": "alpha", "type": "function", "width": 0.15 },
+    { "code": -32, "label": "Cut", "type": "function", "width": 0.15 },
+    { "code": -31, "label": "Copy", "type": "function", "width": 0.15 },
+    { "code": -33, "label": "Paste", "type": "function", "width": 0.15 },
+    { "code": 32, "label": "space", "type": "function", "width": 0.25 },
+    { "code": -5, "label": "delete", "type": "function", "width": 0.15 }
+  ]
+]
