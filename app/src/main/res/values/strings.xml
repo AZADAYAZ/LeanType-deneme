@@ -1245,6 +1245,8 @@ New dictionary:
     <string name="offline_model_summary">Manage local LLM</string>
     <string name="offline_max_tokens_title">Offline AI Max Tokens</string>
     <string name="offline_max_tokens_summary">Maximum length of the generated correction</string>
+    <string name="offline_max_tokens_custom_option">Custom…</string>
+    <string name="offline_max_tokens_custom_desc">Custom (%1$d tokens)</string>
     <string name="offline_temp_title">Temperature</string>
     <string name="offline_temp_summary">Controls randomness: lower is more focused and deterministic</string>
     <string name="offline_top_p_title">Top-P (Nucleus Sampling)</string>

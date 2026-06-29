@@ -404,7 +404,7 @@ public class KeyboardView extends View {
                 case -131: // Undo
                 case -132: // Redo
                 case -7:   // delete
-                    customColor = 0xFFC2A98F;
+                    customColor = mColors.get(ColorType.EDIT_MODE_DELETE_BACKGROUND);
                     break;
                 case -35:  // All
                 case -34:  // Word
@@ -412,17 +412,17 @@ public class KeyboardView extends View {
                 case -32:  // Cut
                 case -31:  // Copy
                 case -33:  // Paste
-                    customColor = 0xFF9BB0C1;
+                    customColor = mColors.get(ColorType.EDIT_MODE_FUNC_BACKGROUND);
                     break;
                 case -201: // alpha (✕)
-                    customColor = 0xFFBFA29E;
+                    customColor = mColors.get(ColorType.EDIT_MODE_ALPHA_BACKGROUND);
                     break;
                 case -23:  // Up
                 case -24:  // Down
                 case -21:  // Left
                 case -22:  // Right
                 case 32:   // space
-                    customColor = 0xFF3D3D3D;
+                    customColor = mColors.get(ColorType.EDIT_MODE_NAV_BACKGROUND);
                     break;
             }
             if (customColor != 0) {

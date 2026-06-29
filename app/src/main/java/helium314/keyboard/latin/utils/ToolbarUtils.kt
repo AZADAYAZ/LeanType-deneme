@@ -542,6 +542,18 @@ class LongPressHintDrawable(private val base: Drawable) : Drawable() {
         base.colorFilter = colorFilter
     }
 
+    override fun setTint(tintColor: Int) {
+        base.setTint(tintColor)
+    }
+
+    override fun setTintList(tint: ColorStateList?) {
+        base.setTintList(tint)
+    }
+
+    override fun setTintMode(tintMode: PorterDuff.Mode?) {
+        base.setTintMode(tintMode)
+    }
+
     @Deprecated("Deprecated in Java", ReplaceWith("PixelFormat.UNKNOWN", "android.graphics.PixelFormat"))
     @Suppress("DEPRECATION")
     override fun getOpacity(): Int = base.opacity
