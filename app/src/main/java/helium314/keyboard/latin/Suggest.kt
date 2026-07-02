@@ -18,6 +18,7 @@ import helium314.keyboard.latin.define.DebugFlags
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORRECT_USING_NON_WHITE_LISTED_SUGGESTION
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION
 import helium314.keyboard.latin.dictionary.Dictionary
+import helium314.keyboard.latin.gesture.SwipeGestureEngine
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.suggestions.SuggestionStripView
@@ -41,6 +42,12 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             // Optionally log evicted entries for debugging
         }
     }
+    // Precomputed gesture word index, keyed by a fingerprint of the key positions.
+    // Rebuilt only when key centres actually change (language/layout switch), not on shift-state
+    // or action-button changes, and not on text-field focus changes.
+    @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
+    @Volatile private var gestureIndexFingerprint: Int = 0
+
     // Cached scoreLimit to avoid repeated Settings lookups in hot path
     // The read-then-write of (mLastScoreLimitUpdateTime, mCachedScoreLimitForAutocorrect)
     // is guarded by `synchronized(this)` in shouldBeAutoCorrected() to make the update atomic
@@ -330,10 +337,22 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         settingsValuesForSuggestion: SettingsValuesForSuggestion,
         inputStyle: Int, sequenceNumber: Int
     ): SuggestedWords {
-        val suggestionResults = mDictionaryFacilitator.getSuggestionResults(
-            wordComposer.composedDataSnapshot, ngramContext, keyboard,
-            settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
-        )
+        val pointers = wordComposer.composedDataSnapshot.mInputPointers
+        // Build the precomputed gesture index lazily (once per keyboard layout).
+        // Keyed by a fingerprint of key positions so it survives text-field focus and shift-state
+        // changes, but is rebuilt when the user switches languages or physical layout.
+        // The build iterates the binary dict via JNI and runs on InputLogicHandler's background thread.
+        val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
+        var index = gestureIndex
+        if (index == null || index.byFirst.isEmpty() || gestureIndexFingerprint != fingerprint) {
+            val words = mDictionaryFacilitator.getAllMainDictionaryWordsWithFrequency()
+            index = SwipeGestureEngine.buildIndex(words, keyboard)
+            if (index.byFirst.isNotEmpty()) {
+                gestureIndex = index
+                gestureIndexFingerprint = fingerprint
+            }
+        }
+        val suggestionResults = SwipeGestureEngine.rankByIndex(index, pointers, keyboard, SuggestedWords.MAX_SUGGESTIONS)
         replaceSingleLetterFirstSuggestion(suggestionResults)
 
         // For transforming words that don't come from a dictionary, because it's our best bet
