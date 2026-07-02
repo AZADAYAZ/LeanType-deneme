@@ -40,6 +40,7 @@ fun GestureTypingScreen(
     val hasGestureLib = JniUtils.sHaveGestureLib
     val gestureFloatingPreviewEnabled = prefs.getBoolean(Settings.PREF_GESTURE_FLOATING_PREVIEW_TEXT, Defaults.PREF_GESTURE_FLOATING_PREVIEW_TEXT)
     val gestureEnabled = hasGestureLib && prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
+    val selectedMethod = prefs.getString(Settings.PREF_GESTURE_METHOD, if (JniUtils.sHaveNativeGestureLib) "native" else "fallback")
     
     // Always show library loader first when no library
     val items = buildList {
@@ -48,8 +49,8 @@ fun GestureTypingScreen(
 
         if (hasGestureLib && gestureEnabled) {
             add(Settings.PREF_GESTURE_METHOD)
-            // Library loader is always first if allowed
-            if (helium314.keyboard.latin.BuildConfig.BUILD_TYPE != "nouserlib") {
+            // Library loader is always first if allowed, and only if native library method is selected!
+            if (helium314.keyboard.latin.BuildConfig.BUILD_TYPE != "nouserlib" && selectedMethod == "native") {
                 add(SettingsWithoutKey.LOAD_GESTURE_LIB)
             }
 
