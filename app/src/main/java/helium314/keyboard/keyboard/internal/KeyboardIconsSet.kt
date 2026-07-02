@@ -21,9 +21,7 @@ class KeyboardIconsSet private constructor() {
 
     fun loadIcons(context: Context) {
         val prefs = context.prefs()
-        // ponytail: fallback to active theme style if icon style is not explicitly set
-        val themeStyle = prefs.getString(Settings.PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE) ?: Defaults.PREF_THEME_STYLE
-        val iconStyle = prefs.getString(Settings.PREF_ICON_STYLE, themeStyle) ?: themeStyle
+        val iconStyle = prefs.getString(Settings.PREF_ICON_STYLE, Defaults.PREF_ICON_STYLE)
         val defaultIds = when (iconStyle) {
             KeyboardTheme.STYLE_HOLO -> keyboardIconsHolo
             KeyboardTheme.STYLE_ROUNDED -> keyboardIconsRounded
@@ -164,7 +162,7 @@ class KeyboardIconsSet private constructor() {
                     ToolbarKey.FLOATING -> R.drawable.ic_drag_indicator
                     ToolbarKey.INCOGNITO -> R.drawable.ic_incognito_final
                     ToolbarKey.TOUCHPAD -> R.drawable.ic_touchpad
-                    ToolbarKey.TEXT_EDIT -> R.drawable.ic_text_edit_holo
+                    ToolbarKey.TEXT_EDIT -> R.drawable.ic_text_edit
                     ToolbarKey.AUTOCORRECT -> R.drawable.ic_autocorrect
                     ToolbarKey.CLEAR_CLIPBOARD -> R.drawable.ic_bin
                     ToolbarKey.CLOSE_HISTORY -> R.drawable.ic_close
@@ -322,7 +320,7 @@ class KeyboardIconsSet private constructor() {
                     ToolbarKey.FLOATING -> R.drawable.ic_drag_indicator
                     ToolbarKey.INCOGNITO -> R.drawable.ic_incognito_final
                     ToolbarKey.TOUCHPAD -> R.drawable.ic_touchpad_rounded
-                    ToolbarKey.TEXT_EDIT -> R.drawable.ic_text_edit_rounded
+                    ToolbarKey.TEXT_EDIT -> R.drawable.ic_text_edit
                     ToolbarKey.AUTOCORRECT -> R.drawable.ic_autocorrect_rounded
                     ToolbarKey.CLEAR_CLIPBOARD -> R.drawable.ic_bin
                     ToolbarKey.CLOSE_HISTORY -> R.drawable.ic_close_rounded
@@ -359,10 +357,7 @@ class KeyboardIconsSet private constructor() {
 
         fun getAllIcons(context: Context): Map<String, List<Int>> {
             // currently active style first
-            val prefs = context.prefs()
-            // ponytail: fallback to active theme style if icon style is not explicitly set
-            val themeStyle = prefs.getString(Settings.PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE) ?: Defaults.PREF_THEME_STYLE
-            val iconStyle = prefs.getString(Settings.PREF_ICON_STYLE, themeStyle) ?: themeStyle
+            val iconStyle = context.prefs().getString(Settings.PREF_ICON_STYLE, Defaults.PREF_ICON_STYLE)
             return keyboardIconsMaterial.entries.associate { (name, id) ->
                 name to when (iconStyle) {
                     KeyboardTheme.STYLE_HOLO -> listOfNotNull(keyboardIconsHolo[name], keyboardIconsRounded[name], id)
