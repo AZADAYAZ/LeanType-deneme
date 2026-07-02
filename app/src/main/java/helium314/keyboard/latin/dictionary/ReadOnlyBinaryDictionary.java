@@ -115,10 +115,22 @@ public final class ReadOnlyBinaryDictionary extends Dictionary {
     @androidx.annotation.NonNull
     public Map<String, Integer> getAllWordsWithFrequency() {
         Map<String, Integer> words = new HashMap<>();
-        if (!mLock.readLock().tryLock()) return words;
-        try {
-            int token = 0;
-            do {
+        int token = 0;
+        int count = 0;
+        do {
+            if (!mLock.readLock().tryLock()) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+                continue;
+            }
+            try {
+                if (!mBinaryDictionary.isValidDictionary()) {
+                    break;
+                }
                 BinaryDictionary.GetNextWordPropertyResult result =
                         mBinaryDictionary.getNextWordProperty(token);
                 if (result.mWordProperty == null) break;
@@ -128,10 +140,20 @@ public final class ReadOnlyBinaryDictionary extends Dictionary {
                         words.put(word, result.mWordProperty.mProbabilityInfo.mProbability);
                 }
                 token = result.mNextToken;
-            } while (token != 0);
-        } finally {
-            mLock.readLock().unlock();
-        }
+            } finally {
+                mLock.readLock().unlock();
+            }
+
+            count++;
+            if (count % 100 == 0) {
+                try {
+                    Thread.sleep(2);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        } while (token != 0);
         return words;
     }
 
