@@ -189,6 +189,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_URL_DETECTION = "url_detection";
     public static final String PREF_DONT_SHOW_MISSING_DICTIONARY_DIALOG = "dont_show_missing_dict_dialog";
     public static final String PREF_QUICK_PIN_TOOLBAR_KEYS = "quick_pin_toolbar_keys";
+    public static final String PREF_TOOLBAR_LONG_PRESS_HINT = "toolbar_long_press_hint";
     public static final String PREF_DISABLE_NETWORK = "disable_network";
     public static final String PREF_PINNED_TOOLBAR_KEYS = "pinned_toolbar_keys";
     public static final String PREF_TOOLBAR_KEYS = "toolbar_keys";

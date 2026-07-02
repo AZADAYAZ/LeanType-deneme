@@ -76,6 +76,7 @@ fun ToolbarScreen(
         if (!isSplitToolbar) Settings.PREF_PINNED_TOOLBAR_KEYS else null,
         Settings.PREF_CLIPBOARD_TOOLBAR_KEYS,
         Settings.PREF_TOOLBAR_CUSTOM_KEY_CODES,
+        Settings.PREF_TOOLBAR_LONG_PRESS_HINT,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_QUICK_PIN_TOOLBAR_KEYS else null,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_AUTO_SHOW_TOOLBAR else null,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_AUTO_SHOW_TOOLBAR_ON_SELECT else null,
@@ -144,6 +145,11 @@ fun createToolbarSettings(context: Context): List<Setting> {
             R.string.quick_pin_toolbar_keys, R.string.quick_pin_toolbar_keys_summary)
         {
             SwitchPreference(it, Defaults.PREF_QUICK_PIN_TOOLBAR_KEYS) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
+        },
+        Setting(context, Settings.PREF_TOOLBAR_LONG_PRESS_HINT,
+            R.string.toolbar_long_press_hint, R.string.toolbar_long_press_hint_summary)
+        {
+            SwitchPreference(it, Defaults.PREF_TOOLBAR_LONG_PRESS_HINT) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
         },
         Setting(context, Settings.PREF_AUTO_SHOW_TOOLBAR, R.string.auto_show_toolbar_open, R.string.auto_show_toolbar_summary)
         {
