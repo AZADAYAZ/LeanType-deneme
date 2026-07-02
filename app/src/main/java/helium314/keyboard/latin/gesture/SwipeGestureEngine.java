@@ -102,22 +102,38 @@ public class SwipeGestureEngine {
         return (code >= 'a' && code <= 'z') || (code >= 'A' && code <= 'Z');
     }
 
-    public static char nearestLetter(int x, int y, Keyboard keyboard) {
-        // Always use a full distance scan — getNearestKeys uses a proximity grid that is
-        // NOT sorted by distance, so the first letter it returns is often wrong.
+    public static List<Character> nearestLetters(int x, int y, Keyboard keyboard) {
         float kw = keyboard.mOccupiedWidth, kh = keyboard.mOccupiedHeight;
         float nx = x / kw, ny = y / kh;
+
+        // ponytail: hold key codes and normalized squared distances
+        class KeyDist {
+            final char code;
+            final float dist;
+            KeyDist(char code, float dist) { this.code = code; this.dist = dist; }
+        }
+
+        List<KeyDist> candidates = new ArrayList<>();
         float minDist = Float.MAX_VALUE;
-        char best = 0;
         for (Key key : keyboard.getSortedKeys()) {
             int code = key.getCode();
             if (!isAsciiLetter(code)) continue;
             float cx = (key.getX() + key.getWidth()  / 2f) / kw;
             float cy = (key.getY() + key.getHeight() / 2f) / kh;
             float d  = (nx - cx) * (nx - cx) + (ny - cy) * (ny - cy);
-            if (d < minDist) { minDist = d; best = Character.toLowerCase((char) code); }
+            if (d < minDist) minDist = d;
+            candidates.add(new KeyDist(Character.toLowerCase((char) code), d));
         }
-        return best;
+
+        List<Character> results = new ArrayList<>();
+        // ponytail: include closest key and any neighbor keys within approx 1.5 key width
+        float threshold = minDist + 0.02f;
+        for (KeyDist kd : candidates) {
+            if (kd.dist <= threshold) {
+                results.add(kd.code);
+            }
+        }
+        return results;
     }
 
     /**
@@ -150,11 +166,16 @@ public class SwipeGestureEngine {
 
         float kw = keyboard.mOccupiedWidth, kh = keyboard.mOccupiedHeight;
 
-        char firstLetter = nearestLetter(xs[0],     ys[0],     keyboard);
-        char lastLetter  = nearestLetter(xs[n - 1], ys[n - 1], keyboard);
+        List<Character> startLetters = nearestLetters(xs[0],     ys[0],     keyboard);
+        List<Character> endLetters   = nearestLetters(xs[n - 1], ys[n - 1], keyboard);
 
-        List<IndexEntry> candidates = index.byFirst.get(firstLetter);
-        if (candidates == null || candidates.isEmpty()) return empty;
+        List<IndexEntry> candidates = new ArrayList<>();
+        for (char first : startLetters) {
+            List<IndexEntry> list = index.byFirst.get(first);
+            if (list != null) candidates.addAll(list);
+        }
+        if (candidates.isEmpty()) return empty;
+
         List<float[]> rawPath = new ArrayList<>(n);
         for (int i = 0; i < n; i++) rawPath.add(new float[]{xs[i] / kw, ys[i] / kh});
         float[] inputVec = resample(rawPath, N_PTS);
@@ -163,8 +184,12 @@ public class SwipeGestureEngine {
         List<IndexEntry> filtered = new ArrayList<>();
         for (IndexEntry e : candidates) {
             String w = e.word.toLowerCase(Locale.ROOT);
-            if (lastLetter != 0 && !w.isEmpty() && w.charAt(w.length() - 1) == lastLetter)
-                filtered.add(e);
+            if (!w.isEmpty()) {
+                char last = w.charAt(w.length() - 1);
+                if (endLetters.contains(last)) {
+                    filtered.add(e);
+                }
+            }
         }
         if (filtered.isEmpty()) filtered = candidates;
 
