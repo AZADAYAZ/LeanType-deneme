@@ -80,7 +80,11 @@ fun createToolbarKey(context: Context, key: ToolbarKey): ImageButton {
         KeyboardIconsSet.instance.getNewDrawable(key.name, context)
     }
 
-    val finalDrawable = if (rawDrawable != null && getCodeForToolbarKeyLongClick(key) != KeyCode.UNSPECIFIED) {
+    val showLongPressHint = context.prefs()
+        .getBoolean(Settings.PREF_TOOLBAR_LONG_PRESS_HINT, Defaults.PREF_TOOLBAR_LONG_PRESS_HINT)
+    val finalDrawable = if (rawDrawable != null && showLongPressHint
+        && getCodeForToolbarKeyLongClick(key) != KeyCode.UNSPECIFIED
+    ) {
         LongPressHintDrawable(rawDrawable)
     } else {
         rawDrawable
