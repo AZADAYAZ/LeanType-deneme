@@ -456,7 +456,7 @@ public final class BinaryDictionary extends Dictionary {
         final int nextToken = getNextWordNative(mNativeDict, token, codePoints,
                 isBeginningOfSentence);
         final String word = StringUtils.getStringFromNullTerminatedCodePointArray(codePoints);
-        final int probability = getProbabilityNative(mNativeDict, codePoints);
+        final int probability = getFrequency(word);
         return new GetNextWordAndFrequencyResult(new WordAndFrequency(word, probability), nextToken);
     }
 
