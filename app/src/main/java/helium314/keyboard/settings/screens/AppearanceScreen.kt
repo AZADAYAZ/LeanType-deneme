@@ -107,7 +107,7 @@ fun createAppearanceSettings(context: Context) = listOf(
         ListPreference(
             setting,
             items,
-            Defaults.PREF_ICON_STYLE
+            Defaults.PREF_THEME_STYLE
         ) {
             if (it != KeyboardTheme.STYLE_HOLO) {
                 if (prefs.getString(Settings.PREF_THEME_COLORS, Defaults.PREF_THEME_COLORS) == KeyboardTheme.THEME_HOLO_WHITE)
@@ -121,11 +121,14 @@ fun createAppearanceSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_ICON_STYLE, R.string.icon_style) { setting ->
         val ctx = LocalContext.current
+        val prefs = ctx.prefs()
+        // ponytail: default to the currently set theme style when icon style has not been configured
+        val themeStyle = prefs.getString(Settings.PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE) ?: Defaults.PREF_THEME_STYLE
         val items = KeyboardTheme.STYLES.map { it.getStringResourceOrName("style_name_", ctx) to it }
         ListPreference(
             setting,
             items,
-            Defaults.PREF_ICON_STYLE
+            themeStyle
         ) {
             KeyboardIconsSet.needsReload = true // only relevant for Settings.PREF_CUSTOM_ICON_NAMES
             KeyboardSwitcher.getInstance().setThemeNeedsReload()
