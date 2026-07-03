@@ -4,7 +4,7 @@
 ## 🚀 What's New
 
 ### 👆 Gesture & Swipe Engine
-*   **Pure-Java Fallback Engine**: Added a pure-Java fallback gesture typing engine (`SwipeGestureEngine`) so gesture typing works out of the box without requiring native libraries (ported from [HeliBoard #2351](https://github.com/HeliBorg/HeliBoard/pull/2351)).
+*   **Pure-Java Fallback Engine (Experimental Alpha)**: Added an experimental, alpha-stage pure-Java fallback gesture typing engine (`SwipeGestureEngine`) so gesture typing works out of the box without requiring native libraries (ported from [HeliBoard #2351](https://github.com/HeliBorg/HeliBoard/pull/2351)).
 *   **Engine Selection Toggle**: Added settings to toggle between native and fallback gesture typing, dynamically hiding unnecessary settings like native library loader.
 *   **Self-Learning**: Enabled swipe gesture self-learning by indexing user history and personal dictionaries.
 *   **Ranking & Matching accuracy**: Added endpoint-weighted L2 scoring, shape length mismatch penalty, sequence matching penalty, next-word bigram prediction boost, and forgiving start/end matching.

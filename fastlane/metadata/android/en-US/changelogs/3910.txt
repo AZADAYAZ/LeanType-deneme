@@ -1,4 +1,4 @@
-- Pure-Java fallback swipe gesture typing engine & selector toggle
+- Experimental pure-Java fallback swipe gesture typing engine & toggle
 - Swipe self-learning via user history & dictionaries
 - Enhanced gesture ranking, endpoint scoring & L2 shape penalty
 - Sped up index building & memory optimization to avoid ANRs
