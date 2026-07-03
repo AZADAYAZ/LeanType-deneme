@@ -1,0 +1,1 @@
+- Fix space deletion when typing symbols right after manually entered space
