@@ -2008,8 +2008,10 @@ public final class InputLogic {
             return false;
         }
 
+        // ponytail: only strip auto-inserted spaces (WEAK/PHANTOM/SWAP), never manual (NONE)
         if (isSpaceStrippingPunctuation(codePoint)
-                && !inputTransaction.getSettingsValues().isUsuallyPrecededBySpace(codePoint)) {
+                && !inputTransaction.getSettingsValues().isUsuallyPrecededBySpace(codePoint)
+                && inputTransaction.getSpaceState() != SpaceState.NONE) {
             if (mConnection.getCodePointBeforeCursor() == Constants.CODE_SPACE) {
                 mConnection.removeTrailingSpace();
             }
