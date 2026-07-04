@@ -380,22 +380,6 @@ fun getUserAndInternalDictionaries(context: Context, locale: Locale): Pair<List<
         }
     }
 
-    if (userLocaleDir?.exists() == true && userLocaleDir.isDirectory) {
-        userLocaleDir.listFiles()?.forEach {
-            if (it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX)) {
-                userDicts.add(it)
-            } else if (it.name.startsWith(DictionaryInfoUtils.MAIN_DICT_PREFIX)) {
-                hasInternalDict = true
-            } else if (it.name.endsWith(".dict")) {
-                // ponytail: main.dict and emoji.dict are extracted internal dicts, not user dicts
-                if (it.name != DictionaryInfoUtils.MAIN_DICT_FILE_NAME && it.name != "emoji.dict") {
-                    userDicts.add(it)
-                } else {
-                    hasInternalDict = true
-                }
-            }
-        }
-    }
     val internalDicts = DictionaryInfoUtils.getAssetsDictionaryList(context)
     val best = internalDicts?.let {
         LocaleUtils.getBestMatch(locale, it.toList()) { dict ->
@@ -403,6 +387,28 @@ fun getUserAndInternalDictionaries(context: Context, locale: Locale): Pair<List<
         }
     }
     val hasAsset = best != null
+
+    if (userLocaleDir?.exists() == true && userLocaleDir.isDirectory) {
+        userLocaleDir.listFiles()?.forEach {
+            if (it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX)) {
+                userDicts.add(it)
+            } else if (it.name.startsWith(DictionaryInfoUtils.MAIN_DICT_PREFIX)) {
+                hasInternalDict = true
+            } else if (it.name.endsWith(".dict")) {
+                if (it.name == DictionaryInfoUtils.MAIN_DICT_FILE_NAME) {
+                    if (!hasAsset) {
+                        userDicts.add(it)
+                    } else {
+                        hasInternalDict = true
+                    }
+                } else if (it.name != "emoji.dict") {
+                    userDicts.add(it)
+                } else {
+                    hasInternalDict = true
+                }
+            }
+        }
+    }
     
     return userDicts to (hasInternalDict || hasAsset)
 }
