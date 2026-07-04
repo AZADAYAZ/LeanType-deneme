@@ -401,10 +401,15 @@ fun getUserAndInternalDictionaries(context: Context, locale: Locale): Pair<List<
                     } else {
                         hasInternalDict = true
                     }
-                } else if (it.name != "emoji.dict") {
-                    userDicts.add(it)
+                } else if (it.name == "emoji.dict") {
+                    val hasEmojiAsset = internalDicts?.any { asset -> asset.startsWith("emoji") } == true
+                    if (!hasEmojiAsset) {
+                        userDicts.add(it)
+                    } else {
+                        hasInternalDict = true
+                    }
                 } else {
-                    hasInternalDict = true
+                    userDicts.add(it)
                 }
             }
         }
