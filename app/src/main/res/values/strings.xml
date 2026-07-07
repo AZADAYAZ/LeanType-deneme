@@ -1064,10 +1064,10 @@ New dictionary:
     <string name="sponsor_dialog_never_show_again">Never show again</string>
     <string name="sponsor_dialog_sponsor">Sponsor</string>
     <string name="sponsor_dialog_not_now">Not now</string>
-    <!-- link to the wiki for about screen -->
-    <string name="about_wiki_link">Go to Wiki</string>
-    <!-- description for wiki link -->
-    <string name="about_wiki_link_description">The Wiki can be improved by any GitHub user!</string>
+    <!-- link to features.md for about screen -->
+    <string name="about_features_link">Go to FEATURES.md</string>
+    <!-- description for features.md link -->
+    <string name="about_features_link_description">List of main features and keyboard manual</string>
 
     <!-- Libraries Hub -->
     <string name="libraries_hub_title">Libraries</string>
