@@ -9,6 +9,7 @@
  */
 package helium314.keyboard.latin.gesture;
 
+import android.graphics.Rect;
 import helium314.keyboard.keyboard.Key;
 import helium314.keyboard.keyboard.Keyboard;
 import helium314.keyboard.latin.SuggestedWords.SuggestedWordInfo;
@@ -265,8 +266,9 @@ public class SwipeGestureEngine {
             int code = key.getCode();
             if (!isAsciiLetter(code)) continue;
             int idx = Character.toLowerCase((char) code) - 'a';
-            map[idx][0] = (key.getX() + key.getWidth()  / 2f) / kw;
-            map[idx][1] = (key.getY() + key.getHeight() / 2f) / kh;
+            Rect hitBox = key.getHitBox();
+            map[idx][0] = hitBox.exactCenterX() / kw;
+            map[idx][1] = hitBox.exactCenterY() / kh;
         }
         return map;
     }
