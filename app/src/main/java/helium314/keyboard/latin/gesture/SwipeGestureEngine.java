@@ -34,6 +34,12 @@ public class SwipeGestureEngine {
     // ponytail: ConcurrentHashMap so corrections from any thread don't corrupt state
     private static final ConcurrentHashMap<String, Integer> sUserBoost = new ConcurrentHashMap<>();
     private static final int USER_BOOST_MAX = 50; // cap to avoid runaway inflation
+    private static final float[] sUserBoostCache = new float[USER_BOOST_MAX + 1];
+    static {
+        for (int i = 0; i <= USER_BOOST_MAX; i++) {
+            sUserBoostCache[i] = (float) Math.log(i + 1) * 0.08f;
+        }
+    }
 
     /** Call when user selects a gesture suggestion — bumps its score in future matches. */
     public static void recordAccepted(String word) {
@@ -46,15 +52,19 @@ public class SwipeGestureEngine {
 
     public static class IndexEntry {
         public final String word;
+        public final String lowerWord;
         public final float[] path;  // length N_PTS*2
         public final int frequency;
-        // ponytail: cache path length to avoid recomputing every ranking call
+        // ponytail: cache path length and freq bonus to avoid recomputing every ranking call
         public final float pathLen;
+        public final float freqBonus;
         IndexEntry(String word, float[] path, int frequency) {
             this.word = word;
+            this.lowerWord = word.toLowerCase(Locale.ROOT);
             this.path = path;
             this.frequency = frequency;
             this.pathLen = pathLength(path);
+            this.freqBonus = (frequency > 0) ? (float)(Math.log(frequency + 1) * FREQ_WEIGHT) : 0f;
         }
     }
 
@@ -86,6 +96,9 @@ public class SwipeGestureEngine {
             float[] path = wordPath(word, charToPos);
             byFirst.computeIfAbsent(first, k -> new ArrayList<>())
                     .add(new IndexEntry(raw, path, freq));
+        }
+        for (List<IndexEntry> list : byFirst.values()) {
+            list.sort((a, b) -> Integer.compare(b.frequency, a.frequency));
         }
         return new GestureIndex(byFirst, charToPos);
     }
@@ -125,23 +138,41 @@ public class SwipeGestureEngine {
         return nearestLettersFromMap(x / kw, y / kh, buildCharToPos(keyboard));
     }
 
+    private static float sqDistanceToSegment(float px, float py, float ax, float ay, float bx, float by) {
+        float dx = bx - ax;
+        float dy = by - ay;
+        float segmentLenSq = dx * dx + dy * dy;
+        if (segmentLenSq < 1e-9f) {
+            return (px - ax) * (px - ax) + (py - ay) * (py - ay);
+        }
+        float t = ((px - ax) * dx + (py - ay) * dy) / segmentLenSq;
+        if (t < 0f) t = 0f;
+        else if (t > 1f) t = 1f;
+        float closestX = ax + t * dx;
+        float closestY = ay + t * dy;
+        return (px - closestX) * (px - closestX) + (py - closestY) * (py - closestY);
+    }
+
     public static boolean isSequenceMatch(String word, float[] path, float[][] charToPos) {
         int n = path.length / 2;
-        int pathIdx = 0;
+        int segmentIdx = 0;
         char lastChar = 0;
-        String w = word.toLowerCase(Locale.ROOT);
-        for (int i = 0; i < w.length(); i++) {
-            char c = w.charAt(i);
+        for (int i = 0; i < word.length(); i++) {
+            char c = word.charAt(i);
             if (c < 'a' || c > 'z') continue;
             if (c == lastChar) continue;
             float[] target = charToPos[c - 'a'];
             if (target[0] == 0f && target[1] == 0f) continue;
             boolean found = false;
-            while (pathIdx < n) {
-                float dx = path[2 * pathIdx] - target[0];
-                float dy = path[2 * pathIdx + 1] - target[1];
-                if (dx * dx + dy * dy <= 0.05f) { found = true; break; }
-                pathIdx++;
+            while (segmentIdx < n - 1) {
+                float distSq = sqDistanceToSegment(target[0], target[1],
+                        path[2 * segmentIdx], path[2 * segmentIdx + 1],
+                        path[2 * (segmentIdx + 1)], path[2 * (segmentIdx + 1) + 1]);
+                if (distSq <= 0.035f) { // ~0.187 unit distance center-to-path threshold
+                    found = true;
+                    break;
+                }
+                segmentIdx++;
             }
             if (!found) return false;
             lastChar = c;
@@ -189,8 +220,7 @@ public class SwipeGestureEngine {
         // Filter by last letter first; relax if empty
         List<IndexEntry> filtered = new ArrayList<>(candidates.size());
         for (IndexEntry e : candidates) {
-            String w = e.word.toLowerCase(Locale.ROOT);
-            if (!w.isEmpty() && endLetters.contains(w.charAt(w.length() - 1)))
+            if (!e.lowerWord.isEmpty() && endLetters.contains(e.lowerWord.charAt(e.lowerWord.length() - 1)))
                 filtered.add(e);
         }
         if (filtered.isEmpty()) filtered = candidates;
@@ -206,19 +236,15 @@ public class SwipeGestureEngine {
 
         for (int i = 0; i < m; i++) {
             IndexEntry e = filtered.get(i);
-            float freqBonus = (e.frequency > 0) ? (float)(Math.log(e.frequency + 1) * FREQ_WEIGHT) : 0f;
-            boolean seqMatch = isSequenceMatch(e.word, inputVec, charToPos);
+            boolean seqMatch = isSequenceMatch(e.lowerWord, inputVec, charToPos);
             float seqPenalty = seqMatch ? 0f : -0.4f;
-            boolean isPredicted = predictionSet != null && predictionSet.contains(e.word.toLowerCase(Locale.ROOT));
+            boolean isPredicted = predictionSet != null && predictionSet.contains(e.lowerWord);
             float predBonus = isPredicted ? 0.15f : 0f;
-            // ponytail: use precomputed pathLen from IndexEntry instead of recalculating
             float lenPenalty = -Math.abs(inputLength - e.pathLen) * 0.4f;
-            // ponytail: apply self-learning user boost at ranking time too
-            String lk = e.word.toLowerCase(Locale.ROOT);
-            Integer ub = sUserBoost.get(lk);
-            float userBonus = ub != null ? (float) Math.log(ub + 1) * 0.08f : 0f;
+            Integer ub = sUserBoost.get(e.lowerWord);
+            float userBonus = ub != null ? sUserBoostCache[ub] : 0f;
 
-            float bonuses = freqBonus + seqPenalty + predBonus + lenPenalty + userBonus;
+            float bonuses = e.freqBonus + seqPenalty + predBonus + lenPenalty + userBonus;
             float maxL2 = (threshold == -Float.MAX_VALUE) ? Float.MAX_VALUE : (bonuses - threshold);
             float distance;
             if (maxL2 <= 0f) {
