@@ -125,7 +125,7 @@ public class SwipeGestureEngine {
             if (d < minDist) minDist = d;
         }
         List<Character> results = new ArrayList<>(4);
-        float threshold = minDist + 0.02f;
+        float threshold = minDist + 0.035f;
         for (int i = 0; i < 26; i++) {
             if (dists[i] <= threshold) results.add((char) ('a' + i));
         }
@@ -138,16 +138,18 @@ public class SwipeGestureEngine {
         return nearestLettersFromMap(x / kw, y / kh, buildCharToPos(keyboard));
     }
 
-    private static float sqDistanceToSegment(float px, float py, float ax, float ay, float bx, float by) {
+    private static float sqDistanceToSegment(float px, float py, float ax, float ay, float bx, float by, float[] outT) {
         float dx = bx - ax;
         float dy = by - ay;
         float segmentLenSq = dx * dx + dy * dy;
         if (segmentLenSq < 1e-9f) {
+            outT[0] = 0f;
             return (px - ax) * (px - ax) + (py - ay) * (py - ay);
         }
         float t = ((px - ax) * dx + (py - ay) * dy) / segmentLenSq;
         if (t < 0f) t = 0f;
         else if (t > 1f) t = 1f;
+        outT[0] = t;
         float closestX = ax + t * dx;
         float closestY = ay + t * dy;
         return (px - closestX) * (px - closestX) + (py - closestY) * (py - closestY);
@@ -156,7 +158,9 @@ public class SwipeGestureEngine {
     public static boolean isSequenceMatch(String word, float[] path, float[][] charToPos) {
         int n = path.length / 2;
         int segmentIdx = 0;
+        float prevT = -0.01f;
         char lastChar = 0;
+        float[] outT = new float[1];
         for (int i = 0; i < word.length(); i++) {
             char c = word.charAt(i);
             if (c < 'a' || c > 'z') continue;
@@ -167,12 +171,17 @@ public class SwipeGestureEngine {
             while (segmentIdx < n - 1) {
                 float distSq = sqDistanceToSegment(target[0], target[1],
                         path[2 * segmentIdx], path[2 * segmentIdx + 1],
-                        path[2 * (segmentIdx + 1)], path[2 * (segmentIdx + 1) + 1]);
-                if (distSq <= 0.035f) { // ~0.187 unit distance center-to-path threshold
-                    found = true;
-                    break;
+                        path[2 * (segmentIdx + 1)], path[2 * (segmentIdx + 1) + 1], outT);
+                if (distSq <= 0.05f) {
+                    float t = outT[0];
+                    if (t > prevT) {
+                        prevT = t;
+                        found = true;
+                        break;
+                    }
                 }
                 segmentIdx++;
+                prevT = -0.01f;
             }
             if (!found) return false;
             lastChar = c;
