@@ -1104,8 +1104,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         btn.isAllCaps = false
         btn.isEnabled = !isDownloading
         btn.layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = android.view.Gravity.CENTER
         }
