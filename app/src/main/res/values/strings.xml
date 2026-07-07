@@ -914,7 +914,7 @@ New dictionary:
      %1$s will be replaced by dictionary_link_text, %2$s by the language code, %3$s by dictionary_link_text again.
      This string will be interpreted as HTML -->
     <string name="no_dictionary_message">"Without a dictionary, you will only get suggestions for text you entered before.&lt;br&gt;
-        You can download dictionaries %1$s, or check whether a dictionary for \"%2$s\" can be downloaded directly %3$s."</string>
+        You can download dictionaries %1$s."</string>
     <!-- Button to never show the no_dictionary_message when enabling a language that has no dictionary -->
     <string name="no_dictionary_dont_show_again_button">"Don't show again"</string>
     <!-- Message for the user dictionary selection dialog, %s will be replaced by dictionary_link_text. -->

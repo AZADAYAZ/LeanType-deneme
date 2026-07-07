@@ -117,9 +117,7 @@ fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale, inline
     }
     val availableDicts = createDictionaryTextAnnotated(locale)
     val repositoryLink = stringResource(R.string.dictionary_link_text).withHtmlLink(Links.DICTIONARY_URL)
-    val dictUrl = "${Links.DICTIONARY_URL}${Links.DICTIONARY_DOWNLOAD_SUFFIX}dictionaries/main_$locale.dict"
-    val dictionaryLink = stringResource(R.string.dictionary_link_text).withHtmlLink(dictUrl)
-    val message = stringResource(R.string.no_dictionary_message, repositoryLink, locale.toString(), dictionaryLink)
+    val message = stringResource(R.string.no_dictionary_message, repositoryLink)
     var annotatedString = message.htmlToAnnotated()
     // ponytail: in standard flavor, if there are known dicts we show them as downloadable rows instead of bullet links
     val knownDicts = remember {
