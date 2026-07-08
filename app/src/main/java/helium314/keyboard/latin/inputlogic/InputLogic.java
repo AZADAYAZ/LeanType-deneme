@@ -1463,6 +1463,7 @@ public final class InputLogic {
                     final helium314.keyboard.latin.utils.TextExpanderUtils.ExpandedResult result =
                             helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWordForTyped(typedWord, textStr, mLatinIME);
                     if (result != null) {
+                        mConnection.commitText("", 1);
                         if (result.getPrefixLength() > 0) {
                             mConnection.deleteTextBeforeCursor(result.getPrefixLength());
                         }
