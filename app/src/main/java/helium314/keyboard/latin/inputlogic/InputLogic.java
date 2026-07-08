@@ -3067,6 +3067,7 @@ public final class InputLogic {
                     mConnection.commitText(getTextWithSuggestionSpan(mLatinIME, chosenWord, mSuggestedWords, getDictionaryFacilitatorLocale()), 1);
                     mConnection.deleteTextBeforeCursor(result.getPrefixLength() + chosenWord.length());
                     commitExpandedText(result.getMatchedString(), result.getExpandedText());
+                    resetComposingState(true);
                     return;
                 }
             }
