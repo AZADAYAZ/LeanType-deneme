@@ -3675,24 +3675,56 @@ public final class InputLogic {
 
     private void commitExpandedText(final String shortcut, final String expanded) {
         final int cursorOffset = expanded.indexOf("%cursor%");
-        final String finalExpandedText = cursorOffset != -1 ? expanded.replace("%cursor%", "") : expanded;
-        
-        mConnection.commitText(finalExpandedText, 1);
-        
-        mLastExpandedText = finalExpandedText;
-        mLastShortcutText = shortcut;
-        mLastExpandedCursorOffset = cursorOffset != -1 ? cursorOffset : finalExpandedText.length();
-        
         if (cursorOffset != -1) {
+            final String finalExpandedText = expanded.replace("%cursor%", "");
+            mConnection.commitText(finalExpandedText, 1);
+            mLastExpandedText = finalExpandedText;
+            mLastShortcutText = shortcut;
+            mLastExpandedCursorOffset = cursorOffset;
             final int moveBackAmount = finalExpandedText.length() - cursorOffset;
             if (moveBackAmount > 0) {
                 final int newCursorPos = mConnection.getExpectedSelectionEnd() - moveBackAmount;
                 mConnection.setSelection(newCursorPos, newCursorPos);
             }
-        } else {
-            tryJumpToNextPlaceholder();
+            mLastExpandedCursorPosition = mConnection.getExpectedSelectionEnd();
+            return;
         }
-        
+
+        final java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("%cursor(\\d+)%");
+        final java.util.regex.Matcher matcher = pattern.matcher(expanded);
+        int bestStart = -1;
+        int bestEnd = -1;
+        int lowestNum = Integer.MAX_VALUE;
+        while (matcher.find()) {
+            try {
+                final int num = Integer.parseInt(matcher.group(1));
+                if (num < lowestNum) {
+                    lowestNum = num;
+                    bestStart = matcher.start();
+                    bestEnd = matcher.end();
+                }
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+
+        if (bestStart != -1) {
+            final String finalExpandedText = expanded.substring(0, bestStart) + expanded.substring(bestEnd);
+            mConnection.commitText(finalExpandedText, 1);
+            mLastExpandedText = finalExpandedText;
+            mLastShortcutText = shortcut;
+            mLastExpandedCursorOffset = bestStart;
+            final int moveBackAmount = finalExpandedText.length() - bestStart;
+            if (moveBackAmount > 0) {
+                final int newCursorPos = mConnection.getExpectedSelectionEnd() - moveBackAmount;
+                mConnection.setSelection(newCursorPos, newCursorPos);
+            }
+        } else {
+            mConnection.commitText(expanded, 1);
+            mLastExpandedText = expanded;
+            mLastShortcutText = shortcut;
+            mLastExpandedCursorOffset = expanded.length();
+        }
         mLastExpandedCursorPosition = mConnection.getExpectedSelectionEnd();
     }
 }
