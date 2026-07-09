@@ -4,15 +4,22 @@
 ## 🚀 What's New
 
 ### 👆 Gesture & Swipe Engine (Pure-Java)
-*   **OutOfMemoryError Fixes**: Fixed OOM crashes during gesture typing. Optimized dictionary word streaming and coordinate layout packing to dramatically reduce heap allocations and GC pressure.
-*   **Blacklist Filtering**: Prevented blocked and blacklisted words from appearing in gesture suggestions or history.
+- **OutOfMemoryError Fixes**: Fixed OOM crashes during gesture index construction. Dictionary words are now streamed directly to avoid massive intermediate maps, and gesture path coordinates are packed into primitive variables to drastically reduce object allocations and GC pressure.
+- **Blacklist/Blocked Words Isolation**: Prevented blocked words from leaking into user history, next-word suggestions cache, and gesture recognition indexes. Settings changes/removals now trigger immediate cache and gesture index reloads.
+- **Cursor Selection Fix**: Fixed a bug where moving the cursor under automatic shift mode (such as auto-capitalization at the start of a sentence) would cause text to be unintentionally selected.
 
-### 📖 Dictionary & Typing Predictions
-*   **Privacy Improvements**: Blocked/blacklisted words are now prevented from entering user history and next-word suggestions cache.
+### 📝 Text Expander & Placeholders
+- **Sequential Placeholders**: Added support for sequential template placeholders in text expander macros.
+- **Synchronous Placeholder Deletion**: Rewrote placeholder navigation/deletion to execute synchronously via `deleteSurroundingText` and `setSelection` to prevent IPC selection desync.
+- **Data Backup**: Added text expander data backup and restore capabilities, linking preference keys directly to the database backup category.
 
-### 🛠️ Input & Settings Customizations
-*   **Auto-Correction Triggers**: Added a new setting toggle to choose what triggers auto-correction: Spacebar only, Punctuation only, or both.
-*   **Cursor Selection Fix**: Fixed text selection bug where moving the cursor under automatic shift mode (auto-capitalization at the start of a sentence) caused text selection.
+### 🎨 Keyboards & Custom Layouts
+- **Dynamic Layout Slots**: Added support for up to five dynamic custom secondary layouts (`custom1` to `custom5`) with a direct deletion option in layout settings.
+- **Layout Compatibility**: Resolved issues involving blocked words, custom fonts, and the symbols number row.
+
+### 🛠️ Suggestions & Settings
+- **Long-Press Suggestion Deletion**: Enabled long-press on suggestions in `MoreSuggestionsView` to directly delete/block suggestions. This dialog is wrapped in the platform dialog theme and resolves the `BadTokenException` by binding to the correct window token.
+- **Auto-Correction Triggers**: Added a new settings preference to configure whether auto-correction is triggered by the Spacebar, Punctuation, or both.
 
 ## 📦 Downloads (Choose Your Flavor)
 

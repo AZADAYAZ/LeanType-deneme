@@ -1,4 +1,7 @@
-- Fixed OutOfMemoryError crashes in pure-Java swipe gesture typing engine.
-- Prevented blocked/blacklisted words from leaking into history, next-word predictions, and gesture typing.
-- Fixed cursor movement selection bug triggered by auto-capitalization.
-- Added preference settings toggle to select what key triggers auto-correction (Spacebar only, Punctuation only, or both).
+- Fixed swipe gesture OOM crashes via packed coordinates & sequential word streaming.
+- Blocked blacklisted words from history, suggestion cache, and gesture index.
+- Fixed automatic shift text selection bug.
+- Added text expander sequential placeholders & settings backup integration.
+- Added dynamic secondary layouts (custom1-5) with deletion option.
+- Added long-press deletion of suggestions with window crash fixes.
+- Added auto-correction triggers configuration (space/punctuation/both).
