@@ -23,8 +23,8 @@ android {
         minSdk = 21
         targetSdk = 35
         // ponytail: bump version to 3.9.4
-        versionCode = 3940
-        versionName = "3.9.4"
+        versionCode = 3950
+        versionName = "3.9.5"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         
