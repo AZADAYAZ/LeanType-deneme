@@ -97,6 +97,8 @@ object Defaults {
     const val PREF_PERSIST_FLOATING_KEYBOARD = false
     // ponytail: persist text edit mode default
     const val PREF_PERSIST_TEXT_EDIT_MODE = false
+    // ponytail: default value to disable multi-word suggestions is false
+    const val PREF_DISABLE_MULTI_WORD_SUGGESTIONS = false
     @JvmField
     val PREF_SPLIT_SPACER_SCALE = Array(2) { DEFAULT_SIZE_SCALE }
     @JvmField

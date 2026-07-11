@@ -1310,4 +1310,6 @@ New dictionary:
     <!-- ponytail: persist text edit mode strings -->
     <string name="persist_text_edit_mode_title">Persist text editing mode</string>
     <string name="persist_text_edit_mode_summary">Do not exit text editing mode when input finishes</string>
+    <string name="disable_multi_word_suggestions_title">Disable multi-word suggestions</string>
+    <string name="disable_multi_word_suggestions_summary">Prevent suggestions that consist of multiple combined words (recommended for Turkish)</string>
 </resources>

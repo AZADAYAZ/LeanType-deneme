@@ -104,6 +104,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 getNextWordSuggestions(ngramContext, keyboard, inputStyleIfNotPrediction, settingsValuesForSuggestion)
             else mDictionaryFacilitator.getSuggestionResults(wordComposer.composedDataSnapshot, ngramContext, keyboard,
                 settingsValuesForSuggestion, SESSION_ID_TYPING, inputStyleIfNotPrediction)
+        // ponytail: filter out multi-word suggestions if enabled
+        if (Settings.getValues().mDisableMultiWordSuggestions) {
+            suggestionResults.removeAll { it.mWord.contains(' ') }
+        }
         val trailingSingleQuotesCount = StringUtils.getTrailingSingleQuotesCount(typedWordString)
         val suggestionsContainer = getTransformedSuggestedWordInfoList(wordComposer, suggestionResults,
             trailingSingleQuotesCount, mDictionaryFacilitator.mainLocale, keyboard)
@@ -368,6 +372,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
             )
         }
+        // ponytail: filter out multi-word suggestions if enabled
+        if (Settings.getValues().mDisableMultiWordSuggestions) {
+            suggestionResults.removeAll { it.mWord.contains(' ') }
+        }
         replaceSingleLetterFirstSuggestion(suggestionResults)
         adjustToTooSuggestions(suggestionResults, pointers, keyboard)
 
@@ -447,6 +455,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         if (cachedResults != null) return cachedResults
         val newResults = mDictionaryFacilitator.getSuggestionResults(ComposedData(InputPointers(1),
             false, ""), ngramContext, keyboard, settingsValuesForSuggestion, SESSION_ID_TYPING, inputStyle)
+        // ponytail: filter out multi-word suggestions if enabled
+        if (Settings.getValues().mDisableMultiWordSuggestions) {
+            newResults.removeAll { it.mWord.contains(' ') }
+        }
         nextWordSuggestionsCache.put(ngramContext, newResults)
         return newResults
     }
