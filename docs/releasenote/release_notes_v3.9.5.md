@@ -11,6 +11,10 @@
 - **Custom Layout Persistence**: Track the active custom layout index to ensure that custom layouts are correctly restored after switching between alphabet/symbols or after device orientation changes.
 - **Shift Key Behavior**: Improved shift key press and release tracking for custom layout states.
 
+### 🛠️ Bug Fixes & Toggles
+- **Toggles & Settings**: Added some toggles for more customization
+- **Bug Fixes**: Resolved some other minor bugs
+
 ## 📦 Downloads (Choose Your Flavor)
 
 | File | Description | Permissions |
