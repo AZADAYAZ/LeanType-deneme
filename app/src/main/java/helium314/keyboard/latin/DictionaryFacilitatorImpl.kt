@@ -88,6 +88,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         Dictionary.TYPE_MAIN,
         Dictionary.TYPE_CONTACTS,
         Dictionary.TYPE_APPS,
+        Dictionary.TYPE_USER,
         Dictionary.TYPE_USER_HISTORY
     )
 
