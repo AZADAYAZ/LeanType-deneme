@@ -1107,6 +1107,9 @@ New dictionary:
     <string name="direct_ime_switch_title">Direct Switch Target IME</string>
     <string name="direct_ime_switch_summary">Input Method to switch to directly when using the custom keycode option</string>
     <string name="direct_ime_switch_none">None</string>
+    <string name="app_language_title">App Language</string>
+    <string name="app_language_summary">Change the language of the settings screen and keyboard interface</string>
+    <string name="app_language_system">System default</string>
     <!-- Settings screen title for appearance preferences -->
     <string name="settings_screen_appearance">Appearance</string>
     <!-- Settings screen title for toolbar preferences -->
