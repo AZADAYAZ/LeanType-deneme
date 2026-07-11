@@ -32,6 +32,8 @@
 - **🚫 Blocked Words Blacklist** - Prevent unwanted words from being suggested, with custom regex pattern support and a blacklist management screen.
 - **✉️ Auto-Read OTP** - Automatically reads OTP codes from SMS notifications for quick and easy suggestion strip entry.
 - **💾 Selective Backup & Restore** - Backup and restore settings, dictionaries, and AI prompt configurations selectively.
+- **[⌨️ Direct Switch IME](docs/FEATURES.md#10-direct-switch-target-ime)** - Map custom keycode (`-10076`) to any toolbar key to switch directly to another input method.
+- **[🎨 Custom Layouts](docs/FEATURES.md#11-custom-layouts-customization)** - Save up to five custom layout profiles with persistent slot index tracking.
 - **🔒 Privacy Choices** - Choose **Standard** (Opt-in AI, Handwriting), **Offline** (Hard-disabled network, offline GGUF model load), or **Offline Lite** (Minimalist, no AI) versions.
 - **🎨 Modern UI** - "Squircle" key backgrounds, refined icons, and polished aesthetics.
 - **🕵️ Clear Incognito Mode** - Distinct "Hat & Glasses" icon for clear visibility.
