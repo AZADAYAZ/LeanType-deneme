@@ -25,11 +25,18 @@ class App : Application(), Configuration.Provider {
         super.onCreate()
         DebugFlags.init(this)
         Settings.init(this)
-        if (!Settings.getInstance().useSystemEmoji()) {
+        val useSystemEmoji = Settings.getInstance().useSystemEmoji()
+        Log.i("EmojiCompatInit", "useSystemEmoji is $useSystemEmoji")
+        if (!useSystemEmoji) {
+            Log.i("EmojiCompatInit", "Initializing EmojiCompat...")
             val config = DefaultEmojiCompatConfig.create(this)
             if (config != null) {
                 EmojiCompat.init(config)
+            } else {
+                Log.w("EmojiCompatInit", "DefaultEmojiCompatConfig returned null")
             }
+        } else {
+            Log.i("EmojiCompatInit", "Skipping EmojiCompat (using system emoji font)")
         }
         SubtypeSettings.init(this)
         RichInputMethodManager.init(this)
