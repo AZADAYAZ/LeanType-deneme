@@ -63,7 +63,7 @@ class SwipeGestureEngineKotlin {
 
     class GestureIndex(
         val byFirst: Map<Char, List<IndexEntry>>,
-        val charToPos: Array<FloatArray>
+        val charToPos: Map<Char, FloatArray>
     )
 
     // ─── Companion object (Static Methods & Helpers) ─────────────────────────
@@ -78,6 +78,7 @@ class SwipeGestureEngineKotlin {
             }
         }
         private var sUserDataFile: File? = null
+        private val dtwBuffer = ThreadLocal.withInitial { FloatArray(256) }
 
             private fun loadUserData() {
                 if (sUserDataFile == null || !sUserDataFile!!.exists()) return
@@ -167,7 +168,7 @@ class SwipeGestureEngineKotlin {
                                 if (freq < 3) return@forEachMainDictionaryWord
                                     if (lower.isEmpty()) return@forEachMainDictionaryWord
                                         val first = lower[0]
-                                        if (first !in 'a'..'z') return@forEachMainDictionaryWord
+                                        if (first !in charToPos) return@forEachMainDictionaryWord
 
                                             val userPath = sUserPaths[lower]
                                             val path = if (userPath != null && userPath.size == N_PTS * 2) {
@@ -194,7 +195,7 @@ class SwipeGestureEngineKotlin {
 
             @JvmStatic
             fun layoutFingerprint(keyboard: Keyboard): Int =
-            Arrays.deepHashCode(buildCharToPos(keyboard))
+            Arrays.deepHashCode(buildCharToPos(keyboard).values.map { it.toList() }.toTypedArray())
 
             @JvmStatic
             fun rankByIndex(
@@ -256,38 +257,61 @@ class SwipeGestureEngineKotlin {
                                     val m = filtered.size
                                     val scores = FloatArray(m)
                                     val order = IntArray(m)
+                                    var count = 0
+
+                                    val topScores = FloatArray(maxResults) { -Float.MAX_VALUE }
+                                    var threshold = -Float.MAX_VALUE
 
                                     val candidatePath = FloatArray(N_PTS * 2)
                                     for (i in 0 until m) {
                                         val e = filtered[i]
-                                        e.unpackPath(candidatePath)
-                                        val dtwSq = dtwDistanceSq(inputVec, candidatePath)
-                                        val distance = kotlin.math.sqrt(dtwSq)
                                         val lower = e.word.lowercase(Locale.ROOT)
                                         val userBoostVal = sUserBoost[lower]?.let { sUserBoostCache[it] } ?: 0f
                                         val predBonus = if (predictionSet != null && predictionSet.contains(lower)) 0.15f else 0f
                                         val lenPenalty = -kotlin.math.abs(inputLen - e.pathLen) * 0.4f
 
+                                        val bonuses = e.freqBonus + userBoostVal + predBonus + lenPenalty
+                                        // If best possible score (distance = 0) cannot beat the threshold, prune early
+                                        if (bonuses < threshold) {
+                                            continue
+                                        }
+
                                         val seqMatch = isSequenceMatch(lower, inputVec, charToPos)
                                         val seqPenalty = if (seqMatch) 0f else -0.4f
+                                        val scoreWithSeq = bonuses + seqPenalty
+                                        if (scoreWithSeq < threshold) {
+                                            continue
+                                        }
 
-                                        val score = -distance + e.freqBonus + userBoostVal + predBonus + lenPenalty + seqPenalty
-                                        scores[i] = score
-                                        order[i] = i
+                                        e.unpackPath(candidatePath)
+                                        val dtwSq = dtwDistanceSq(inputVec, candidatePath)
+                                        val distance = kotlin.math.sqrt(dtwSq)
+                                        val score = -distance + scoreWithSeq
+                                        scores[count] = score
+                                        order[count] = i
+                                        count++
+
+                                        if (score > threshold) {
+                                            threshold = updateThreshold(topScores, score)
+                                        }
                                     }
 
-                                    for (i in 1 until m) {
+                                    if (count == 0) return empty
+
+                                    for (i in 1 until count) {
                                         val key = order[i]
-                                        val ks = scores[key]
+                                        val ks = scores[i]
                                         var j = i - 1
-                                        while (j >= 0 && scores[order[j]] < ks) {
+                                        while (j >= 0 && scores[j] < ks) {
+                                            scores[j + 1] = scores[j]
                                             order[j + 1] = order[j]
                                             j--
                                         }
+                                        scores[j + 1] = ks
                                         order[j + 1] = key
                                     }
 
-                                    val take = minOf(maxResults, m)
+                                    val take = minOf(maxResults, count)
                                     val result = SuggestionResults(take, false, false)
                                     val baseScore = 1_000_000
                                     for (rank in 0 until take) {
@@ -388,7 +412,7 @@ class SwipeGestureEngineKotlin {
             }
 
             @JvmStatic
-            fun isSequenceMatch(word: String, path: FloatArray, charToPos: Array<FloatArray>): Boolean {
+            fun isSequenceMatch(word: String, path: FloatArray, charToPos: Map<Char, FloatArray>): Boolean {
                 val n = path.size / 2
                 var segmentIdx = 0
                 var prevT = -0.01f
@@ -396,31 +420,29 @@ class SwipeGestureEngineKotlin {
                 val outT = FloatArray(1)
                 for (i in word.indices) {
                     val c = word[i]
-                    if (c !in 'a'..'z') continue
-                        if (c == lastChar) continue
-                            val target = charToPos[c - 'a']
-                            if (target[0] == 0f && target[1] == 0f) continue
-                                var found = false
-                                while (segmentIdx < n - 1) {
-                                    val distSq = sqDistanceToSegment(
-                                        target[0], target[1],
-                                        path[2 * segmentIdx], path[2 * segmentIdx + 1],
-                                        path[2 * (segmentIdx + 1)], path[2 * (segmentIdx + 1) + 1],
-                                                                     outT
-                                    )
-                                    if (distSq <= 0.05f) {
-                                        val t = outT[0]
-                                        if (t > prevT) {
-                                            prevT = t
-                                            found = true
-                                            break
-                                        }
+                    if (c == lastChar) continue
+                        val target = charToPos[c] ?: continue
+                            var found = false
+                            while (segmentIdx < n - 1) {
+                                val distSq = sqDistanceToSegment(
+                                    target[0], target[1],
+                                    path[2 * segmentIdx], path[2 * segmentIdx + 1],
+                                    path[2 * (segmentIdx + 1)], path[2 * (segmentIdx + 1) + 1],
+                                                                 outT
+                                )
+                                if (distSq <= 0.05f) {
+                                    val t = outT[0]
+                                    if (t > prevT) {
+                                        prevT = t
+                                        found = true
+                                        break
                                     }
-                                    segmentIdx++
-                                    prevT = -0.01f
                                 }
-                                if (!found) return false
-                                    lastChar = c
+                                segmentIdx++
+                                prevT = -0.01f
+                            }
+                            if (!found) return false
+                                lastChar = c
                 }
                 return true
             }
@@ -492,24 +514,22 @@ class SwipeGestureEngineKotlin {
                     return result
             }
 
-            private fun wordPath(word: String, charToPos: Array<FloatArray>): FloatArray {
+            private fun wordPath(word: String, charToPos: Map<Char, FloatArray>): FloatArray {
                 val pts = mutableListOf<FloatArray>()
                 var lastX = -1f
                 var lastY = -1f
                 for (c in word) {
-                    val idx = c - 'a'
-                    if (idx !in 0..25) continue
-                        val p = charToPos[idx]
-                        if (pts.isEmpty() || p[0] != lastX || p[1] != lastY) {
-                            pts.add(floatArrayOf(p[0], p[1]))
-                            lastX = p[0]
-                            lastY = p[1]
-                        }
+                    val p = charToPos[c] ?: continue
+                    if (pts.isEmpty() || p[0] != lastX || p[1] != lastY) {
+                        pts.add(floatArrayOf(p[0], p[1]))
+                        lastX = p[0]
+                        lastY = p[1]
+                    }
                 }
                 if (pts.size < 2) {
                     val r = FloatArray(N_PTS * 2)
-                    val x = pts[0][0]
-                    val y = pts[0][1]
+                    val x = if (pts.isNotEmpty()) pts[0][0] else 0.5f
+                    val y = if (pts.isNotEmpty()) pts[0][1] else 0.5f
                     for (i in 0 until N_PTS) {
                         r[2 * i] = x
                         r[2 * i + 1] = y
@@ -526,7 +546,8 @@ class SwipeGestureEngineKotlin {
 
             private fun dtwDistanceSq(path1: FloatArray, path2: FloatArray): Float {
                 val len = N_PTS
-                val cost = FloatArray(len * len)
+                val cost = dtwBuffer.get()!!
+                Arrays.fill(cost, Float.MAX_VALUE)
                 val infinity = Float.MAX_VALUE
 
                 for (i in 0 until len) {
@@ -571,169 +592,179 @@ class SwipeGestureEngineKotlin {
                 }
             }
 
-            private fun isAsciiLetter(code: Int): Boolean =
-                code in 'a'.code..'z'.code || code in 'A'.code..'Z'.code
-
-                private fun buildCharToPos(keyboard: Keyboard): Array<FloatArray> {
-                    val map = Array(26) { FloatArray(2) }
-                    val kw = keyboard.mOccupiedWidth.toFloat()
-                    val kh = keyboard.mOccupiedHeight.toFloat()
-                    for (key in keyboard.sortedKeys) {
-                        val code = key.code
-                        if (!isAsciiLetter(code)) continue
-                            val idx = code.toChar().lowercaseChar() - 'a'
-                            val hitBox = key.hitBox
-                            map[idx][0] = hitBox.exactCenterX() / kw
-                            map[idx][1] = hitBox.exactCenterY() / kh
-                    }
-                    return map
+            private fun buildCharToPos(keyboard: Keyboard): Map<Char, FloatArray> {
+                val map = mutableMapOf<Char, FloatArray>()
+                val kw = keyboard.mOccupiedWidth.toFloat()
+                val kh = keyboard.mOccupiedHeight.toFloat()
+                for (key in keyboard.sortedKeys) {
+                    val code = key.code
+                    if (code <= 0) continue
+                        val c = code.toChar().lowercaseChar()
+                        val hitBox = key.hitBox
+                        map[c] = floatArrayOf(
+                            hitBox.exactCenterX() / kw,
+                            hitBox.exactCenterY() / kh
+                        )
                 }
+                return map
+            }
 
-                private fun nearestLettersFromMap(nx: Float, ny: Float, charToPos: Array<FloatArray>): List<Char> {
-                    var minDist = Float.MAX_VALUE
-                    val dists = FloatArray(26)
-                    for (i in 0..25) {
-                        val cx = charToPos[i][0]
-                        val cy = charToPos[i][1]
-                        if (cx == 0f && cy == 0f) {
-                            dists[i] = Float.MAX_VALUE
-                            continue
-                        }
-                        val d = (nx - cx) * (nx - cx) + (ny - cy) * (ny - cy)
-                        dists[i] = d
-                        if (d < minDist) minDist = d
-                    }
-                    val results = mutableListOf<Char>()
-                    val threshold = minDist + PROXIMITY_RADIUS
-                     for (i in 0..25) {
-                        if (dists[i] <= threshold) {
-                            results.add(('a'.code + i).toChar())
-                        }
-                    }
-                    return results
+            private fun nearestLettersFromMap(nx: Float, ny: Float, charToPos: Map<Char, FloatArray>): List<Char> {
+                var minDist = Float.MAX_VALUE
+                val dists = mutableMapOf<Char, Float>()
+                for ((char, pos) in charToPos) {
+                    val cx = pos[0]
+                    val cy = pos[1]
+                    val d = (nx - cx) * (nx - cx) + (ny - cy) * (ny - cy)
+                    dists[char] = d
+                    if (d < minDist) minDist = d
                 }
-
-                private fun lcsFilter(candidates: List<IndexEntry>, nodeSignature: String): List<IndexEntry> {
-                    if (nodeSignature.isEmpty()) return candidates
-                        val filtered = mutableListOf<IndexEntry>()
-                        val minMatch = maxOf(1, (0.75 * nodeSignature.length).toInt())
-                        for (e in candidates) {
-                            val wordSeq = canonicalNodeSeq(e.word)
-                            if (longestCommonSubsequence(nodeSignature, wordSeq) >= minMatch) {
-                                filtered.add(e)
-                            }
-                        }
-                        return if (filtered.isNotEmpty()) filtered else candidates
+                val results = mutableListOf<Char>()
+                val threshold = minDist + PROXIMITY_RADIUS
+                for ((char, d) in dists) {
+                    if (d <= threshold) {
+                        results.add(char)
+                    }
                 }
+                return results
+            }
 
-                private fun longestCommonSubsequence(a: String, b: String): Int {
-                    val m = a.length
-                    val n = b.length
-                    val dp = IntArray(n + 1)
-                    for (i in 1..m) {
-                        var prev = 0
-                        for (j in 1..n) {
-                            val temp = dp[j]
-                            if (a[i - 1] == b[j - 1]) {
-                                dp[j] = prev + 1
-                            } else {
-                                dp[j] = dp[j].coerceAtLeast(dp[j - 1])
-                            }
-                            prev = temp
+            private fun lcsFilter(candidates: List<IndexEntry>, nodeSignature: String): List<IndexEntry> {
+                if (nodeSignature.isEmpty()) return candidates
+                    val filtered = mutableListOf<IndexEntry>()
+                    val minMatch = maxOf(1, (0.75 * nodeSignature.length).toInt())
+                    for (e in candidates) {
+                        val wordSeq = canonicalNodeSeq(e.word)
+                        if (longestCommonSubsequence(nodeSignature, wordSeq) >= minMatch) {
+                            filtered.add(e)
                         }
                     }
-                    return dp[n]
-                }
+                    return if (filtered.isNotEmpty()) filtered else candidates
+            }
 
-                private fun canonicalNodeSeq(word: String): String {
+            private fun longestCommonSubsequence(a: String, b: String): Int {
+                val m = a.length
+                val n = b.length
+                val dp = IntArray(n + 1)
+                for (i in 1..m) {
+                    var prev = 0
+                    for (j in 1..n) {
+                        val temp = dp[j]
+                        if (a[i - 1] == b[j - 1]) {
+                            dp[j] = prev + 1
+                        } else {
+                            dp[j] = dp[j].coerceAtLeast(dp[j - 1])
+                        }
+                        prev = temp
+                    }
+                }
+                return dp[n]
+            }
+
+            private fun canonicalNodeSeq(word: String): String {
+                val sb = StringBuilder()
+                var prev = 0.toChar()
+                for (c in word) {
+                    val lc = c.lowercaseChar()
+                    if (lc != prev) {
+                        sb.append(lc)
+                        prev = lc
+                    }
+                }
+                return sb.toString()
+            }
+
+            private fun extractNodeSignature(rawFlat: FloatArray, numPoints: Int, charToPos: Map<Char, FloatArray>): String {
+                if (numPoints < 2) return ""
                     val sb = StringBuilder()
-                    var prev = 0.toChar()
-                    for (c in word) {
-                        if (c in 'a'..'z' && c != prev) {
-                            sb.append(c)
-                            prev = c
-                        }
+                    val vecX = FloatArray(numPoints - 1)
+                    val vecY = FloatArray(numPoints - 1)
+                    for (i in 0 until numPoints - 1) {
+                        vecX[i] = rawFlat[2 * (i + 1)] - rawFlat[2 * i]
+                        vecY[i] = rawFlat[2 * (i + 1) + 1] - rawFlat[2 * i + 1]
+                    }
+
+                    var lastKey = 0.toChar()
+                    val startKey = getNearestKey(rawFlat[0], rawFlat[1], charToPos)
+                    if (startKey != 0.toChar()) {
+                        sb.append(startKey)
+                        lastKey = startKey
+                    }
+
+                    for (i in 1 until numPoints - 2) {
+                        val v1x = vecX[i - 1]
+                        val v1y = vecY[i - 1]
+                        val v2x = vecX[i]
+                        val v2y = vecY[i]
+
+                        val len1Sq = v1x * v1x + v1y * v1y
+                        val len2Sq = v2x * v2x + v2y * v2y
+                        if (len1Sq == 0f || len2Sq == 0f) continue
+
+                            val dot = v1x * v2x + v1y * v2y
+                            val cross = v1x * v2y - v1y * v2x
+                            val angle = kotlin.math.atan2(kotlin.math.abs(cross), dot) * 180.0 / kotlin.math.PI
+                            if (angle >= 45f) {
+                                val key = getNearestKey(rawFlat[2 * i], rawFlat[2 * i + 1], charToPos)
+                                if (key != 0.toChar() && key != lastKey) {
+                                    sb.append(key)
+                                    lastKey = key
+                                }
+                            }
+                    }
+
+                    val endKey = getNearestKey(rawFlat[2 * (numPoints - 1)], rawFlat[2 * (numPoints - 1) + 1], charToPos)
+                    if (endKey != 0.toChar() && endKey != lastKey) {
+                        sb.append(endKey)
                     }
                     return sb.toString()
-                }
+            }
 
-                private fun extractNodeSignature(rawFlat: FloatArray, numPoints: Int, charToPos: Array<FloatArray>): String {
-                    if (numPoints < 2) return ""
-                        val sb = StringBuilder()
-                        val vecX = FloatArray(numPoints - 1)
-                        val vecY = FloatArray(numPoints - 1)
-                        for (i in 0 until numPoints - 1) {
-                            vecX[i] = rawFlat[2 * (i + 1)] - rawFlat[2 * i]
-                            vecY[i] = rawFlat[2 * (i + 1) + 1] - rawFlat[2 * i + 1]
-                        }
-
-                        var lastKey = 0.toChar()
-                        val startKey = getNearestKey(rawFlat[0], rawFlat[1], charToPos)
-                        if (startKey in 'a'..'z') {
-                            sb.append(startKey)
-                            lastKey = startKey
-                        }
-
-                        for (i in 1 until numPoints - 2) {
-                            val v1x = vecX[i - 1]
-                            val v1y = vecY[i - 1]
-                            val v2x = vecX[i]
-                            val v2y = vecY[i]
-
-                            val len1Sq = v1x * v1x + v1y * v1y
-                            val len2Sq = v2x * v2x + v2y * v2y
-                            if (len1Sq == 0f || len2Sq == 0f) continue
-
-                                val dot = v1x * v2x + v1y * v2y
-                                val cross = v1x * v2y - v1y * v2x
-                                val angle = kotlin.math.atan2(kotlin.math.abs(cross), dot) * 180.0 / kotlin.math.PI
-                                if (angle >= 45f) {
-                                    val key = getNearestKey(rawFlat[2 * i], rawFlat[2 * i + 1], charToPos)
-                                    if (key in 'a'..'z' && key != lastKey) {
-                                        sb.append(key)
-                                        lastKey = key
-                                    }
-                                }
-                        }
-
-                        val endKey = getNearestKey(rawFlat[2 * (numPoints - 1)], rawFlat[2 * (numPoints - 1) + 1], charToPos)
-                        if (endKey in 'a'..'z' && endKey != lastKey) {
-                            sb.append(endKey)
-                        }
-                        return sb.toString()
-                }
-
-                private fun getNearestKey(x: Float, y: Float, charToPos: Array<FloatArray>): Char {
-                    var minDist = Float.MAX_VALUE
-                    var best = 0.toChar()
-                    for (i in 0..25) {
-                        val cx = charToPos[i][0]
-                        val cy = charToPos[i][1]
-                        if (cx == 0f && cy == 0f) continue
-                            val d = (x - cx) * (x - cx) + (y - cy) * (y - cy)
-                            if (d < minDist) {
-                                minDist = d
-                                best = ('a'.code + i).toChar()
-                            }
+            private fun getNearestKey(x: Float, y: Float, charToPos: Map<Char, FloatArray>): Char {
+                var minDist = Float.MAX_VALUE
+                var best = 0.toChar()
+                for ((char, pos) in charToPos) {
+                    val cx = pos[0]
+                    val cy = pos[1]
+                    val d = (x - cx) * (x - cx) + (y - cy) * (y - cy)
+                    if (d < minDist) {
+                        minDist = d
+                        best = char
                     }
-                    return best
                 }
+                return best
+            }
 
-                private fun sqDistanceToSegment(px: Float, py: Float, ax: Float, ay: Float, bx: Float, by: Float, outT: FloatArray): Float {
-                    val dx = bx - ax
-                    val dy = by - ay
-                    val segmentLenSq = dx * dx + dy * dy
-                    if (segmentLenSq < 1e-9f) {
-                        outT[0] = 0f
-                        return (px - ax) * (px - ax) + (py - ay) * (py - ay)
-                    }
-                    var t = ((px - ax) * dx + (py - ay) * dy) / segmentLenSq
-                    if (t < 0f) t = 0f
-                        else if (t > 1f) t = 1f
-                            outT[0] = t
-                            val closestX = ax + t * dx
-                            val closestY = ay + t * dy
-                            return (px - closestX) * (px - closestX) + (py - closestY) * (py - closestY)
+            private fun sqDistanceToSegment(px: Float, py: Float, ax: Float, ay: Float, bx: Float, by: Float, outT: FloatArray): Float {
+                val dx = bx - ax
+                val dy = by - ay
+                val segmentLenSq = dx * dx + dy * dy
+                if (segmentLenSq < 1e-9f) {
+                    outT[0] = 0f
+                    return (px - ax) * (px - ax) + (py - ay) * (py - ay)
                 }
+                var t = ((px - ax) * dx + (py - ay) * dy) / segmentLenSq
+                if (t < 0f) t = 0f
+                    else if (t > 1f) t = 1f
+                        outT[0] = t
+                        val closestX = ax + t * dx
+                        val closestY = ay + t * dy
+                        return (px - closestX) * (px - closestX) + (py - closestY) * (py - closestY)
+            }
+
+            private fun updateThreshold(topScores: FloatArray, newScore: Float): Float {
+                var minIdx = 0
+                for (i in 1 until topScores.size) {
+                    if (topScores[i] < topScores[minIdx]) minIdx = i
+                }
+                if (newScore > topScores[minIdx]) {
+                    topScores[minIdx] = newScore
+                }
+                var min = topScores[0]
+                for (i in 1 until topScores.size) {
+                    if (topScores[i] < min) min = topScores[i]
+                }
+                return min
+            }
     }
 }
