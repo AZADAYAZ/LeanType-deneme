@@ -603,6 +603,7 @@ public class LatinIME extends InputMethodService implements
     public void onCreate() {
         updateWrappedContext();
         helium314.keyboard.latin.gesture.SwipeGestureEngine.initialize(this);
+        helium314.keyboard.latin.gesture.SwipeGestureEngineKotlin.initialize(this);
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
@@ -1899,11 +1900,10 @@ public class LatinIME extends InputMethodService implements
         if (suggestionInfo.isKindOf(helium314.keyboard.latin.SuggestedWords.SuggestedWordInfo.KIND_CORRECTION)
                 && helium314.keyboard.latin.dictionary.Dictionary.DICTIONARY_USER_TYPED.equals(
                         suggestionInfo.mSourceDict != null ? suggestionInfo.mSourceDict.mDictType : "")) {
-            helium314.keyboard.latin.gesture.SwipeGestureEngine.recordAccepted(
+            mInputLogic.getSuggest().recordAccepted(
                     suggestionInfo.mWord,
                     mInputLogic.getWordComposer().getComposedDataSnapshot().mInputPointers,
-                    mKeyboardSwitcher.getKeyboard(),
-                    mInputLogic.getSuggest().getGestureIndex()
+                    mKeyboardSwitcher.getKeyboard()
             );
         }
     }

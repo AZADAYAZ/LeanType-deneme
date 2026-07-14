@@ -90,7 +90,8 @@ fun createGestureTypingSettings(context: Context) = listOf(
     Setting(context, Settings.PREF_GESTURE_METHOD, R.string.gesture_method, R.string.gesture_method_summary) {
         val items = listOf(
             stringResource(R.string.gesture_method_native) to "native",
-            stringResource(R.string.gesture_method_fallback) to "fallback"
+            stringResource(R.string.gesture_method_fallback) to "fallback",
+            stringResource(R.string.gesture_method_kotlin) to "kotlin"
         )
         ListPreference(it, items, if (JniUtils.sHaveNativeGestureLib) "native" else "fallback")
     },
