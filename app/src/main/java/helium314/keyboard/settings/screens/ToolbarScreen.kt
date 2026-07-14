@@ -99,6 +99,10 @@ fun createToolbarSettings(context: Context): List<Setting> {
             lowerName.startsWith("custom_ai_") -> BuildConfig.FLAVOR == "standard" || BuildConfig.FLAVOR == "standardfull" || BuildConfig.FLAVOR == "offline"
             lowerName == "handwriting" -> BuildConfig.FLAVOR == "standardfull"
             lowerName in listOf("proofread", "translate", "clipboard_search") -> BuildConfig.FLAVOR != "offlinelite"
+            lowerName == "gesture_deep_search" -> {
+                val prefs = context.prefs()
+                prefs.getBoolean(helium314.keyboard.latin.settings.DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS) || BuildConfig.DEBUG
+            }
             else -> true
         }
     }

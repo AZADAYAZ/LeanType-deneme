@@ -125,6 +125,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_GESTURE_INPUT = "gesture_input";
     // ponytail: gesture method preference key
     public static final String PREF_GESTURE_METHOD = "gesture_method";
+    public static final String PREF_GESTURE_KOTLIN_ADVANCED = "gesture_kotlin_advanced";
     public static final String PREF_VIBRATION_DURATION_SETTINGS = "vibration_duration_settings";
     public static final String PREF_VIBRATION_AMPLITUDE_SETTINGS = "vibration_amplitude_settings";
     public static final String PREF_KEYPRESS_SOUND_VOLUME = "keypress_sound_volume";

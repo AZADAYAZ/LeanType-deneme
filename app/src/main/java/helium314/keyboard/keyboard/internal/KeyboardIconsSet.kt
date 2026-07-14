@@ -182,6 +182,7 @@ class KeyboardIconsSet private constructor() {
                     ToolbarKey.PAGE_END -> R.drawable.ic_page_end
                     ToolbarKey.SPLIT -> R.drawable.ic_ime_switcher
                     ToolbarKey.PROOFREAD -> R.drawable.ic_proofread
+                    ToolbarKey.GESTURE_DEEP_SEARCH -> R.drawable.sym_keyboard_search_holo
                     ToolbarKey.TRANSLATE -> R.drawable.ic_translate
                     ToolbarKey.CUSTOM_AI_1 -> R.drawable.ic_custom_ai_1
                     ToolbarKey.CUSTOM_AI_2 -> R.drawable.ic_custom_ai_2
@@ -261,6 +262,7 @@ class KeyboardIconsSet private constructor() {
                     ToolbarKey.PAGE_END -> R.drawable.ic_page_end
                     ToolbarKey.SPLIT -> R.drawable.ic_ime_switcher
                     ToolbarKey.PROOFREAD -> R.drawable.ic_proofread
+                    ToolbarKey.GESTURE_DEEP_SEARCH -> R.drawable.sym_keyboard_search_lxx
                     ToolbarKey.TRANSLATE -> R.drawable.ic_translate
                     ToolbarKey.CUSTOM_AI_1 -> R.drawable.ic_custom_ai_1
                     ToolbarKey.CUSTOM_AI_2 -> R.drawable.ic_custom_ai_2
@@ -340,6 +342,7 @@ class KeyboardIconsSet private constructor() {
                     ToolbarKey.PAGE_END -> R.drawable.ic_page_end_rounded
                     ToolbarKey.SPLIT -> R.drawable.ic_ime_switcher
                     ToolbarKey.PROOFREAD -> R.drawable.ic_proofread_rounded
+                    ToolbarKey.GESTURE_DEEP_SEARCH -> R.drawable.sym_keyboard_search_rounded
                     ToolbarKey.TRANSLATE -> R.drawable.ic_translate_rounded
                     ToolbarKey.CUSTOM_AI_1 -> R.drawable.ic_custom_ai_1
                     ToolbarKey.CUSTOM_AI_2 -> R.drawable.ic_custom_ai_2

@@ -448,6 +448,9 @@ class SwipeGestureEngineKotlin {
             }
 
             // ─── Stubs ─────────────────────────────────────────────────────────────
+            @JvmStatic fun deepSearch(context: Context) {
+                Log.i("GestureEngineKotlin", "deepSearch stub called")
+            }
 
             @JvmStatic fun reloadSettings() {}
             @JvmStatic fun syncUserHistory(facilitator: helium314.keyboard.latin.DictionaryFacilitator) {}

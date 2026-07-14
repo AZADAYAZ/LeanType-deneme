@@ -49,6 +49,10 @@ fun GestureTypingScreen(
 
         if (hasGestureLib && gestureEnabled) {
             add(Settings.PREF_GESTURE_METHOD)
+            val showDebug = prefs.getBoolean(helium314.keyboard.latin.settings.DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS) || helium314.keyboard.latin.BuildConfig.DEBUG
+            if (showDebug && selectedMethod == "kotlin") {
+                add(Settings.PREF_GESTURE_KOTLIN_ADVANCED)
+            }
             // Library loader is always first if allowed, and only if native library method is selected!
             if (helium314.keyboard.latin.BuildConfig.BUILD_TYPE != "nouserlib" && selectedMethod == "native") {
                 add(SettingsWithoutKey.LOAD_GESTURE_LIB)
@@ -88,12 +92,19 @@ fun createGestureTypingSettings(context: Context) = listOf(
         SwitchPreference(it, Defaults.PREF_GESTURE_INPUT)
     },
     Setting(context, Settings.PREF_GESTURE_METHOD, R.string.gesture_method, R.string.gesture_method_summary) {
-        val items = listOf(
-            stringResource(R.string.gesture_method_native) to "native",
-            stringResource(R.string.gesture_method_fallback) to "fallback",
-            stringResource(R.string.gesture_method_kotlin) to "kotlin"
-        )
+        val prefs = LocalContext.current.prefs()
+        val showDebug = prefs.getBoolean(helium314.keyboard.latin.settings.DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS) || helium314.keyboard.latin.BuildConfig.DEBUG
+        val items = buildList {
+            add(stringResource(R.string.gesture_method_native) to "native")
+            add(stringResource(R.string.gesture_method_fallback) to "fallback")
+            if (showDebug) {
+                add(stringResource(R.string.gesture_method_kotlin) to "kotlin")
+            }
+        }
         ListPreference(it, items, if (JniUtils.sHaveNativeGestureLib) "native" else "fallback")
+    },
+    Setting(context, Settings.PREF_GESTURE_KOTLIN_ADVANCED, R.string.gesture_kotlin_advanced, R.string.gesture_kotlin_advanced_summary) {
+        SwitchPreference(it, Defaults.PREF_GESTURE_KOTLIN_ADVANCED)
     },
     Setting(context, Settings.PREF_GESTURE_PREVIEW_TRAIL, R.string.gesture_preview_trail) {
         SwitchPreference(it, Defaults.PREF_GESTURE_PREVIEW_TRAIL)

@@ -287,6 +287,8 @@
     <string name="gesture_method_native">Native library (requires swypelib)</string>
     <string name="gesture_method_fallback">Fallback engine (pure Java)</string>
     <string name="gesture_method_kotlin">Experimental engine (pure Kotlin)</string>
+    <string name="gesture_kotlin_advanced">Enable experimental engine features</string>
+    <string name="gesture_kotlin_advanced_summary">Enable advanced experimental database and path logic for the Kotlin gesture engine</string>
     <!-- Message in load gesture library dialog -->
     <string name="load_gesture_library_message">You will need the library for \'%s\'. Incompatible libraries may crash when using gesture typing.
         \n\nWarning: loading external code can be a security risk. Only use a library from a source you trust.</string>
@@ -458,6 +460,7 @@
     <string name="emoji" tools:keep="@string/emoji">Emoji</string>
     <!-- Proofreading feature strings -->
     <string name="proofread" tools:keep="@string/proofread">Proofread</string>
+    <string name="gesture_deep_search" tools:keep="@string/gesture_deep_search">Gesture Deep Search</string>
     <string name="proofread_loading">Proofreading…</string>
     <string name="proofread_success">Text proofread</string>
     <string name="proofread_error">Proofreading failed: %s</string>
