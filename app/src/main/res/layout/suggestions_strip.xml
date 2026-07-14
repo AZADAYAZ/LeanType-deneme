@@ -68,7 +68,8 @@
         <!-- Translate language selector -->
         <HorizontalScrollView
             android:id="@+id/translate_language_selector"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent"
             android:fillViewport="true"
             android:scrollbarThumbHorizontal="@color/toolbar_scrollbar"
