@@ -49,6 +49,18 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
     @Volatile private var gestureIndexFingerprint: Int = 0
 
+    fun buildGestureIndexAsync(keyboard: Keyboard) {
+        val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
+        if (gestureIndex != null && gestureIndexFingerprint == fingerprint) {
+            return
+        }
+        Thread {
+            val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
+            gestureIndex = index
+            gestureIndexFingerprint = fingerprint
+        }.start()
+    }
+
     fun getGestureIndex(): SwipeGestureEngine.GestureIndex? = gestureIndex
 
     // Cached scoreLimit to avoid repeated Settings lookups in hot path
@@ -350,12 +362,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         val suggestionResults = if (useFallback) {
             val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
             var index = gestureIndex
-            if (index == null || index.byFirst.isEmpty() || gestureIndexFingerprint != fingerprint) {
+            if (index == null || gestureIndexFingerprint != fingerprint) {
                 index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
-                if (index.byFirst.isNotEmpty()) {
-                    gestureIndex = index
-                    gestureIndexFingerprint = fingerprint
-                }
+                gestureIndex = index
+                gestureIndexFingerprint = fingerprint
             }
             val predictionSet = if (ngramContext.isValid) {
                 mDictionaryFacilitator.getSuggestionResults(

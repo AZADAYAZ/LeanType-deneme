@@ -711,6 +711,12 @@ public class LatinIME extends InputMethodService implements
         if (mainKeyboardView != null) {
             mainKeyboardView.setMainDictionaryAvailability(isMainDictionaryAvailable);
         }
+        if (isMainDictionaryAvailable) {
+            final Keyboard keyboard = mKeyboardSwitcher.getKeyboard();
+            if (keyboard != null) {
+                mInputLogic.getSuggest().buildGestureIndexAsync(keyboard);
+            }
+        }
         if (mHandler.hasPendingWaitForDictionaryLoad()) {
             mHandler.cancelWaitForDictionaryLoad();
             mHandler.postResumeSuggestions(false /* shouldDelay */);
@@ -1143,6 +1149,10 @@ public class LatinIME extends InputMethodService implements
             mainKeyboardView.closing();
             suggest.setAutoCorrectionThreshold(currentSettingsValues.mAutoCorrectionThreshold);
             switcher.reloadMainKeyboard();
+            final Keyboard keyboard = switcher.getKeyboard();
+            if (keyboard != null) {
+                suggest.buildGestureIndexAsync(keyboard);
+            }
             if (needToCallLoadKeyboardLater) {
                 // If we need to call loadKeyboard again later, we need to save its state now.
                 // The
