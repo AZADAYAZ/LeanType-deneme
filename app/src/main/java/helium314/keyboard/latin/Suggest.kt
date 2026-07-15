@@ -59,18 +59,28 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 return
             }
             Thread {
-                val index = SwipeGestureEngineKotlin.buildIndex(mDictionaryFacilitator, keyboard)
-                gestureIndexKotlin = index
-                gestureIndexFingerprint = fingerprint
+                try {
+                    val index = SwipeGestureEngineKotlin.buildIndex(mDictionaryFacilitator, keyboard)
+                    gestureIndexKotlin = index
+                    gestureIndexFingerprint = fingerprint
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Failed to build Kotlin gesture index", t)
+                    gestureIndexKotlin = null
+                }
             }.start()
         } else {
             if (gestureIndex != null && gestureIndexFingerprint == fingerprint) {
                 return
             }
             Thread {
-                val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
-                gestureIndex = index
-                gestureIndexFingerprint = fingerprint
+                try {
+                    val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
+                    gestureIndex = index
+                    gestureIndexFingerprint = fingerprint
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Failed to build Java/JNI gesture index", t)
+                    gestureIndex = null
+                }
             }.start()
         }
     }

@@ -22,6 +22,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnLongClickListener
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import android.widget.ImageButton
@@ -303,6 +304,20 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         gestureDetector = GestureDetector(context, slidingListener)
     }
 
+    private var swipeDownDismissed = false
+    private val swipeDownDetector = GestureDetector(context, object : SimpleOnGestureListener() {
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+            if (!Settings.getValues().mToolbarSwipeDownDismiss) return false
+            val minVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity * 1.5f
+            if (velocityY > minVelocity && Math.abs(velocityY) > Math.abs(velocityX)) {
+                swipeDownDismissed = true
+                listener.onCodeInput(KeyCode.IME_HIDE_UI, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
+                return true
+            }
+            return false
+        }
+    })
+
     // public stuff
 
     val isShowingMoreSuggestionPanel get() = moreSuggestionsView.isShowingInParent
@@ -553,6 +568,15 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         // Disable More Suggestions if external suggestions are visible
         if (isExternalSuggestionVisible) {
             return false
+        }
+
+        // Detect swipe-down to dismiss keyboard
+        if (Settings.getValues().mToolbarSwipeDownDismiss) {
+            swipeDownDetector.onTouchEvent(motionEvent)
+            if (swipeDownDismissed) {
+                swipeDownDismissed = false
+                return true
+            }
         }
         
         // In split mode, don't intercept touches on the top row (toolbar row)

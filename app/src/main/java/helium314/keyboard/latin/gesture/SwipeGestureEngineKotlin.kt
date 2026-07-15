@@ -16,10 +16,19 @@ import java.util.concurrent.ConcurrentHashMap
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 private const val N_PTS = 16
+private const val MAX_WORD_PTS = 64
 private const val DTW_BAND = 3
 private const val FREQ_WEIGHT = 0.05f
 private const val USER_BOOST_MAX = 50
 private const val PROXIMITY_RADIUS = 0.035f
+
+private class BuildBuffers {
+    val ptsX = FloatArray(MAX_WORD_PTS)
+    val ptsY = FloatArray(MAX_WORD_PTS)
+    val flat = FloatArray(MAX_WORD_PTS * 2)
+    val cum = FloatArray(MAX_WORD_PTS)
+    val result = FloatArray(N_PTS * 2)
+}
 
 // ─── Main class ─────────────────────────────────────────────────────────────
 
@@ -157,6 +166,7 @@ class SwipeGestureEngineKotlin {
             ): GestureIndex {
                 val charToPos = buildCharToPos(keyboard)
                 val byFirst = mutableMapOf<Char, MutableList<IndexEntry>>()
+                val buf = BuildBuffers()
 
                 facilitator.forEachMainDictionaryWord { raw, freqVal ->
                     if (raw == null) return@forEachMainDictionaryWord
@@ -173,13 +183,13 @@ class SwipeGestureEngineKotlin {
                                             val userPath = sUserPaths[lower]
                                             val path = if (userPath != null && userPath.size == N_PTS * 2) {
                                                 val blended = FloatArray(N_PTS * 2)
-                                                val dictPath = wordPath(lower, charToPos)
+                                                val dictPath = wordPath(lower, charToPos, buf)
                                                 for (i in blended.indices) {
                                                     blended[i] = dictPath[i] * 0.3f + userPath[i] * 0.7f
                                                 }
                                                 blended
                                             } else {
-                                                wordPath(lower, charToPos)
+                                                wordPath(lower, charToPos, buf)
                                             }
 
                                             byFirst.getOrPut(first) { mutableListOf() }
@@ -545,6 +555,84 @@ class SwipeGestureEngineKotlin {
                     flat[2 * i + 1] = pts[i][1]
                 }
                 return resampleFlat(flat, pts.size, N_PTS)
+            }
+
+            private fun resampleFlat(pts: FloatArray, numPts: Int, n: Int, cum: FloatArray, result: FloatArray): FloatArray {
+                if (numPts == 0) {
+                    for (i in 0 until n) {
+                        result[2 * i] = 0.5f
+                        result[2 * i + 1] = 0.5f
+                    }
+                    return result
+                }
+                if (numPts == 1) {
+                    val x = pts[0]
+                    val y = pts[1]
+                    for (i in 0 until n) {
+                        result[2 * i] = x
+                        result[2 * i + 1] = y
+                    }
+                    return result
+                }
+                cum[0] = 0f
+                for (i in 1 until numPts) {
+                    val dx = pts[2 * i] - pts[2 * (i - 1)]
+                    val dy = pts[2 * i + 1] - pts[2 * (i - 1) + 1]
+                    cum[i] = cum[i - 1] + kotlin.math.sqrt(dx * dx + dy * dy).toFloat()
+                }
+                val total = cum[numPts - 1]
+                if (total < 1e-9f) {
+                    val x = pts[0]
+                    val y = pts[1]
+                    for (i in 0 until n) {
+                        result[2 * i] = x
+                        result[2 * i + 1] = y
+                    }
+                    return result
+                }
+                var seg = 0
+                for (i in 0 until n) {
+                    val t = total * i / (n - 1)
+                    while (seg < numPts - 2 && cum[seg + 1] < t) seg++
+                    val segLen = cum[seg + 1] - cum[seg]
+                    val alpha = if (segLen > 1e-9f) (t - cum[seg]) / segLen else 0f
+                    result[2 * i] = pts[2 * seg] + alpha * (pts[2 * (seg + 1)] - pts[2 * seg])
+                    result[2 * i + 1] = pts[2 * seg + 1] + alpha * (pts[2 * (seg + 1) + 1] - pts[2 * seg + 1])
+                }
+                return result
+            }
+
+            private fun wordPath(word: String, charToPos: Map<Char, FloatArray>, buf: BuildBuffers): FloatArray {
+                var numPts = 0
+                var lastX = -1f
+                var lastY = -1f
+                for (c in word) {
+                    val p = charToPos[c] ?: continue
+                    if (numPts == 0 || p[0] != lastX || p[1] != lastY) {
+                        if (numPts < MAX_WORD_PTS) {
+                            buf.ptsX[numPts] = p[0]
+                            buf.ptsY[numPts] = p[1]
+                            numPts++
+                        }
+                        lastX = p[0]
+                        lastY = p[1]
+                    }
+                }
+                if (numPts < 2) {
+                    val r = buf.result
+                    val x = if (numPts > 0) buf.ptsX[0] else 0.5f
+                    val y = if (numPts > 0) buf.ptsY[0] else 0.5f
+                    for (i in 0 until N_PTS) {
+                        r[2 * i] = x
+                        r[2 * i + 1] = y
+                    }
+                    return r
+                }
+                for (i in 0 until numPts) {
+                    buf.flat[2 * i] = buf.ptsX[i]
+                    buf.flat[2 * i + 1] = buf.ptsY[i]
+                }
+                return resampleFlat(buf.flat, numPts, N_PTS, buf.cum, buf.result)
             }
 
             private fun dtwDistanceSq(path1: FloatArray, path2: FloatArray): Float {

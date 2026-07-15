@@ -208,6 +208,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_AUTO_SHOW_TOOLBAR = "auto_show_toolbar";
     public static final String PREF_AUTO_SHOW_TOOLBAR_ON_SELECT = "auto_show_toolbar_on_select";
     public static final String PREF_AUTO_HIDE_TOOLBAR = "auto_hide_toolbar";
+    public static final String PREF_TOOLBAR_SWIPE_DOWN_DISMISS = "toolbar_swipe_down_dismiss";
     public static final String PREF_AUTO_HIDE_PINNED_KEYS = "auto_hide_pinned_keys";
     public static final String PREF_REMEMBER_TOOLBAR_STATE = "remember_toolbar_state";
     public static final String PREF_TOOLBAR_EXPANDED = "toolbar_expanded";
