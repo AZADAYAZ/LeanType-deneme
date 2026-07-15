@@ -11,9 +11,14 @@
 
 ### 🎨 User Interface & Styling
 - **Themed Translation Bar Layout**: Styled button layouts for the horizontal language selector bar and aligned text colors with standard key themes for higher contrast. Fixed horizontal width constraint that pushed the close button off-screen.
+- **Toolbar Swipe-to-Dismiss**: Added support for swiping to close/dismiss the toolbar.
+- **Sorted Translation Target Languages**: Sorted the translation language selector dynamically to show last used target languages first.
 
 ### 📖 Language & Corrective Dictionaries
 - **Turkish Case-Folding Blacklist Fix**: Fixed Turkish word blacklist filtering by processing case-folding logic using the Turkish locale directly, correctly treating dotless `ı` and dotted `i` as independent characters.
+- **Dictionary Upgrade & Protection**: Added support for in-app dictionary upgrades and protected user-downloaded dictionaries from accidental deletion.
+- **Multilingual Settings Visibility**: Fixed the multilingual settings option to show when at least one secondary language/layout is enabled.
+- **Immediate Download Status Refresh**: Ensured the dictionary installation status refreshes immediately after downloading from the missing dictionary dialog.
 
 ## 📦 Downloads (Choose Your Flavor)
 
