@@ -776,6 +776,23 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         pinnedKeys.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
     }
 
+    private fun getLanguageHistory(prefs: SharedPreferences): List<Pair<String, String>> {
+        val historyString = prefs.getString("pref_translation_language_history", "") ?: ""
+        if (historyString.isEmpty()) return emptyList()
+        return historyString.split("\n").mapNotNull {
+            val parts = it.split("|", limit = 2)
+            if (parts.size == 2) parts[1] to parts[0] else null
+        }
+    }
+
+    private fun saveLanguageHistory(prefs: SharedPreferences, name: String, code: String) {
+        val currentHistory = getLanguageHistory(prefs).toMutableList()
+        currentHistory.removeAll { it.second == code }
+        currentHistory.add(0, name to code)
+        val serialized = currentHistory.joinToString("\n") { "${it.second}|${it.first}" }
+        prefs.edit().putString("pref_translation_language_history", serialized).apply()
+    }
+
     fun showTranslateLanguageSelector() {
         // Hide other views
         suggestionsStrip.isVisible = false
@@ -791,12 +808,22 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val languageCodes = resources.getStringArray(R.array.translate_language_codes)
         val prefs = context.prefs()
 
-        val list = languageNames.zip(languageCodes).toMutableList()
+        val defaultList = languageNames.zip(languageCodes).toMutableList()
         val currentLanguageCode = prefs.getString(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, "English") ?: "English"
         val currentLanguageName = prefs.getString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, currentLanguageCode) ?: currentLanguageCode
         
-        if (!languageCodes.contains(currentLanguageCode) && currentLanguageCode.isNotEmpty()) {
-            list.add(0, currentLanguageName to currentLanguageCode)
+        val history = getLanguageHistory(prefs).toMutableList()
+        if (currentLanguageCode.isNotEmpty() && history.none { it.second == currentLanguageCode }) {
+            history.add(0, currentLanguageName to currentLanguageCode)
+        }
+
+        val list = mutableListOf<Pair<String, String>>()
+        list.addAll(history)
+        val historyCodes = history.map { it.second }.toSet()
+        for (item in defaultList) {
+            if (item.second !in historyCodes) {
+                list.add(item)
+            }
         }
 
         // Create a button for each language
@@ -821,6 +848,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                     putString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, languageName)
                     putString(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, languageCode)
                 }.apply()
+                saveLanguageHistory(context.prefs(), languageName, languageCode)
                 helium314.keyboard.latin.utils.ProofreadService(context).setTargetLanguage(languageCode)
                 hideTranslateLanguageSelector()
                 listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
@@ -862,6 +890,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                         putString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, customLang)
                         putString(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, customLang)
                     }.apply()
+                    saveLanguageHistory(prefs, customLang, customLang)
                     helium314.keyboard.latin.utils.ProofreadService(context).setTargetLanguage(customLang)
                     hideTranslateLanguageSelector()
                     listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
