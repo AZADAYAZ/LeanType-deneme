@@ -228,10 +228,14 @@ fun WelcomeWizard(
                     val allSubtypes = remember { SubtypeSettings.getAllAvailableSubtypes() }
                     var enabledSubtypes by remember { mutableStateOf(SubtypeSettings.getEnabledSubtypes(true)) }
                     
-                    val gestureMethods = listOf(
-                        stringResource(R.string.gesture_method_native) to "native",
-                        stringResource(R.string.gesture_method_fallback) to "fallback"
-                    )
+                    val showDebug = ctx.prefs().getBoolean(helium314.keyboard.latin.settings.DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS) || BuildConfig.DEBUG
+                    val gestureMethods = buildList {
+                        add(stringResource(R.string.gesture_method_native) to "native")
+                        add(stringResource(R.string.gesture_method_fallback) to "fallback")
+                        if (showDebug) {
+                            add(stringResource(R.string.gesture_method_kotlin) to "kotlin")
+                        }
+                    }
                     var selectedMethod by remember {
                         mutableStateOf(
                             ctx.prefs().getString(
@@ -325,7 +329,7 @@ fun WelcomeWizard(
                             ) {
                                 DropDownField(
                                     items = gestureMethods,
-                                    selectedItem = gestureMethods.first { it.second == selectedMethod },
+                                    selectedItem = gestureMethods.firstOrNull { it.second == selectedMethod } ?: gestureMethods.first(),
                                     onSelected = { pair ->
                                         selectedMethod = pair.second
                                         ctx.prefs().edit { putString(Settings.PREF_GESTURE_METHOD, pair.second) }
