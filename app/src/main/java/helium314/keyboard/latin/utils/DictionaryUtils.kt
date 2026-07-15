@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -277,10 +278,14 @@ fun downloadDictionary(context: Context, locale: Locale, type: String, linkUrl: 
             }
             
             if (status == java.net.HttpURLConnection.HTTP_OK) {
+                val lastModified = conn.lastModified
                 conn.inputStream.use { input ->
                     targetFile.outputStream().use { output ->
                         input.copyTo(output)
                     }
+                }
+                if (lastModified > 0L) {
+                    targetFile.setLastModified(lastModified)
                 }
                 success = true
             } else {
@@ -309,9 +314,51 @@ fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, refres
     val file = remember(cacheDir, type) { cacheDir?.let { File(it, "$type.dict") } }
     var downloading by remember { mutableStateOf(false) }
     val downloadedLink = remember(link, refreshTrigger) { ctx.prefs().getString("pref_dict_download_link_${type}_${dictLocale}", "") ?: "" }
-    val isInstalled = remember(file, refreshTrigger) { file?.exists() == true }
-    val hasUpgrade = remember(isInstalled, downloadedLink, link) {
-        isInstalled && downloadedLink.isNotEmpty() && downloadedLink != link
+    val isInstalled = remember(file, downloadedLink, link, refreshTrigger) {
+        file?.exists() == true && (downloadedLink == link || (downloadedLink.isEmpty() && !link.contains("experimental")))
+    }
+    var onlineLastModified by remember(link) { mutableStateOf(0L) }
+    LaunchedEffect(link, isInstalled) {
+        if (isInstalled) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val url = java.net.URL(link)
+                    val connection = url.openConnection() as java.net.HttpURLConnection
+                    connection.requestMethod = "HEAD"
+                    connection.setRequestProperty("User-Agent", "HeliboardL/3.8.9 (Android)")
+                    connection.connectTimeout = 5000
+                    connection.readTimeout = 5000
+                    connection.instanceFollowRedirects = true
+                    var status = connection.responseCode
+                    var conn = connection
+                    var redirectCount = 0
+                    while ((status == java.net.HttpURLConnection.HTTP_MOVED_TEMP || 
+                            status == java.net.HttpURLConnection.HTTP_MOVED_PERM || 
+                            status == 307 || status == 308) && redirectCount < 5) {
+                        val newUrl = conn.getHeaderField("Location") ?: break
+                        conn.disconnect()
+                        val nextUrl = java.net.URL(newUrl)
+                        conn = nextUrl.openConnection() as java.net.HttpURLConnection
+                        conn.requestMethod = "HEAD"
+                        conn.setRequestProperty("User-Agent", "HeliboardL/3.8.9 (Android)")
+                        conn.connectTimeout = 5000
+                        conn.readTimeout = 5000
+                        conn.instanceFollowRedirects = true
+                        status = conn.responseCode
+                        redirectCount++
+                    }
+                    if (status == java.net.HttpURLConnection.HTTP_OK) {
+                        onlineLastModified = conn.lastModified
+                    }
+                    conn.disconnect()
+                } catch (e: Exception) {
+                    android.util.Log.e("DictionaryUtils", "Failed to check online last modified", e)
+                }
+            }
+        }
+    }
+    val hasUpgrade = remember(isInstalled, file, onlineLastModified, refreshTrigger) {
+        isInstalled && file != null && onlineLastModified > 0L && onlineLastModified > file.lastModified()
     }
 
     Row(
