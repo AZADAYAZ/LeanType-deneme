@@ -83,7 +83,7 @@
 
 #### 1. Standard Full Version (`-standardfull-release.apk`)
 *   **Features:** Recommended. Cloud AI (Proofreading, Translation), **Handwriting Input** support, and Gesture Library Downloader.
-*   **Permissions:** Request `INTERNET` permission (used *only* when explicitly using Cloud AI features or updating libraries).
+*   **Permissions:** Request `INTERNET` permission (used *only* when explicitly using Cloud AI features, downloading dictionaries/libraries, or updating).
 *   **Setup:** Configure Cloud AI keys in Settings.
 
 #### 2. Standard Version (`-standard-release.apk`)
@@ -108,16 +108,17 @@
 
 ## Todo
 
-- inbuild voice input
-- improved inbuild gesture typing
-- Custom key sound
-- two thumb typing
+- Stabilize the current beta version
+- Built-in voice input support
+- Improved built-in gesture typing
+- Custom key sounds
+- Two-thumb typing layout
 
 ## Setup
 
 ### AI Features Setup
 
-LeanType supports multiple AI providers: **Google Gemini**, **Groq**, and **OpenAI-compatible** (OpenRouter, HuggingFace, etc.).
+LeanType supports multiple AI providers: **Google Gemini**, **Groq**, and **OpenAI-compatible** (a custom endpoint option allowing you to use any custom provider, such as OpenRouter, HuggingFace, or local LLM servers).
 
 👉 **[Read the Full AI Setup & Features Guide](docs/FEATURES.md)**
 
@@ -134,9 +135,7 @@ LeanType supports multiple AI providers: **Google Gemini**, **Groq**, and **Open
 
 ## Contributing
 
-For issues specific to LeanType features, please open an issue in this repository.
-
-For issues with core HeliBoard functionality, please report to the [original HeliBoard repository](https://github.com/Helium314/HeliBoard/issues).
+Please report any issues or suggestions directly in our repository: [🐛 Open an Issue](https://github.com/LeanBitLab/HeliboardL/issues)
 
 ## Community Themes
 
@@ -168,17 +167,17 @@ Check out our other projects:
 
 ---
 
-## Support the Development
+## 💖 Support the Development
 
-Building and maintaining privacy-focused, offline AI apps takes time and resources (test devices, server costs, etc.).
+Building and maintaining privacy-focused, on-device apps takes significant time, hardware resources (test devices, compilation machines), and effort. 
 
-If you love LeanType, please consider supporting the project!
+If LeanType makes your daily typing experience better, please consider supporting our development! Your sponsorship directly helps us keep the project **100% free, open-source, and independent**.
 
-<a href="https://github.com/sponsors/LeanBitLab">
-  <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" width="150" alt="Sponsor on GitHub"/>
-</a>
-
-Your support keeps the code **100% Free and Open Source**.
+<div align="left">
+  <a href="https://github.com/sponsors/LeanBitLab">
+    <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" style="height: 40px;" alt="Sponsor on GitHub"/>
+  </a>
+</div>
 
 ---
 
