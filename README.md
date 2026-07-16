@@ -101,22 +101,12 @@
 *   **Manual Setup Required:**
     *   **Gesture Typing:** [Download library manually](https://github.com/erkserkserks/openboard/tree/46fdf2b550035ca69299ce312fa158e7ade36967/app/src/main/jniLibs) and load via *Settings > Gesture typing*.
 
-## Original HeliBoard Features
+## Todo
 
-<ul>
-  <li>Add dictionaries for suggestions and spell check</li>
-  <li>Customize keyboard themes (style, colors and background image)</li>
-  <li>Customize keyboard layouts</li>
-  <li>Multilingual typing</li>
-  <li>Glide typing (works out of the box with built-in pure-Java fallback engine, or use native library)</li>
-  <li>Clipboard history</li>
-  <li>One-handed mode</li>
-  <li>Split keyboard</li>
-  <li>Number pad</li>
-  <li>Backup and restore settings</li>
-</ul>
-
-For original feature documentation, visit the [HeliBoard Wiki](https://github.com/Helium314/HeliBoard/wiki).
+- inbuild voice input
+- improved inbuild gesture typing
+- Custom key sound
+- two thumb typing
 
 ## Setup
 
