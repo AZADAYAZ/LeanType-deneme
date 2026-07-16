@@ -81,12 +81,17 @@
 
 ### 📦 Choose Your Version
 
-#### 1. Standard Version (`-standard-release.apk`)
-*   **Features:** Full suite including **AI Proofreading**, **AI Translation**, **Handwriting Input**, and **Gesture Library Downloader**.
-*   **Permissions:** Request `INTERNET` permission (used *only* when you explicitly use AI features, download plugins, or update libraries).
-*   **Setup:** Use the built-in downloader for Gesture Typing and Handwriting Input. Configure AI keys in Settings.
+#### 1. Standard Full Version (`-standardfull-release.apk`)
+*   **Features:** Recommended. Cloud AI (Proofreading, Translation), **Handwriting Input** support, and Gesture Library Downloader.
+*   **Permissions:** Request `INTERNET` permission (used *only* when explicitly using Cloud AI features or updating libraries).
+*   **Setup:** Configure Cloud AI keys in Settings.
 
-#### 2. Offline Version (`-offline-release.apk`)
+#### 2. Standard Version (`-standard-release.apk`)
+*   **Features:** F-Droid compatible (FOSS only). Cloud AI (Proofreading, Translation) and Gesture Library Downloader. **NO Handwriting Input**.
+*   **Permissions:** Request `INTERNET` permission.
+*   **Setup:** Configure Cloud AI keys in Settings.
+
+#### 3. Offline Version (`-offline-release.apk`)
 *   **Features:** All UI/UX enhancements and **Offline Neural Proofreading** (via `llama.cpp` using local **GGUF models**).
 *   **Permissions:** **NO INTERNET PERMISSION**. Guaranteed at OS level.
 *   **Best For:** Privacy purists.
@@ -94,7 +99,7 @@
     *   **Gesture Typing:** [Download library manually](https://github.com/erkserkserks/openboard/tree/46fdf2b550035ca69299ce312fa158e7ade36967/app/src/main/jniLibs) and load via *Settings > Gesture typing*.
     *   **Offline AI:** Download GGUF models and load via *Settings > Advanced > GGUF Model (.gguf)*. 👉 **[See Offline Setup Instructions](docs/FEATURES.md#5-offline-proofreading-privacy-focused)**
 
-#### 3. Offline Lite Version (`-offlinelite-release.apk`)
+#### 4. Offline Lite Version (`-offlinelite-release.apk`)
 *   **Features:** All UI/UX enhancements but **NO AI FEATURES**.
 *   **Permissions:** **NO INTERNET PERMISSION**. Guaranteed at OS level.
 *   **Best For:** Minimalists who want a modern keyboard without any AI components (~20MB size).
