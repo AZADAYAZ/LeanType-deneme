@@ -16,5 +16,5 @@ Explain how you would use this feature and why it is useful.
 **Alternatives considered**
 Any alternative solutions or workarounds you've considered.
 
-**App version**
-Specify the version you are using.
+**App version & Flavor**
+Specify the version and the flavor you are using (e.g. standardfull, standard, offline, offlinelite).

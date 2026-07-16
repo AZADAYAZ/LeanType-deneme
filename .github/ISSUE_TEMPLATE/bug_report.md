@@ -16,8 +16,8 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 Add screenshots only if they help explain the problem (keep file size small).
 
-**App version**
-Specify the version (e.g. v3.9.9) or build commit.
+**App version & Flavor**
+Specify the version (e.g. v3.9.9) or build commit, and the flavor (e.g. standardfull, standard, offline, offlinelite).
 
 **Device Info**
 - Model:
