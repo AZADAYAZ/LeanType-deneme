@@ -200,7 +200,7 @@ object Defaults {
     const val PREF_DISABLE_NETWORK = false
     const val PREF_TOOLBAR_MODE = "EXPANDABLE"
     const val PREF_TOOLBAR_HIDING_GLOBAL = true
-    const val PREF_QUICK_PIN_TOOLBAR_KEYS = true
+    const val PREF_QUICK_PIN_TOOLBAR_KEYS = false
     const val PREF_TOOLBAR_LONG_PRESS_HINT = true
     val PREF_PINNED_TOOLBAR_KEYS = defaultPinnedToolbarPref
     val PREF_TOOLBAR_KEYS = defaultToolbarPref
