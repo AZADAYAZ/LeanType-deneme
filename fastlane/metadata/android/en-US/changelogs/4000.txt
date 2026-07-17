@@ -1,4 +1,5 @@
 - Resolved gesture typing battery drain and thread contention issue.
+- Fixed regional main dictionary variant detection for language-only layouts.
 - Fixed selection and backspace delete behaviors in floating mode.
 - Added user toggle for first-word suggestions.
 - Improved Thai text expansion and word segmentation.

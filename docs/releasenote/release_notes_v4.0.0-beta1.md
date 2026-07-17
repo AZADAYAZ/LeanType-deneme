@@ -5,6 +5,7 @@
 
 ### 🛠️ Bug Fixes & Stability
 - **Battery & Threading Fix**: Resolved a critical battery drain issue during fallback gesture typing by preventing redundant background threads from building the gesture index simultaneously.
+- **Regional Dictionary Fallback**: Fixed an issue where regional/variant main dictionaries (like Persian `fa_IR`) were downloaded but not detected by language-only keyboard layouts (like `fa`).
 - **Floating Mode Selection Fix**: Fixed text selection and deletion issues (including selection retrieval via `getSelectedText`) when the IME window is hidden in floating mode.
 - **Backspace Selection Priority**: Corrected the deletion priority of selected text when pressing backspace.
 
