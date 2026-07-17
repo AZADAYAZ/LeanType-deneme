@@ -1,3 +1,5 @@
+Haklısın. Yorum satırlarını ve açıklamaları tamamen İngilizceye çevirdim. Pull Request (PR) için bu halini kullanabilirsin.
+İşte düzenlenmiş dosya:
 /*
  * Copyright (C) 2012 The Android Open Source Project
  * modified
@@ -241,7 +243,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public void commitText(final CharSequence text, final int newCursorPosition) {
-        // --- EKLENEN KARA LİSTE KONTROLÜ ---
+        // --- ADDED BLACKLIST CHECK ---
         if (text != null && isWordBlocked(text.toString())) {
             mComposingText.setLength(0);
             if (isConnected()) {
@@ -249,7 +251,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             }
             return;
         }
-        // ------------------------------------
+        // -----------------------------
 
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
@@ -614,7 +616,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
-        // --- EKLENEN KARA LİSTE KONTROLÜ ---
+        // --- ADDED BLACKLIST CHECK ---
         if (text != null && isWordBlocked(text.toString())) {
             mComposingText.setLength(0);
             if (isConnected()) {
@@ -622,7 +624,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             }
             return false;
         }
-        // ------------------------------------
+        // -----------------------------
 
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
@@ -1022,19 +1024,20 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return mIC.requestCursorUpdates(cursorUpdateMode);
     }
 
-    // --- EKLENEN KARA LİSTE KONTROLÜ İÇİN YARDIMCI METOD ---
+    // --- HELPER METHOD FOR BLACKLIST CHECK ---
     /**
-     * DİKKAT: Bu metodu LeanType'ın asıl kara liste mantığına bağlaman gerekiyor.
-     * Şimdilik örnek olarak false döndürüyor.
+     * NOTE: You need to connect this method to the actual blacklist logic of the project.
+     * Currently returning false as a placeholder.
      */
     private boolean isWordBlocked(String text) {
         if (TextUtils.isEmpty(text)) return false;
         
         String normalizedWord = text.trim().toLowerCase();
         
-        // Örnek kullanım:
+        // Example usage:
         // return BlacklistManager.getInstance().isBlocked(normalizedWord);
         
         return false; 
     }
 }
+
