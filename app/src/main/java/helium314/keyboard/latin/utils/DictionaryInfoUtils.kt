@@ -113,7 +113,6 @@ object DictionaryInfoUtils {
         getCachedDictsForLocale(locale, context).firstOrNull { it.name.substringBefore("_") == type }
 
     fun getFallbackVariantDirectory(locale: Locale, context: Context): File? {
-        if (locale.country.isEmpty() && locale.variant.isEmpty()) return null
         val cacheDir = File(getWordListCacheDirectory(context))
         if (!cacheDir.exists() || !cacheDir.isDirectory) return null
         val subDirs = cacheDir.listFiles { file -> file.isDirectory } ?: return null
@@ -150,10 +149,10 @@ object DictionaryInfoUtils {
             if (fallbackFiles?.any { it.name.endsWith(USER_DICTIONARY_SUFFIX) || it.name.startsWith(MAIN_DICT_PREFIX) || it.name == MAIN_DICT_FILE_NAME } == true) {
                 return fallbackFiles
             }
-            val variantDir = getFallbackVariantDirectory(locale, context)
-            if (variantDir != null) {
-                return variantDir.listFiles() ?: emptyArray()
-            }
+        }
+        val variantDir = getFallbackVariantDirectory(locale, context)
+        if (variantDir != null) {
+            return variantDir.listFiles() ?: emptyArray()
         }
         return exactFiles ?: emptyArray()
     }

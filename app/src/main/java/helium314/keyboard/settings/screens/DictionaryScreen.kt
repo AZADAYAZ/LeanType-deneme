@@ -409,14 +409,21 @@ fun getUserAndInternalDictionaries(context: Context, locale: Locale): Pair<List<
         it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX) || it.name.startsWith(DictionaryInfoUtils.MAIN_DICT_PREFIX) || it.name.endsWith(".dict")
     } == true
 
-    if (!hasFiles && (locale.country.isNotEmpty() || locale.variant.isNotEmpty())) {
-        val fallbackLocale = Locale(locale.language)
-        val fallbackDir = DictionaryInfoUtils.getCacheDirectoryForLocale(fallbackLocale, context)?.let { File(it) }
-        val hasFallbackFiles = fallbackDir?.exists() == true && fallbackDir.isDirectory && fallbackDir.listFiles()?.any {
-            it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX) || it.name.startsWith(DictionaryInfoUtils.MAIN_DICT_PREFIX) || it.name.endsWith(".dict")
-        } == true
-        if (hasFallbackFiles) {
-            userLocaleDir = fallbackDir
+    if (!hasFiles) {
+        if (locale.country.isNotEmpty() || locale.variant.isNotEmpty()) {
+            val fallbackLocale = Locale(locale.language)
+            val fallbackDir = DictionaryInfoUtils.getCacheDirectoryForLocale(fallbackLocale, context)?.let { File(it) }
+            val hasFallbackFiles = fallbackDir?.exists() == true && fallbackDir.isDirectory && fallbackDir.listFiles()?.any {
+                it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX) || it.name.startsWith(DictionaryInfoUtils.MAIN_DICT_PREFIX) || it.name.endsWith(".dict")
+            } == true
+            if (hasFallbackFiles) {
+                userLocaleDir = fallbackDir
+            } else {
+                val variantDir = DictionaryInfoUtils.getFallbackVariantDirectory(locale, context)
+                if (variantDir != null) {
+                    userLocaleDir = variantDir
+                }
+            }
         } else {
             val variantDir = DictionaryInfoUtils.getFallbackVariantDirectory(locale, context)
             if (variantDir != null) {
