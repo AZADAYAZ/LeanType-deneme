@@ -1,2 +1,5 @@
-- Prepared initial beta release for version 4.0.0.
-- Included updates for dictionary loading optimizations and crash fixes.
+- Resolved gesture typing battery drain and thread contention issue.
+- Fixed selection and backspace delete behaviors in floating mode.
+- Added user toggle for first-word suggestions.
+- Improved Thai text expansion and word segmentation.
+- Quick pin toolbar is now disabled by default.
