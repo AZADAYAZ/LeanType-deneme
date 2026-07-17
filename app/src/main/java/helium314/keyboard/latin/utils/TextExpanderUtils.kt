@@ -209,6 +209,22 @@ object TextExpanderUtils {
         return result
     }
 
+    fun isPrefixOfNonRegexShortcut(
+        word: String,
+        textBeforeCursor: String,
+        context: Context,
+    ): Boolean =
+        getShortcuts(context).any { (key, entry) ->
+            if (key.startsWith(REGEX_PREFIX) || key.length < entry.prefix.length) {
+                false
+            } else {
+                val shortcut = key.substring(entry.prefix.length)
+                !shortcut.equals(word, ignoreCase = true) &&
+                    shortcut.startsWith(word, ignoreCase = true) &&
+                    textBeforeCursor.endsWith(entry.prefix + word, ignoreCase = true)
+            }
+        }
+
     fun getExpandedWordForTyped(word: String?, textBeforeCursor: String?, context: Context): ExpandedResult? {
         if (word == null || textBeforeCursor == null || !isEnabled(context)) return null
         val shortcuts = getShortcuts(context)
