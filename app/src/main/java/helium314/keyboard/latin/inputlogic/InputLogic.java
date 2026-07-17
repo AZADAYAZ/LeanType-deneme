@@ -1739,6 +1739,24 @@ public final class InputLogic {
         mSpaceState = SpaceState.NONE;
         mDeleteCount++;
 
+        if (mConnection.hasSelection()) {
+            final int numCharsDeleted = mConnection.getExpectedSelectionEnd()
+                    - mConnection.getExpectedSelectionStart();
+            final CharSequence selection = mConnection.getSelectedText(0 /* 0 for no styles */);
+            if (!TextUtils.isEmpty(selection)) {
+                unlearnWord(selection.toString(), inputTransaction.getSettingsValues(),
+                        Constants.EVENT_BACKSPACE);
+            }
+            mWordComposer.reset();
+            mConnection.commitText("", 1);
+            StatsUtils.onBackspaceSelectedText(numCharsDeleted);
+            if (inputTransaction.getSettingsValues().needsToLookupSuggestions()
+                    && inputTransaction.getSettingsValues().mSpacingAndPunctuations.mCurrentLanguageHasSpaces) {
+                restartSuggestionsOnWordTouchedByCursor(inputTransaction.getSettingsValues());
+            }
+            return;
+        }
+
         if (mLastExpandedText != null && !event.isKeyRepeat()) {
             final int expectedCursor = mConnection.getExpectedSelectionEnd();
             if (expectedCursor == mLastExpandedCursorPosition) {
@@ -1878,20 +1896,8 @@ public final class InputLogic {
             // No cancelling of commit/double space/swap: we have a regular backspace.
             // We should backspace one char and restart suggestion if at the end of a word.
             if (mConnection.hasSelection()) {
-                // If there is a selection, remove it.
-                // We also need to unlearn the selected text.
-                final CharSequence selection = mConnection.getSelectedText(0 /* 0 for no styles */);
-                if (!TextUtils.isEmpty(selection)) {
-                    unlearnWord(selection.toString(), inputTransaction.getSettingsValues(),
-                            Constants.EVENT_BACKSPACE);
-                    hasUnlearnedWordBeingDeleted = true;
-                }
-                final int numCharsDeleted = mConnection.getExpectedSelectionEnd()
-                        - mConnection.getExpectedSelectionStart();
-                mConnection.setSelection(mConnection.getExpectedSelectionEnd(),
-                        mConnection.getExpectedSelectionEnd());
-                mConnection.deleteTextBeforeCursor(numCharsDeleted);
-                StatsUtils.onBackspaceSelectedText(numCharsDeleted);
+                mWordComposer.reset();
+                mConnection.commitText("", 1);
             } else {
                 // There is no selection, just delete one character.
                 if (inputTransaction.getSettingsValues().mInputAttributes.isTypeNull()
