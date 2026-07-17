@@ -108,6 +108,7 @@ public class SettingsValues {
         public final boolean mBigramPredictionEnabled;// Use bigrams to predict the next word when there is no input for
                                                       // it
                                                       // yet
+        public final boolean mFirstWordPredictionEnabled;
         public final boolean mSuggestPunctuation;
         public final boolean mCenterSuggestionTextToEnter;
         public final String mGestureMethod;
@@ -283,6 +284,8 @@ public class SettingsValues {
                                 Defaults.PREF_DISABLE_MULTI_WORD_SUGGESTIONS);
                 mBigramPredictionEnabled = prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS,
                                 Defaults.PREF_BIGRAM_PREDICTIONS);
+                mFirstWordPredictionEnabled = prefs.getBoolean(Settings.PREF_FIRST_WORD_PREDICTIONS,
+                                Defaults.PREF_FIRST_WORD_PREDICTIONS);
                 mSuggestPunctuation = prefs.getBoolean(Settings.PREF_SUGGEST_PUNCTUATION,
                                 Defaults.PREF_SUGGEST_PUNCTUATION);
                 mSuggestClipboardContent = prefs.getBoolean(Settings.PREF_SUGGEST_CLIPBOARD_CONTENT,
@@ -555,6 +558,8 @@ public class SettingsValues {
                 sb.append("" + mBlockPotentiallyOffensive);
                 sb.append("\n   mBigramPredictionEnabled = ");
                 sb.append("" + mBigramPredictionEnabled);
+                sb.append("\n   mFirstWordPredictionEnabled = ");
+                sb.append("" + mFirstWordPredictionEnabled);
                 sb.append("\n   mGestureInputEnabled = ");
                 sb.append("" + mGestureInputEnabled);
                 sb.append("\n   mGestureTrailEnabled = ");

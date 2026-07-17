@@ -2334,9 +2334,15 @@ public final class InputLogic {
             return;
         }
 
-        if (!mWordComposer.isComposingWord() && !settingsValues.mBigramPredictionEnabled) {
-            mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
-            return;
+        if (!mWordComposer.isComposingWord()) {
+            final NgramContext ngramContext = getNgramContextFromNthPreviousWordForSuggestion(
+                    settingsValues.mSpacingAndPunctuations, 1);
+            final boolean isFirstWord = ngramContext.isBeginningOfSentenceContext();
+            if ((isFirstWord && !settingsValues.mFirstWordPredictionEnabled)
+                    || (!isFirstWord && !settingsValues.mBigramPredictionEnabled)) {
+                mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
+                return;
+            }
         }
 
         final AsyncResultHolder<SuggestedWords> holder = new AsyncResultHolder<>("Suggest");

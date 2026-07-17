@@ -179,6 +179,10 @@
     <string name="bigram_prediction">Next-word suggestions</string>
     <!-- Description for "next word suggestion" option. This displays suggestions even when there is no input, based on the previous word. -->
     <string name="bigram_prediction_summary">Use the previous word in making suggestions</string>
+    <!-- Option to show first-word suggestions when there is no input at the start of a sentence. -->
+    <string name="first_word_prediction">First-word suggestions</string>
+    <!-- Description for first-word suggestions option -->
+    <string name="first_word_prediction_summary">Show suggestions when there is no input at the start of a sentence</string>
     <!-- Option to enable using punctuation suggestions. -->
     <string name="suggest_punctuation">Punctuation suggestions</string>
     <!-- Description for "suggest_punctuation" option. -->

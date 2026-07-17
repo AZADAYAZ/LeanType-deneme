@@ -126,6 +126,7 @@ object Defaults {
     const val PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = false
     const val PREF_ALWAYS_INCOGNITO_MODE = false
     const val PREF_BIGRAM_PREDICTIONS = true
+    const val PREF_FIRST_WORD_PREDICTIONS = true
     const val PREF_SUGGEST_PUNCTUATION = false
     const val PREF_SUGGEST_CLIPBOARD_CONTENT = true
     const val PREF_SUGGEST_SCREENSHOTS = false

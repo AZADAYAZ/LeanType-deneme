@@ -534,7 +534,7 @@ private fun getCategoryForPrefKey(key: String): BackupCategory {
     }
     
     val dictKeys = setOf(
-        "use_personalized_dicts", "block_potentially_offensive", "next_word_prediction",
+        "use_personalized_dicts", "block_potentially_offensive", "next_word_prediction", "first_word_prediction",
         "suggest_emojis", "inline_emoji_search", "show_emoji_descriptions",
         "auto_correction", "more_auto_correction", "auto_correct_threshold",
         "autocorrect_shortcuts", "backspace_reverts_autocorrect", "suggest_punctuation",
