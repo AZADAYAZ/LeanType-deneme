@@ -1961,7 +1961,11 @@ public class LatinIME extends InputMethodService implements
                 mSuggestionStripView.setToolbarVisibility(false);
             return;
         }
-        if (currentSettings.mBigramPredictionEnabled) {
+        final NgramContext ngramContext = mInputLogic.getNgramContextFromNthPreviousWordForSuggestion(
+                currentSettings.mSpacingAndPunctuations, 1);
+        final boolean isFirstWord = ngramContext.isBeginningOfSentenceContext();
+        final boolean predictionEnabled = isFirstWord ? currentSettings.mFirstWordPredictionEnabled : currentSettings.mBigramPredictionEnabled;
+        if (predictionEnabled) {
             mInputLogic.getSuggestedWords(SuggestedWords.INPUT_STYLE_PREDICTION, 0, new Suggest.OnGetSuggestedWordsCallback() {
                 @Override
                 public void onGetSuggestedWords(SuggestedWords suggestedWords) {
