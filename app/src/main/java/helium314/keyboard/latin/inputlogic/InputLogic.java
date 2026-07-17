@@ -1739,10 +1739,11 @@ public final class InputLogic {
         mSpaceState = SpaceState.NONE;
         mDeleteCount++;
 
-        if (mConnection.hasSelection()) {
-            final int numCharsDeleted = mConnection.getExpectedSelectionEnd()
-                    - mConnection.getExpectedSelectionStart();
-            final CharSequence selection = mConnection.getSelectedText(0 /* 0 for no styles */);
+        final CharSequence selection = mConnection.getSelectedText(0 /* 0 for no styles */);
+        final boolean hasSelection = !TextUtils.isEmpty(selection) || mConnection.hasSelection();
+        if (hasSelection) {
+            final int numCharsDeleted = !TextUtils.isEmpty(selection) ? selection.length()
+                    : (mConnection.getExpectedSelectionEnd() - mConnection.getExpectedSelectionStart());
             if (!TextUtils.isEmpty(selection)) {
                 unlearnWord(selection.toString(), inputTransaction.getSettingsValues(),
                         Constants.EVENT_BACKSPACE);
@@ -1895,7 +1896,8 @@ public final class InputLogic {
 
             // No cancelling of commit/double space/swap: we have a regular backspace.
             // We should backspace one char and restart suggestion if at the end of a word.
-            if (mConnection.hasSelection()) {
+            final CharSequence fallbackSel = mConnection.getSelectedText(0);
+            if (!TextUtils.isEmpty(fallbackSel) || mConnection.hasSelection()) {
                 mWordComposer.reset();
                 sendDownUpKeyEvent(KeyEvent.KEYCODE_DEL);
             } else {
