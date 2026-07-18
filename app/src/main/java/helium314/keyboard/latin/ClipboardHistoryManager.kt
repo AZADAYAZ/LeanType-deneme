@@ -52,7 +52,6 @@ class ClipboardHistoryManager(
             _clipboardDao = value
         }
     private var dontShowCurrentSuggestion: Boolean = false
-    private var mediaStoreObserver: ContentObserver? = null
     // ponytail: track last clip state to avoid resetting dismiss state on duplicate events
     private var lastPrimaryClipText: String? = null
     private var lastPrimaryClipUri: String? = null
@@ -179,51 +178,12 @@ class ClipboardHistoryManager(
 
     fun onStartInputView() {
         if (latinIME.mSettings.current.mSuggestScreenshots) {
-            registerMediaStoreObserver()
             updateLatestScreenshotCache()
         }
     }
 
     fun onFinishInputView() {
-        unregisterMediaStoreObserver()
         mainHandler.removeCallbacksAndMessages(null)
-    }
-
-    private fun registerMediaStoreObserver() {
-        if (mediaStoreObserver == null) {
-            mediaStoreObserver = object : ContentObserver(mainHandler) {
-                override fun onChange(selfChange: Boolean, uri: Uri?) {
-                    super.onChange(selfChange, uri)
-                    if (latinIME.mSettings.current.mSuggestScreenshots) {
-                        mainHandler.removeCallbacksAndMessages(null)
-                        mainHandler.postDelayed({
-                            updateLatestScreenshotCache {
-                                dontShowCurrentSuggestion = false
-                                val prefs = latinIME.prefs()
-                                prefs.edit().remove("last_dismissed_screenshot_uri").apply()
-                                latinIME.setNeutralSuggestionStrip()
-                            }
-                        }, 1000)
-                    }
-                }
-            }
-            latinIME.contentResolver.registerContentObserver(
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                true,
-                mediaStoreObserver!!
-            )
-        }
-    }
-
-    private fun unregisterMediaStoreObserver() {
-        mediaStoreObserver?.let {
-            try {
-                latinIME.contentResolver.unregisterContentObserver(it)
-            } catch (e: Exception) {
-                // Ignore
-            }
-            mediaStoreObserver = null
-        }
     }
 
     private fun cleanUpImageCache() {
@@ -245,7 +205,6 @@ class ClipboardHistoryManager(
 
     fun onDestroy() {
         clipboardManager.removePrimaryClipChangedListener(this)
-        unregisterMediaStoreObserver()
         mainHandler.removeCallbacksAndMessages(null)
     }
 
