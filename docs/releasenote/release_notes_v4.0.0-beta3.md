@@ -5,6 +5,7 @@
 
 ### 🛠️ Bug Fixes & Stability
 - **PointerTracker Crash Fix**: Fixed `NullPointerException` during rapid view switches and keyboard mode changes.
+- **Settings Initialization Safety**: Made `Settings.getValues()` null-safe to auto-load settings during layout inflation, preventing `InflateException` crashes.
 - **Emoji Dictionary Detection & Persistence**: Fixed issue where `emoji_*.dict` files failed to be recognized after downloading. Added preference tracking to prevent emoji and custom dictionaries from being wiped on app upgrade or cache cleanup.
 - **Regional Locale Dictionary Aggregation**: Resolved issue where regional locales (e.g. `English (India)` / `en-IN`) only displayed the emoji dictionary tab by aggregating main and emoji dictionaries across variant and language fallback directories (`en-US`, `en`).
 
