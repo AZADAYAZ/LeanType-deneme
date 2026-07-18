@@ -26,6 +26,8 @@ import helium314.keyboard.latin.utils.AutoCorrectionUtils
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.SuggestionResults
+import helium314.keyboard.latin.utils.ExecutorUtils
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.Locale
 import kotlin.math.min
 
@@ -48,15 +50,18 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // or action-button changes, and not on text-field focus changes.
     @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
     @Volatile private var gestureIndexFingerprint: Int = 0
-    @Volatile private var buildingFingerprint: Int? = null
+    private val buildingFingerprint = AtomicInteger(0)
 
     fun buildGestureIndexAsync(keyboard: Keyboard) {
         val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
-        if ((gestureIndex != null && gestureIndexFingerprint == fingerprint) || buildingFingerprint == fingerprint) {
+        if (fingerprint == 0) return
+        if ((gestureIndex != null && gestureIndexFingerprint == fingerprint) || buildingFingerprint.get() == fingerprint) {
             return
         }
-        buildingFingerprint = fingerprint
-        Thread {
+        if (!buildingFingerprint.compareAndSet(0, fingerprint)) {
+            return
+        }
+        ExecutorUtils.getBackgroundExecutor(ExecutorUtils.KEYBOARD).execute {
             try {
                 val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
                 gestureIndex = index
@@ -65,11 +70,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                 Log.e(TAG, "Failed to build Java/JNI gesture index", t)
                 gestureIndex = null
             } finally {
-                if (buildingFingerprint == fingerprint) {
-                    buildingFingerprint = null
-                }
+                buildingFingerprint.compareAndSet(fingerprint, 0)
             }
-        }.start()
+        }
     }
 
     fun getGestureIndex(): SwipeGestureEngine.GestureIndex? = gestureIndex
@@ -89,7 +92,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     fun clearNextWordSuggestionsCache() {
         nextWordSuggestionsCache.evictAll()
         gestureIndex = null
-        buildingFingerprint = null
+        buildingFingerprint.set(0)
         // Also reset scoreLimit cache to force refresh on next use
         synchronized(this) {
             mLastScoreLimitUpdateTime = 0
@@ -581,9 +584,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
 
         @JvmStatic
         fun addDebugInfo(wordInfo: SuggestedWordInfo?, typedWord: String) {
-            if (!SuggestionStripView.DEBUG_SUGGESTIONS)
+            if (!SuggestionStripView.DEBUG_SUGGESTIONS || wordInfo == null)
                 return
-            val normalizedScore = BinaryDictionaryUtils.calcNormalizedScore(typedWord, wordInfo.toString(), wordInfo!!.mScore)
+            val normalizedScore = BinaryDictionaryUtils.calcNormalizedScore(typedWord, wordInfo.toString(), wordInfo.mScore)
             val scoreInfoString: String
             val dict = wordInfo.mSourceDict.mDictType + ":" + wordInfo.mSourceDict.mLocale
             scoreInfoString = if (normalizedScore > 0) {

@@ -57,6 +57,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -263,7 +264,9 @@ private fun backupLauncher(
                 wait.countDown()
             }
         }
-        wait.await()
+        if (!wait.await(30, TimeUnit.SECONDS)) {
+            Log.w("AdvancedScreen", "Backup timed out")
+        }
     }
 }
 
@@ -392,7 +395,9 @@ private fun restoreLauncher(
                 wait.countDown()
             }
         }
-        wait.await()
+        if (!wait.await(30, TimeUnit.SECONDS)) {
+            Log.w("AdvancedScreen", "Restore timed out")
+        }
         AppUpgrade.checkVersionUpgrade(ctx)
         AppUpgrade.transferOldPinnedClips(ctx)
         Settings.getInstance().startListener()

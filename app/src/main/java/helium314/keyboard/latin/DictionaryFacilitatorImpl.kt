@@ -316,9 +316,10 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 }
 
                 listener?.onUpdateMainDictionaryAvailability(hasAtLeastOneInitializedMainDictionary())
-                latchForWaitingLoadingMainDictionary.countDown()
             } catch (e: Throwable) {
                 Log.e(TAG, "could not initialize main dictionaries for $locales", e)
+            } finally {
+                latchForWaitingLoadingMainDictionary.countDown()
             }
         }
     }
@@ -606,7 +607,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         val suggestionResults = SuggestionResults(
             SuggestedWords.MAX_SUGGESTIONS, ngramContext.isBeginningOfSentenceContext, false
         )
-        waitForOtherDicts?.await()
+        waitForOtherDicts?.await(500, TimeUnit.MILLISECONDS)
 
         suggestionsArray.forEach {
             if (it == null) return@forEach

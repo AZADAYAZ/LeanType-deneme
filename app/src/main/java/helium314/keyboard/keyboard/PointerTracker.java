@@ -87,6 +87,9 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     // WeakHashMap?
     public static void clearOldViewData() {
         sProxyMap.clear();
+        sDrawingProxy = null;
+        sTimerProxy = null;
+        sListener = KeyboardActionListener.EMPTY_LISTENER;
     }
 
     public static void switchTo(DrawingProxy drawingProxy) {
@@ -459,7 +462,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     }
 
     private void setReleasedKeyGraphics(@Nullable final Key key, final boolean withAnimation) {
-        if (key == null) {
+        if (key == null || sDrawingProxy == null) {
             return;
         }
 
@@ -502,7 +505,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         // altCodeWhileTyping state.
         final boolean altersCode = key.altCodeWhileTyping() && sTimerProxy.isTypingState();
         final boolean needsToUpdateGraphics = key.isEnabled() || altersCode;
-        if (!needsToUpdateGraphics) {
+        if (!needsToUpdateGraphics || sDrawingProxy == null) {
             return;
         }
 

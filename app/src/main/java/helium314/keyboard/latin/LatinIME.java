@@ -792,6 +792,7 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onDestroy() {
+        mHandler.removeCallbacksAndMessages(null);
         if (mFloatingKeyboardManager != null) {
             mFloatingKeyboardManager.destroy();
         }
@@ -805,7 +806,6 @@ public class LatinIME extends InputMethodService implements
         unregisterReceiver(mRestartAfterDeviceUnlockReceiver);
         mStatsUtilsManager.onDestroy(this /* context */);
         super.onDestroy();
-        mHandler.removeCallbacksAndMessages(null);
         deallocateMemory();
     }
 
