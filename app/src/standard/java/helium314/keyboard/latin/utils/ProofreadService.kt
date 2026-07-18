@@ -404,8 +404,7 @@ class ProofreadService(private val context: Context) {
 
             val targetLanguage = getTargetLanguage()
             val response = model.generateContent(getTranslatePrompt(targetLanguage) + text)
-            val rawTranslatedText = response.text?.trim()
-            val translatedText = if (rawTranslatedText != null) stripThinkingTags(rawTranslatedText) else null
+            val translatedText = response.text?.trim()
             
             if (translatedText.isNullOrBlank()) {
                 Result.failure(TranslateException("Empty response from API"))
@@ -511,7 +510,7 @@ class ProofreadService(private val context: Context) {
                 put("model", modelName)
                 put("messages", messagesArray)
                 put("temperature", 0.1)
-                put("max_tokens", 1024)
+                put("max_tokens", 512)
             }
 
             OutputStreamWriter(connection.outputStream).use { writer ->
@@ -594,14 +593,8 @@ class ProofreadService(private val context: Context) {
                 }
                 
                 if (!showThinking && content.isNotBlank()) {
-                    val stripped = stripThinkingTags(content)
-                    content = if (stripped.isNotBlank()) {
-                        stripped
-                    } else {
-                        content.replace(Regex("(?i)</?think>"), "")
-                            .replace(Regex("(?i)</?thought>"), "")
-                            .trim()
-                    }
+                    // Filter out <think>...</think> blocks
+                    content = content.replace(Regex("<think>[\\s\\S]*?</think>"), "").trim()
                 }
 
                 if (content.isNotBlank()) {
@@ -683,30 +676,13 @@ class ProofreadService(private val context: Context) {
             "Ensure the sentence structure is logical and coherent. " +
             "Text to proofread: "
 
-        private fun stripThinkingTags(text: String): String {
-            var cleaned = text
-                .replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
-                .replace(Regex("<thought>[\\s\\S]*?</thought>", RegexOption.IGNORE_CASE), "")
-                .replace(Regex("<thinking>[\\s\\S]*?</thinking>", RegexOption.IGNORE_CASE), "")
-                .replace(Regex("<reasoning>[\\s\\S]*?</reasoning>", RegexOption.IGNORE_CASE), "")
-                .replace(Regex("<details>[\\s\\S]*?</details>", RegexOption.IGNORE_CASE), "")
-                .trim()
-            if (cleaned.contains(Regex("<think>", RegexOption.IGNORE_CASE)) && !cleaned.contains(Regex("</think>", RegexOption.IGNORE_CASE))) {
-                cleaned = cleaned.replace(Regex("<think>[\\s\\S]*", RegexOption.IGNORE_CASE), "").trim()
-            }
-            if (cleaned.contains(Regex("<thought>", RegexOption.IGNORE_CASE)) && !cleaned.contains(Regex("</thought>", RegexOption.IGNORE_CASE))) {
-                cleaned = cleaned.replace(Regex("<thought>[\\s\\S]*", RegexOption.IGNORE_CASE), "").trim()
-            }
-            return cleaned
-        }
-
         private fun getTranslatePrompt(targetLanguage: String) = """You are an expert translator. Translate the following text to $targetLanguage.
 
 STRICT RULES:
 1. Translate naturally and fluently - not word-for-word
 2. Preserve the original meaning, tone, and intent
 3. If the text is already in $targetLanguage, return it unchanged
-4. Return ONLY the translated text with no explanations, notes, reasoning, or <think> tags
+4. Return ONLY the translated text with no explanations or notes
 5. Preserve formatting, line breaks, and emojis
 6. For names and proper nouns, keep them as-is unless there's a common equivalent in $targetLanguage
 

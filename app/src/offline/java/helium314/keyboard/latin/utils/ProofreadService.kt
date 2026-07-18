@@ -591,20 +591,12 @@ class ProofreadService(private val context: Context) {
     }
 
     private fun stripThinkingTags(text: String): String {
-        var cleaned = text
-            .replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("<thought>[\\s\\S]*?</thought>", RegexOption.IGNORE_CASE), "")
+        return text
             .replace(Regex("<thinking>[\\s\\S]*?</thinking>", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("<thought>[\\s\\S]*?</thought>", RegexOption.IGNORE_CASE), "")
             .replace(Regex("<reasoning>[\\s\\S]*?</reasoning>", RegexOption.IGNORE_CASE), "")
             .replace(Regex("<details>[\\s\\S]*?</details>", RegexOption.IGNORE_CASE), "")
             .trim()
-        if (cleaned.contains(Regex("<think>", RegexOption.IGNORE_CASE)) && !cleaned.contains(Regex("</think>", RegexOption.IGNORE_CASE))) {
-            cleaned = cleaned.replace(Regex("<think>[\\s\\S]*", RegexOption.IGNORE_CASE), "").trim()
-        }
-        if (cleaned.contains(Regex("<thought>", RegexOption.IGNORE_CASE)) && !cleaned.contains(Regex("</thought>", RegexOption.IGNORE_CASE))) {
-            cleaned = cleaned.replace(Regex("<thought>[\\s\\S]*", RegexOption.IGNORE_CASE), "").trim()
-        }
-        return cleaned
     }
 
     private fun getTranslationFewShot(targetLanguage: String): List<Pair<String, String>> {
