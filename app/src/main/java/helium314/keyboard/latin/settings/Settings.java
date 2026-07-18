@@ -272,6 +272,11 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public static SettingsValues getValues() {
+        if (sInstance == null || sInstance.mSettingsValues == null) {
+            if (sInstance != null && sInstance.mContext != null) {
+                sInstance.loadSettings(sInstance.mContext);
+            }
+        }
         return sInstance.mSettingsValues;
     }
 
