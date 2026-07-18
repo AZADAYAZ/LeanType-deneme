@@ -579,17 +579,30 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         val proximityInfoHandle = keyboard.proximityInfo.nativeProximityInfo
         val weightOfLangModelVsSpatialModel = floatArrayOf(Dictionary.NOT_A_WEIGHT_OF_LANG_MODEL_VS_SPATIAL_MODEL)
 
-        val waitForOtherDicts = if (dictionaryGroups.size == 1) null else CountDownLatch(dictionaryGroups.size - 1)
-        val suggestionsArray = Array<List<SuggestedWordInfo>?>(dictionaryGroups.size) { null }
-        for (i in 1..dictionaryGroups.lastIndex) {
+        val dictGroups = dictionaryGroups
+        if (dictGroups.isEmpty()) {
+            return SuggestionResults(SuggestedWords.MAX_SUGGESTIONS, ngramContext.isBeginningOfSentenceContext, false)
+        }
+        val waitForOtherDicts = if (dictGroups.size <= 1) null else CountDownLatch(dictGroups.size - 1)
+        val suggestionsArray = Array<List<SuggestedWordInfo>?>(dictGroups.size) { null }
+        for (i in 1..dictGroups.lastIndex) {
             scope.launch {
-                suggestionsArray[i] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
-                    proximityInfoHandle, weightOfLangModelVsSpatialModel, dictionaryGroups[i])
-                waitForOtherDicts?.countDown()
+                try {
+                    suggestionsArray[i] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
+                        proximityInfoHandle, weightOfLangModelVsSpatialModel, dictGroups[i])
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error querying secondary dictionary for locale ${dictGroups[i].locale}", e)
+                } finally {
+                    waitForOtherDicts?.countDown()
+                }
             }
         }
-        suggestionsArray[0] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
-            proximityInfoHandle, weightOfLangModelVsSpatialModel, dictionaryGroups[0])
+        try {
+            suggestionsArray[0] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
+                proximityInfoHandle, weightOfLangModelVsSpatialModel, dictGroups[0])
+        } catch (e: Exception) {
+            Log.e(TAG, "Error querying primary dictionary for locale ${dictGroups[0].locale}", e)
+        }
         val suggestionResults = SuggestionResults(
             SuggestedWords.MAX_SUGGESTIONS, ngramContext.isBeginningOfSentenceContext, false
         )
