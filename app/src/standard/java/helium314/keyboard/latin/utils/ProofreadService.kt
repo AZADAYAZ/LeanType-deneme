@@ -512,9 +512,6 @@ class ProofreadService(private val context: Context) {
                 put("messages", messagesArray)
                 put("temperature", 0.1)
                 put("max_tokens", 1024)
-                if (isGroq && !showThinking) {
-                    put("reasoning_format", "hidden")
-                }
             }
 
             OutputStreamWriter(connection.outputStream).use { writer ->
