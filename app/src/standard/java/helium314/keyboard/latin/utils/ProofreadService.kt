@@ -404,7 +404,8 @@ class ProofreadService(private val context: Context) {
 
             val targetLanguage = getTargetLanguage()
             val response = model.generateContent(getTranslatePrompt(targetLanguage) + text)
-            val translatedText = response.text?.trim()
+            val rawTranslatedText = response.text?.trim()
+            val translatedText = if (rawTranslatedText != null) cleanTranslationOutput(rawTranslatedText) else null
             
             if (translatedText.isNullOrBlank()) {
                 Result.failure(TranslateException("Empty response from API"))
@@ -627,7 +628,8 @@ class ProofreadService(private val context: Context) {
     private fun huggingFaceTranslate(text: String): Result<String> {
         val targetLanguage = getTargetLanguage()
         val prompt = "${getTranslatePrompt(targetLanguage)}$text"
-        return huggingFaceRequest(prompt, showThinking = false, isTranslate = true)
+        val result = huggingFaceRequest(prompt, showThinking = false, isTranslate = true)
+        return result.map { cleanTranslationOutput(it) }
     }
 
     class ProofreadException(message: String) : Exception(message)
@@ -675,6 +677,39 @@ class ProofreadService(private val context: Context) {
             "If the text is already correct, return it exactly as is. " +
             "Ensure the sentence structure is logical and coherent. " +
             "Text to proofread: "
+
+        private fun cleanTranslationOutput(text: String): String {
+            var cleaned = text.trim()
+
+            // 1. Cut off reasoning / explanation sections at the end
+            val reasoningHeaders = listOf(
+                "\nReasoning", "\n\nReasoning",
+                "\nExplanation", "\n\nExplanation",
+                "\nNotes:", "\n\nNotes:",
+                "\nJustification:", "\n\nJustification:",
+                "\n- The original", "\n\n- The original",
+                "\n* The original", "\n\n* The original"
+            )
+            for (header in reasoningHeaders) {
+                val index = cleaned.indexOf(header, ignoreCase = true)
+                if (index > 0) {
+                    cleaned = cleaned.substring(0, index).trim()
+                }
+            }
+
+            // 2. Strip leading section prefixes
+            val prefixRegex = Regex("^(?i)(translated\\s+text:?|translation:?|here\\s+is\\s+the\\s+translation:?)\\s*", RegexOption.MULTILINE)
+            cleaned = cleaned.replace(prefixRegex, "").trim()
+
+            // 3. Remove outer quotes if wrapped in quotes
+            if ((cleaned.startsWith("\"") && cleaned.endsWith("\"")) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+                if (cleaned.length >= 2) {
+                    cleaned = cleaned.substring(1, cleaned.length - 1).trim()
+                }
+            }
+
+            return cleaned
+        }
 
         private fun getTranslatePrompt(targetLanguage: String) = """You are an expert translator. Translate the following text to $targetLanguage.
 
