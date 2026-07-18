@@ -174,7 +174,17 @@ class ClipboardHistoryManager(
         if (latinIME.mSettings.current.mSuggestScreenshots) {
             updateLatestScreenshotCache()
         }
-        registerMediaStoreObserver()
+    }
+
+    fun onStartInputView() {
+        if (latinIME.mSettings.current.mSuggestScreenshots) {
+            registerMediaStoreObserver()
+            updateLatestScreenshotCache()
+        }
+    }
+
+    fun onFinishInputView() {
+        unregisterMediaStoreObserver()
     }
 
     private fun registerMediaStoreObserver() {
@@ -202,6 +212,17 @@ class ClipboardHistoryManager(
         }
     }
 
+    private fun unregisterMediaStoreObserver() {
+        mediaStoreObserver?.let {
+            try {
+                latinIME.contentResolver.unregisterContentObserver(it)
+            } catch (e: Exception) {
+                // Ignore
+            }
+            mediaStoreObserver = null
+        }
+    }
+
     private fun cleanUpImageCache() {
         try {
             val cacheDir = java.io.File(latinIME.cacheDir, "clipboard_images")
@@ -221,10 +242,7 @@ class ClipboardHistoryManager(
 
     fun onDestroy() {
         clipboardManager.removePrimaryClipChangedListener(this)
-        mediaStoreObserver?.let {
-            latinIME.contentResolver.unregisterContentObserver(it)
-            mediaStoreObserver = null
-        }
+        unregisterMediaStoreObserver()
     }
 
     override fun onPrimaryClipChanged() {

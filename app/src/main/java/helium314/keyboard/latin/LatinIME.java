@@ -1023,6 +1023,7 @@ public class LatinIME extends InputMethodService implements
         super.onStartInputView(editorInfo, restarting);
         helium314.keyboard.latin.utils.ProofreadHelper.preloadModel(this);
 
+        mClipboardHistoryManager.onStartInputView();
         mDictionaryFacilitator.onStartInput();
         // Switch to the null consumer to handle cases leading to early exit below, for
         // which we
@@ -1246,6 +1247,7 @@ public class LatinIME extends InputMethodService implements
         super.onFinishInputView(finishingInput);
         Log.i(TAG, "onFinishInputView");
         mOtpSuggestionManager.stop();
+        mClipboardHistoryManager.onFinishInputView();
         cleanupInternalStateForFinishInput();
     }
 
