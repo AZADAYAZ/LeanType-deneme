@@ -83,6 +83,7 @@ fun ToolbarScreen(
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_AUTO_HIDE_TOOLBAR else null,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_AUTO_HIDE_PINNED_KEYS else null,
         if (toolbarMode == ToolbarMode.EXPANDABLE) Settings.PREF_REMEMBER_TOOLBAR_STATE else null,
+        if (toolbarMode != ToolbarMode.HIDDEN) Settings.PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD else null,
         if (toolbarMode != ToolbarMode.HIDDEN) Settings.PREF_VARIABLE_TOOLBAR_DIRECTION else null,
         Settings.PREF_TOOLBAR_SWIPE_DOWN_DISMISS,
     )
@@ -178,6 +179,13 @@ fun createToolbarSettings(context: Context): List<Setting> {
             R.string.toolbar_swipe_down_dismiss, R.string.toolbar_swipe_down_dismiss_summary)
         {
             SwitchPreference(it, Defaults.PREF_TOOLBAR_SWIPE_DOWN_DISMISS)
+        },
+        Setting(context, Settings.PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD,
+            R.string.toolbar_only_with_hw_keyboard, R.string.toolbar_only_with_hw_keyboard_summary)
+        {
+            SwitchPreference(it, Defaults.PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD) {
+                KeyboardSwitcher.getInstance().setThemeNeedsReload() // necessary for updating insets
+            }
         },
         Setting(context, Settings.PREF_VARIABLE_TOOLBAR_DIRECTION,
             R.string.var_toolbar_direction, R.string.var_toolbar_direction_summary)
