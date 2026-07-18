@@ -511,7 +511,10 @@ class ProofreadService(private val context: Context) {
                 put("model", modelName)
                 put("messages", messagesArray)
                 put("temperature", 0.1)
-                put("max_tokens", 512)
+                put("max_tokens", 1024)
+                if (isGroq && !showThinking) {
+                    put("reasoning_format", "hidden")
+                }
             }
 
             OutputStreamWriter(connection.outputStream).use { writer ->
@@ -594,7 +597,14 @@ class ProofreadService(private val context: Context) {
                 }
                 
                 if (!showThinking && content.isNotBlank()) {
-                    content = stripThinkingTags(content)
+                    val stripped = stripThinkingTags(content)
+                    content = if (stripped.isNotBlank()) {
+                        stripped
+                    } else {
+                        content.replace(Regex("(?i)</?think>"), "")
+                            .replace(Regex("(?i)</?thought>"), "")
+                            .trim()
+                    }
                 }
 
                 if (content.isNotBlank()) {

@@ -967,6 +967,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
             updateVoiceKey() // Re-apply voice logic to pinned keys
             layoutHelper.setSuggestionsCountInStrip(5)
+            applyToolbarKeyLayoutParams(true)
+            toolbarContainer.post { applyToolbarKeyLayoutParams(true) }
         } else {
             toolbarExpandKey.isVisible = toolbarIsExpandable
             // Don't manage visibility here - let setToolbarVisibility handle it
@@ -1091,7 +1093,9 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val singleKeyWidth = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
         val totalKeysWidth = count * singleKeyWidth
 
-        val useEqualSpacing = isExpanded && !Settings.getValues().mSplitToolbar && containerWidth > 0 && totalKeysWidth <= containerWidth
+        val isSplit = Settings.getValues().mSplitToolbar
+        val isToolbarVisible = toolbarContainer.isVisible && (isExpanded || isSplit)
+        val useEqualSpacing = isToolbarVisible && containerWidth > 0 && totalKeysWidth <= containerWidth
 
         for (i in 0 until count) {
             val child = toolbar.getChildAt(i) ?: continue
