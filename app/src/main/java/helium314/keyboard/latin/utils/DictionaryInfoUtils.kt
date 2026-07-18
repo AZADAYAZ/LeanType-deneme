@@ -139,14 +139,14 @@ object DictionaryInfoUtils {
     fun getCachedDictsForLocale(locale: Locale, context: Context): Array<File> {
         val exactDir = getCacheDirectoryForLocale(locale, context)?.let { File(it) }
         val exactFiles = exactDir?.listFiles()
-        if (exactFiles?.any { it.name.endsWith(USER_DICTIONARY_SUFFIX) || it.name.startsWith(MAIN_DICT_PREFIX) || it.name == MAIN_DICT_FILE_NAME } == true) {
+        if (exactFiles?.any { it.name.endsWith(USER_DICTIONARY_SUFFIX) || it.name.startsWith(MAIN_DICT_PREFIX) || it.name == MAIN_DICT_FILE_NAME || it.name.endsWith(".dict") } == true) {
             return exactFiles
         }
         if (locale.country.isNotEmpty() || locale.variant.isNotEmpty()) {
             val fallbackLocale = Locale(locale.language)
             val fallbackDir = getCacheDirectoryForLocale(fallbackLocale, context)?.let { File(it) }
             val fallbackFiles = fallbackDir?.listFiles()
-            if (fallbackFiles?.any { it.name.endsWith(USER_DICTIONARY_SUFFIX) || it.name.startsWith(MAIN_DICT_PREFIX) || it.name == MAIN_DICT_FILE_NAME } == true) {
+            if (fallbackFiles?.any { it.name.endsWith(USER_DICTIONARY_SUFFIX) || it.name.startsWith(MAIN_DICT_PREFIX) || it.name == MAIN_DICT_FILE_NAME || it.name.endsWith(".dict") } == true) {
                 return fallbackFiles
             }
         }

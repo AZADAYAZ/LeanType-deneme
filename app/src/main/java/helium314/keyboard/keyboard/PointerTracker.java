@@ -90,9 +90,10 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     }
 
     public static void switchTo(DrawingProxy drawingProxy) {
+        if (drawingProxy == null) return;
         sDrawingProxy = drawingProxy;
-        final Object[] thatArray = sProxyMap.get(drawingProxy); // if it's null, the view we're switching to should not
-                                                                // exist
+        final Object[] thatArray = sProxyMap.get(drawingProxy);
+        if (thatArray == null) return;
         sParams = (PointerTrackerParams) thatArray[0];
         sGestureStrokeRecognitionParams = (GestureStrokeRecognitionParams) thatArray[1];
         sGestureStrokeDrawingParams = (GestureStrokeDrawingParams) thatArray[2];
