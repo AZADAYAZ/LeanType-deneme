@@ -88,24 +88,22 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     public static void clearOldViewData() {
         sProxyMap.clear();
         sDrawingProxy = null;
-        sTimerProxy = TimerProxy.NULL;
-        sListener = KeyboardActionListener.EMPTY_LISTENER;
+        // Don't clear sTimerProxy or sListener here.
+        // The MainKeyboardView (and its TimerHandler + ActionListener)
+        // survives trimMemory(). These are only properly re-initialized
+        // by init() and setKeyboardActionListener() during onCreateInputView().
     }
 
     public static void switchTo(DrawingProxy drawingProxy) {
         if (drawingProxy == null) return;
         sDrawingProxy = drawingProxy;
         final Object[] thatArray = sProxyMap.get(drawingProxy);
-        if (thatArray == null) {
-            sTimerProxy = TimerProxy.NULL;
-            return;
-        }
+        if (thatArray == null) return;
         sParams = (PointerTrackerParams) thatArray[0];
         sGestureStrokeRecognitionParams = (GestureStrokeRecognitionParams) thatArray[1];
         sGestureStrokeDrawingParams = (GestureStrokeDrawingParams) thatArray[2];
         sTypingTimeRecorder = (TypingTimeRecorder) thatArray[3];
-        final TimerProxy timerProxy = (TimerProxy) thatArray[4];
-        sTimerProxy = timerProxy != null ? timerProxy : TimerProxy.NULL;
+        sTimerProxy = (TimerProxy) thatArray[4];
         // noinspection unchecked
         sTrackers = (ArrayList<PointerTracker>) thatArray[5];
     }

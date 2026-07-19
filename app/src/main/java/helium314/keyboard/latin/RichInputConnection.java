@@ -173,11 +173,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
 
     public void onStartInput() {
         mLastSlowInputConnectionTime = -SLOW_INPUTCONNECTION_PERSIST_MS;
-        mIC = mParent.getCurrentInputConnection();
-    }
-
-    public void onFinishInput() {
-        mIC = null;
     }
 
     private void checkConsistencyForDebug() {
@@ -379,11 +374,13 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         if (DebugFlags.DEBUG_ENABLED)
             Log.d(TAG, "committing " + text.length() + " characters");
         mCommittedTextBeforeComposingText.append(text);
-        if (mExpectedSelStart == INVALID_CURSOR_POSITION) {
-            mExpectedSelStart = text.length();
-        } else {
-            mExpectedSelStart += text.length() - mComposingText.length();
-        }
+        // TODO: the following is exceedingly error-prone. Right now when the cursor is
+        // in the
+        // middle of the composing word mComposingText only holds the part of the
+        // composing text
+        // that is before the cursor, so this actually works, but it's terribly
+        // confusing. Fix this.
+        mExpectedSelStart += text.length() - mComposingText.length();
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
         if (isConnected()) {
@@ -395,6 +392,10 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 final int spanStart = mTempObjectForCommitText.getSpanStart(span);
                 final int spanEnd = mTempObjectForCommitText.getSpanEnd(span);
                 final int spanFlags = mTempObjectForCommitText.getSpanFlags(span);
+                // We have to adjust the end of the span to include an additional character.
+                // This is to avoid splitting a unicode surrogate pair.
+                // See helium314.keyboard.latin.common.Constants.UnicodeSurrogate
+                // See https://b.corp.google.com/issues/19255233
                 if (0 < spanEnd && spanEnd < mTempObjectForCommitText.length()) {
                     final char spanEndChar = mTempObjectForCommitText.charAt(spanEnd - 1);
                     final char nextChar = mTempObjectForCommitText.charAt(spanEnd);
@@ -404,8 +405,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                     }
                 }
             }
-            final CharSequence textToCommit = spans.length > 0 ? mTempObjectForCommitText : text.toString();
-            mIC.commitText(textToCommit, newCursorPosition);
+            mIC.commitText(mTempObjectForCommitText, newCursorPosition);
         }
     }
 
@@ -867,11 +867,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
-        if (mExpectedSelStart == INVALID_CURSOR_POSITION) {
-            mExpectedSelStart = text.length();
-        } else {
-            mExpectedSelStart += text.length() - mComposingText.length();
-        }
+        mExpectedSelStart += text.length() - mComposingText.length();
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
         mComposingText.append(text);
