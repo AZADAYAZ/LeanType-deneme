@@ -26,7 +26,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           
           # Total downloads
-          DOWNLOADS=$(gh api repos/$REPO/releases --jq '[.[].assets[]?.download_count] | add // 0' 2>/dev/null || echo "0")
+          DOWNLOADS=$(gh api repos/$REPO/releases --paginate --jq '.[] | .assets[]?.download_count' 2>/dev/null | jq -s 'add // 0')
           echo "downloads=$DOWNLOADS" >> $GITHUB_OUTPUT
           
           # Stars
