@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
 import time
-import sys
 
 ADB_DEVICE = "192.168.240.112:5555"
 
@@ -27,27 +26,37 @@ def main():
     adb("shell am start -n com.leanbitlab.leantype.debug/helium314.keyboard.settings.SettingsActivity")
     time.sleep(2)
 
-    print("4. Tapping Settings Search Bar and Typing...")
-    adb("shell input tap 500 120")
-    time.sleep(1)
-    adb("shell input text 'gesture'")
-    time.sleep(1)
+    print("4. Tapping Search Icon (Top-Right) to open SearchScreen...")
+    adb("shell input tap 960 160")
+    time.sleep(1.5)
 
-    print("5. Clearing search and typing again...")
+    print("5. Tapping Search Input Field to trigger LeanType Keyboard...")
+    adb("shell input tap 400 160")
+    time.sleep(1.5)
+
+    print("6. Typing 'gesture' into Search Field...")
+    adb("shell input text 'gesture'")
+    time.sleep(1.5)
+
+    print("7. Clearing search query...")
     for _ in range(7):
         adb("shell input keyevent 67")
-    time.sleep(1)
-    adb("shell input text 'autocorrect'")
-    time.sleep(1)
+        time.sleep(0.1)
 
-    print("6. Simulating Keyboard Interaction & Back Navigation...")
+    print("8. Typing 'autocorrect' into Search Field...")
+    adb("shell input text 'autocorrect'")
+    time.sleep(1.5)
+
+    print("9. Dismissing Search and Navigating Back...")
+    adb("shell input keyevent 4")
+    time.sleep(1)
     adb("shell input keyevent 4")
     time.sleep(1)
 
-    print("7. Fetching Logcat Errors & Warnings...")
+    print("10. Fetching Logcat Errors & Warnings...")
     logs = adb("logcat -d *:W")
     
-    app_logs = [line for line in logs.splitlines() if "leantype" in line.lower() or "helium314" in line.lower() or "latinime" in line.lower()]
+    app_logs = [line for line in logs.splitlines() if any(k in line.lower() for k in ["leantype", "helium314", "latinime", "richinputconnection"])]
     
     print("\n--- LOGCAT SUMMARY FOR LEANTYPE ---")
     if app_logs:
