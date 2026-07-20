@@ -380,7 +380,6 @@ public final class InputLogic {
             return inputTransaction;
         }
 
-        mConnection.finishComposingText();
         commitChosenWord(settingsValues, suggestion, LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
                 LastComposedWord.NOT_A_SEPARATOR);
         if (settingsValues.mAutospaceAfterSuggestion) {
