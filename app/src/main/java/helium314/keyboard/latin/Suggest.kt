@@ -18,7 +18,6 @@ import helium314.keyboard.latin.define.DebugFlags
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORRECT_USING_NON_WHITE_LISTED_SUGGESTION
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION
 import helium314.keyboard.latin.dictionary.Dictionary
-import helium314.keyboard.latin.gesture.SwipeGestureEngine
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.suggestions.SuggestionStripView
@@ -47,20 +46,12 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     }
     // Precomputed gesture word index, keyed by a fingerprint of the key positions.
     // Rebuilt only when key centres actually change (language/layout switch), not on shift-state
-    // or action-button changes, and not on text-field focus changes.
-    @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
-    @Volatile private var gestureIndexFingerprint: Int = 0
-    private val buildingFingerprint = AtomicInteger(0)
-
     fun buildGestureIndexAsync(keyboard: Keyboard) {
-        // Java gesture engine disabled for testing
-        return
     }
 
-    fun getGestureIndex(): SwipeGestureEngine.GestureIndex? = null
+    fun getGestureIndex(): Any? = null
 
     fun recordAccepted(word: String, pointers: InputPointers, keyboard: Keyboard) {
-        // Java gesture engine disabled for testing
     }
 
     // Cached scoreLimit to avoid repeated Settings lookups in hot path
@@ -73,8 +64,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // cache cleared whenever LatinIME.loadSettings is called, notably on changing layout and switching input fields
     fun clearNextWordSuggestionsCache() {
         nextWordSuggestionsCache.evictAll()
-        gestureIndex = null
-        buildingFingerprint.set(0)
         // Also reset scoreLimit cache to force refresh on next use
         synchronized(this) {
             mLastScoreLimitUpdateTime = 0
@@ -360,10 +349,15 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     ): SuggestedWords {
         val pointers = wordComposer.composedDataSnapshot.mInputPointers
         val method = settingsValuesForSuggestion.mGestureMethod
-        val suggestionResults = mDictionaryFacilitator.getSuggestionResults(
-            wordComposer.composedDataSnapshot, ngramContext, keyboard,
-            settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
-        )
+        val useFallback = "fallback" == method || !JniUtils.sHaveNativeGestureLib
+        val suggestionResults = if (useFallback) {
+            SuggestionResults(1, false, false)
+        } else {
+            mDictionaryFacilitator.getSuggestionResults(
+                wordComposer.composedDataSnapshot, ngramContext, keyboard,
+                settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
+            )
+        }
         // ponytail: filter out multi-word suggestions if enabled
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
@@ -458,7 +452,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
 
     private fun adjustToTooSuggestions(suggestionResults: SuggestionResults, pointers: InputPointers, keyboard: Keyboard) {
         if (suggestionResults.size < 2) return
-        val hasLoop = SwipeGestureEngine.hasLoopAtEnd(pointers, keyboard)
+        val hasLoop = false
         if (!hasLoop) {
             var toInfo: SuggestedWordInfo? = null
             var tooInfo: SuggestedWordInfo? = null

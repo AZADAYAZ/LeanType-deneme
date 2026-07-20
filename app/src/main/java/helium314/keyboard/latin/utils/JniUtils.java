@@ -102,8 +102,6 @@ public final class JniUtils {
             }
         }
         sHaveNativeGestureLib = sHaveGestureLib;
-        // We have a Java-side gesture engine (SwipeGestureEngine) that doesn't need the native lib.
-        sHaveGestureLib = true;
     }
 
     private JniUtils() {

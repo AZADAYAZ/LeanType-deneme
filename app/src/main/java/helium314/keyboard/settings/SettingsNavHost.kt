@@ -26,7 +26,6 @@ import helium314.keyboard.settings.screens.CustomAIKeysScreen
 import helium314.keyboard.settings.screens.TextExpanderScreen
 import helium314.keyboard.settings.screens.DictionaryScreen
 import helium314.keyboard.settings.screens.LibrariesHubScreen
-import helium314.keyboard.settings.screens.GestureTypingScreen
 import helium314.keyboard.settings.screens.LanguageScreen
 import helium314.keyboard.settings.screens.MainSettingsScreen
 import helium314.keyboard.settings.screens.PersonalDictionariesScreen
@@ -75,7 +74,6 @@ fun SettingsNavHost(
                 onClickTextCorrection = { navController.navigate(SettingsDestination.TextCorrection) },
                 onClickPreferences = { navController.navigate(SettingsDestination.Preferences) },
                 onClickToolbar = { navController.navigate(SettingsDestination.Toolbar) },
-                onClickGestureTyping = { navController.navigate(SettingsDestination.GestureTyping) },
                 onClickLibraries = { navController.navigate(SettingsDestination.Libraries) },
                 onClickAdvanced = { navController.navigate(SettingsDestination.Advanced) },
                 onClickAppearance = { navController.navigate(SettingsDestination.Appearance) },
@@ -83,7 +81,6 @@ fun SettingsNavHost(
                 onClickLayouts = { navController.navigate(SettingsDestination.Layouts) },
                 onClickDictionaries = { navController.navigate(SettingsDestination.Dictionaries) },
                 onClickAIIntegration = { navController.navigate(SettingsDestination.AIIntegration) },
-                onClickGesture = { navController.navigate(SettingsDestination.GestureTyping) },
                 onClickBack = ::goBack,
             )
         }
@@ -98,9 +95,6 @@ fun SettingsNavHost(
         }
         composable(SettingsDestination.Toolbar) {
             ToolbarScreen(onClickBack = ::goBack)
-        }
-        composable(SettingsDestination.GestureTyping) {
-            GestureTypingScreen(onClickBack = ::goBack)
         }
         composable(SettingsDestination.Advanced) {
             AdvancedSettingsScreen(onClickBack = ::goBack)

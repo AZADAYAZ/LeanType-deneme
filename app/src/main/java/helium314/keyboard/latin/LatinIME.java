@@ -602,7 +602,6 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onCreate() {
         updateWrappedContext();
-        // helium314.keyboard.latin.gesture.SwipeGestureEngine.initialize(this);
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
