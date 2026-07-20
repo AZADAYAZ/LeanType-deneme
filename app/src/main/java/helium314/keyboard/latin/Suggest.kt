@@ -44,16 +44,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             // Optionally log evicted entries for debugging
         }
     }
-    // Precomputed gesture word index, keyed by a fingerprint of the key positions.
-    // Rebuilt only when key centres actually change (language/layout switch), not on shift-state
-    fun buildGestureIndexAsync(keyboard: Keyboard) {
-    }
-
-    fun getGestureIndex(): Any? = null
-
-    fun recordAccepted(word: String, pointers: InputPointers, keyboard: Keyboard) {
-    }
-
     // Cached scoreLimit to avoid repeated Settings lookups in hot path
     // The read-then-write of (mLastScoreLimitUpdateTime, mCachedScoreLimitForAutocorrect)
     // is guarded by `synchronized(this)` in shouldBeAutoCorrected() to make the update atomic
@@ -348,16 +338,13 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         inputStyle: Int, sequenceNumber: Int
     ): SuggestedWords {
         val pointers = wordComposer.composedDataSnapshot.mInputPointers
-        val method = settingsValuesForSuggestion.mGestureMethod
-        val useFallback = "fallback" == method || !JniUtils.sHaveNativeGestureLib
-        val suggestionResults = if (useFallback) {
-            SuggestionResults(1, false, false)
-        } else {
-            mDictionaryFacilitator.getSuggestionResults(
-                wordComposer.composedDataSnapshot, ngramContext, keyboard,
-                settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
-            )
+        if (!JniUtils.sHaveNativeGestureLib) {
+            return SuggestedWords.getEmptyInstance()
         }
+        val suggestionResults = mDictionaryFacilitator.getSuggestionResults(
+            wordComposer.composedDataSnapshot, ngramContext, keyboard,
+            settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
+        )
         // ponytail: filter out multi-word suggestions if enabled
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
