@@ -127,6 +127,9 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = "preserve_space_before_punctuation";
     public static final String PREF_ALWAYS_INCOGNITO_MODE = "always_incognito_mode";
     public static final String PREF_BIGRAM_PREDICTIONS = "next_word_prediction";
+    public static final String PREF_PRIORITIZE_PERSONAL_SUGGESTIONS = "prioritize_personal_suggestions";
+    public static final String PREF_NEXT_WORD_BOOST_LEVEL = "next_word_boost_level";
+    public static final String PREF_NEXT_WORD_STRICT_NGRAM = "next_word_strict_ngram";
     public static final String PREF_FIRST_WORD_PREDICTIONS = "first_word_prediction";
     public static final String PREF_SUGGEST_PUNCTUATION = "suggest_punctuation";
     public static final String PREF_SUGGEST_CLIPBOARD_CONTENT = "suggest_clipboard_content";

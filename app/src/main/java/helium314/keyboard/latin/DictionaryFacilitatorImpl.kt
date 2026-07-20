@@ -641,30 +641,32 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             if (composedData.mTypedWord.isEmpty() && (dictionarySuggestions == null || dictionarySuggestions.isEmpty())
                 && (dictType == Dictionary.TYPE_USER || dictType == Dictionary.TYPE_USER_HISTORY)
             ) {
-                val allWords = try {
-                    dictionary.allWordsWithFrequency
-                } catch (e: Exception) {
-                    null
-                }
-                if (allWords != null && allWords.isNotEmpty()) {
-                    val topWords = allWords.entries
-                        .sortedByDescending { it.value }
-                        .take(15)
-                    val unigramSuggestions = ArrayList<SuggestedWordInfo>()
-                    for (entry in topWords) {
-                        unigramSuggestions.add(
-                            SuggestedWordInfo(
-                                entry.key,
-                                "",
-                                entry.value,
-                                SuggestedWordInfo.KIND_PREDICTION,
-                                dictionary,
-                                SuggestedWordInfo.NOT_AN_INDEX,
-                                SuggestedWordInfo.NOT_A_CONFIDENCE
-                            )
-                        )
+                if (!Settings.getValues().mNextWordStrictNgram) {
+                    val allWords = try {
+                        dictionary.allWordsWithFrequency
+                    } catch (e: Exception) {
+                        null
                     }
-                    dictionarySuggestions = unigramSuggestions
+                    if (allWords != null && allWords.isNotEmpty()) {
+                        val topWords = allWords.entries
+                            .sortedByDescending { it.value }
+                            .take(15)
+                        val unigramSuggestions = ArrayList<SuggestedWordInfo>()
+                        for (entry in topWords) {
+                            unigramSuggestions.add(
+                                SuggestedWordInfo(
+                                    entry.key,
+                                    "",
+                                    entry.value,
+                                    SuggestedWordInfo.KIND_PREDICTION,
+                                    dictionary,
+                                    SuggestedWordInfo.NOT_AN_INDEX,
+                                    SuggestedWordInfo.NOT_A_CONFIDENCE
+                                )
+                            )
+                        }
+                        dictionarySuggestions = unigramSuggestions
+                    }
                 }
             }
             if (dictionarySuggestions == null) continue
@@ -694,7 +696,12 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                     continue
 
                 if (composedData.mTypedWord.isEmpty() && (dictType == Dictionary.TYPE_USER_HISTORY || dictType == Dictionary.TYPE_USER)) {
-                    val boostedScore = info.mScore + 1000
+                    val settingsValues = Settings.getValues()
+                    val boostedScore = if (settingsValues.mPrioritizePersonalSuggestions) {
+                        info.mScore + settingsValues.mNextWordBoostLevel
+                    } else {
+                        info.mScore
+                    }
                     val boostedInfo = SuggestedWordInfo(
                         info.mWord, info.mPrevWordsContext, boostedScore, info.mKindAndFlags,
                         info.mSourceDict, info.mIndexOfTouchPointOfSecondWord, info.mAutoCommitFirstWordConfidence

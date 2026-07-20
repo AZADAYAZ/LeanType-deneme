@@ -178,6 +178,9 @@ public class SettingsValues {
         public final boolean mPersistTextEditMode;
         public final boolean mBackspaceRevertsAutocorrect;
         public final boolean mDisableMultiWordSuggestions;
+        public final boolean mPrioritizePersonalSuggestions;
+        public final int mNextWordBoostLevel;
+        public final boolean mNextWordStrictNgram;
         public final int mScoreLimitForAutocorrect;
         private final boolean mSuggestionsEnabledPerUserSettings;
         private final boolean mOverrideShowingSuggestions;
@@ -299,6 +302,17 @@ public class SettingsValues {
                                 Defaults.PREF_DISABLE_MULTI_WORD_SUGGESTIONS);
                 mBigramPredictionEnabled = prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS,
                                 Defaults.PREF_BIGRAM_PREDICTIONS);
+                mPrioritizePersonalSuggestions = prefs.getBoolean(Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS,
+                                Defaults.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS);
+                int boostLevel = 500;
+                try {
+                        boostLevel = Integer.parseInt(prefs.getString(Settings.PREF_NEXT_WORD_BOOST_LEVEL, Defaults.PREF_NEXT_WORD_BOOST_LEVEL));
+                } catch (Exception e) {
+                        boostLevel = 500;
+                }
+                mNextWordBoostLevel = boostLevel;
+                mNextWordStrictNgram = prefs.getBoolean(Settings.PREF_NEXT_WORD_STRICT_NGRAM,
+                                Defaults.PREF_NEXT_WORD_STRICT_NGRAM);
                 mFirstWordPredictionEnabled = prefs.getBoolean(Settings.PREF_FIRST_WORD_PREDICTIONS,
                                 Defaults.PREF_FIRST_WORD_PREDICTIONS);
                 mSuggestPunctuation = prefs.getBoolean(Settings.PREF_SUGGEST_PUNCTUATION,

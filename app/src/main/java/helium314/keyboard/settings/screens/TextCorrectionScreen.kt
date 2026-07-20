@@ -90,6 +90,13 @@ fun TextCorrectionScreen(
         Settings.PREF_KEY_USE_PERSONALIZED_DICTS,
         Settings.PREF_BIGRAM_PREDICTIONS,
         if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
+            Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS else null,
+        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS) &&
+            prefs.getBoolean(Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS, Defaults.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS))
+            Settings.PREF_NEXT_WORD_BOOST_LEVEL else null,
+        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
+            Settings.PREF_NEXT_WORD_STRICT_NGRAM else null,
+        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
             Settings.PREF_FIRST_WORD_PREDICTIONS else null,
         if (suggestionsEnabled) Settings.PREF_DISABLE_MULTI_WORD_SUGGESTIONS else null,
         Settings.PREF_SUGGEST_PUNCTUATION,
@@ -229,6 +236,26 @@ fun createCorrectionSettings(context: Context) = listOf(
         R.string.bigram_prediction, R.string.bigram_prediction_summary
     ) {
         SwitchPreference(it, Defaults.PREF_BIGRAM_PREDICTIONS) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
+    },
+    Setting(context, Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS,
+        R.string.prioritize_personal_suggestions, R.string.prioritize_personal_suggestions_summary
+    ) {
+        SwitchPreference(it, Defaults.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS)
+    },
+    Setting(context, Settings.PREF_NEXT_WORD_BOOST_LEVEL,
+        R.string.next_word_boost_level, R.string.next_word_boost_level_summary
+    ) {
+        val items = listOf(
+            "Low (+200)" to "200",
+            "Medium (+500)" to "500",
+            "High (+1000)" to "1000"
+        )
+        ListPreference(it, items, Defaults.PREF_NEXT_WORD_BOOST_LEVEL)
+    },
+    Setting(context, Settings.PREF_NEXT_WORD_STRICT_NGRAM,
+        R.string.next_word_strict_ngram, R.string.next_word_strict_ngram_summary
+    ) {
+        SwitchPreference(it, Defaults.PREF_NEXT_WORD_STRICT_NGRAM)
     },
     Setting(context, Settings.PREF_FIRST_WORD_PREDICTIONS,
         R.string.first_word_prediction, R.string.first_word_prediction_summary
