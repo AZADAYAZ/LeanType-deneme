@@ -781,29 +781,13 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         pinnedKeys.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
     }
 
-    private fun getLanguageHistory(prefs: SharedPreferences): List<Pair<String, String>> {
-        val historyString = prefs.getString("pref_translation_language_history", "") ?: ""
-        if (historyString.isEmpty()) return emptyList()
-        return historyString.split("\n").mapNotNull {
-            val parts = it.split("|", limit = 2)
-            if (parts.size == 2) parts[1] to parts[0] else null
-        }
-    }
+    private fun getLanguageHistory(prefs: SharedPreferences) = helium314.keyboard.latin.utils.TranslationUtils.getLanguageHistory(prefs)
 
-    private fun saveLanguageHistory(prefs: SharedPreferences, name: String, code: String) {
-        val currentHistory = getLanguageHistory(prefs).toMutableList()
-        currentHistory.removeAll { it.second == code }
-        currentHistory.add(0, name to code)
-        val serialized = currentHistory.joinToString("\n") { "${it.second}|${it.first}" }
-        prefs.edit().putString("pref_translation_language_history", serialized).apply()
-    }
+    private fun saveLanguageHistory(prefs: SharedPreferences, name: String, code: String) = helium314.keyboard.latin.utils.TranslationUtils.saveLanguageHistory(prefs, name, code)
 
-    private fun removeLanguageHistory(prefs: SharedPreferences, code: String) {
-        val currentHistory = getLanguageHistory(prefs).toMutableList()
-        currentHistory.removeAll { it.second == code }
-        val serialized = currentHistory.joinToString("\n") { "${it.second}|${it.first}" }
-        prefs.edit().putString("pref_translation_language_history", serialized).apply()
-    }
+    private fun removeLanguageHistory(prefs: SharedPreferences, code: String) = helium314.keyboard.latin.utils.TranslationUtils.removeLanguageHistory(prefs, code)
+
+    private fun isSameLanguage(p1: Pair<String, String>, p2: Pair<String, String>) = helium314.keyboard.latin.utils.TranslationUtils.isSameLanguage(p1, p2)
 
     private fun showDialogForIme(builder: android.app.AlertDialog.Builder) {
         val dialog = builder.create()
@@ -816,11 +800,6 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             window.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         }
         dialog.show()
-    }
-
-    private fun isSameLanguage(p1: Pair<String, String>, p2: Pair<String, String>): Boolean {
-        return p1.first.equals(p2.first, ignoreCase = true) ||
-               p1.second.equals(p2.second, ignoreCase = true)
     }
 
     fun showTranslateLanguageSelector() {

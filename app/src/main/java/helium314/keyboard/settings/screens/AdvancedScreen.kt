@@ -477,7 +477,13 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
 
         val items = remember(selectedLanguage) {
             val zipped = languageNames.zip(languageCodes).toMutableList()
-            if (!languageCodes.contains(selectedLanguage) && selectedLanguage.isNotEmpty() && selectedLanguage != "custom") {
+            val history = helium314.keyboard.latin.utils.TranslationUtils.getLanguageHistory(ctx.prefs())
+            for (h in history.reversed()) {
+                if (zipped.none { helium314.keyboard.latin.utils.TranslationUtils.isSameLanguage(it, h) }) {
+                    zipped.add(0, h.first to h.second)
+                }
+            }
+            if (selectedLanguage.isNotEmpty() && selectedLanguage != "custom" && zipped.none { it.second.equals(selectedLanguage, ignoreCase = true) }) {
                 zipped.add(0, selectedLanguage to selectedLanguage)
             }
             zipped.add("Custom..." to "custom")
@@ -493,6 +499,7 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
                     showCustomDialog = true
                 } else {
                     service.setTargetLanguage(newLanguage)
+                    helium314.keyboard.latin.utils.TranslationUtils.saveLanguageHistory(ctx.prefs(), newLanguage, newLanguage)
                     selectedLanguage = newLanguage
                 }
             }
@@ -511,6 +518,7 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
                     if (trimmed.isNotEmpty()) {
                         service.setTargetLanguage(trimmed)
                         ctx.prefs().edit().putString(setting.key, trimmed).apply()
+                        helium314.keyboard.latin.utils.TranslationUtils.saveLanguageHistory(ctx.prefs(), trimmed, trimmed)
                         selectedLanguage = trimmed
                     } else {
                         ctx.prefs().edit().putString(setting.key, selectedLanguage).apply()
