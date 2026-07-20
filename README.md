@@ -20,7 +20,7 @@
 - **[🧠 Custom AI Keys](docs/FEATURES.md#4-custom-ai-keys--keywords)** - Assign custom prompts, personas (#editor, #proofread), and custom text labels/tags (showing as themed capsules) to 10 customizable toolbar keys.
 - **🧭 Text Editing Mode** - Gboard-style dedicated editing panel with precise DPAD navigation, custom selection mode (Shift + arrows), clipboard actions, and editing utilities.
 - **[✍️ Handwriting Input](docs/FEATURES.md#8-handwriting-input)** - Draw characters directly on a handwriting recognition canvas (Standard version, requires [Leantype-Handwriting-Plugin](https://github.com/LeanBitLab/Leantype-Handwriting-Plugin)).
-- **[👆 Built-in Gesture Typing](docs/FEATURES.md#9-built-in-gesture-typing)** - Gesture typing works out of the box using our new built-in pure-Java fallback engine, removing the strict dependency on native Google libraries.
+- **👆 Gesture Typing** - Supports gesture typing (swipe/glide typing) powered by the native C++ library, loadable directly via *Settings > Gesture typing*.
 - **🖱️ Touchpad Mode** - Swipe spacebar up to toggle touchpad with custom sensitivity controls, including full-screen laptop-style touchpad mode.
 - **📝 Text Expander** - Built-in expansion tool supporting custom shortcuts and dynamic template variables (date, time, clipboard, custom placeholders).
 - **🪟 Floating Keyboard** - Detach the keyboard into a draggable window for seamless multitasking. Includes a persistent mode option to keep the keyboard floating.
