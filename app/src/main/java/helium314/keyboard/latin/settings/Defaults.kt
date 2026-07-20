@@ -54,7 +54,7 @@ object Defaults {
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false
     const val PREF_ENABLE_CLIPBOARD_LISTENER = true
-    const val PREF_ENABLE_SMS_OTP_RECEIVER = true
+    const val PREF_ENABLE_SMS_OTP_RECEIVER = false
     const val PREF_ENABLE_APP_SYNC_LISTENER = false
 
 
