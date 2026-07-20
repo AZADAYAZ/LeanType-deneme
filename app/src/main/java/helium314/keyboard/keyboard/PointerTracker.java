@@ -612,7 +612,9 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         }
         // A gesture floating preview text will be shown at the oldest pointer/finger on
         // the screen.
-        sDrawingProxy.showGestureTrail(this, isOldestTrackerInQueue());
+        if (sDrawingProxy != null) {
+            sDrawingProxy.showGestureTrail(this, isOldestTrackerInQueue());
+        }
     }
 
     public void updateBatchInputByTimer(final long syntheticMoveEventTime) {
@@ -813,7 +815,9 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     private void resetKeySelectionByDraggingFinger() {
         mIsInDraggingFinger = false;
         mIsInSlidingKeyInput = false;
-        sDrawingProxy.showSlidingKeyInputPreview(null);
+        if (sDrawingProxy != null) {
+            sDrawingProxy.showSlidingKeyInputPreview(null);
+        }
     }
 
     private boolean isSwiper(final int code) {
@@ -885,7 +889,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
             final int translatedY = mPopupKeysPanel.translateY(y);
             mPopupKeysPanel.onMoveEvent(translatedX, translatedY, mPointerId, eventTime);
             onMoveKey(x, y);
-            if (mIsInSlidingKeyInput) {
+            if (mIsInSlidingKeyInput && sDrawingProxy != null) {
                 sDrawingProxy.showSlidingKeyInputPreview(this);
             }
             return;
@@ -1157,7 +1161,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
                 dragFingerOutFromOldKey(oldKey, x, y);
             }
         }
-        if (mIsInSlidingKeyInput) {
+        if (mIsInSlidingKeyInput && sDrawingProxy != null) {
             sDrawingProxy.showSlidingKeyInputPreview(this);
         }
     }
@@ -1321,6 +1325,9 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         }
 
         setReleasedKeyGraphics(key, false);
+        if (sDrawingProxy == null) {
+            return;
+        }
         final PopupKeysPanel popupKeysPanel = sDrawingProxy.showPopupKeysKeyboard(key, this);
         if (popupKeysPanel == null) {
             return;
