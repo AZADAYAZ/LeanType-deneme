@@ -843,8 +843,13 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             }
         }
 
+        val removed = helium314.keyboard.latin.utils.TranslationUtils.getRemovedLanguages(prefs)
+        val filteredList = list.filter { 
+            it.first.lowercase() !in removed && it.second.lowercase() !in removed 
+        }
+
         // Create a button for each language
-        for ((languageName, languageCode) in list) {
+        for ((languageName, languageCode) in filteredList) {
             val button = android.widget.TextView(context, null, R.attr.suggestionWordStyle).apply {
                 text = languageName
                 gravity = android.view.Gravity.CENTER
@@ -871,22 +876,20 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
             }
 
-            val isCustomOrHistory = history.any { isSameLanguage(it, languageName to languageCode) }
-            if (isCustomOrHistory) {
-                button.setOnLongClickListener {
-                    val builder = android.app.AlertDialog.Builder(context)
-                    builder.setTitle(languageName)
-                    builder.setMessage("Remove this language from translation list?")
-                    builder.setPositiveButton("Remove") { dialog, _ ->
-                        removeLanguageHistory(prefs, languageCode)
-                        showTranslateLanguageSelector()
-                        dialog.dismiss()
-                    }
-                    builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-                    showDialogForIme(builder)
-                    true
+            button.setOnLongClickListener {
+                val builder = android.app.AlertDialog.Builder(context)
+                builder.setTitle(languageName)
+                builder.setMessage("Remove this language from translation list?")
+                builder.setPositiveButton("Remove") { dialog, _ ->
+                    removeLanguageHistory(prefs, languageCode)
+                    showTranslateLanguageSelector()
+                    dialog.dismiss()
                 }
+                builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+                showDialogForIme(builder)
+                true
             }
+
             button.setBackgroundResource(R.drawable.toolbar_key_background)
             val colors = Settings.getValues().mColors
             colors.setColor(button.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
