@@ -131,6 +131,13 @@ public class ContactsContentObserver implements Runnable {
     }
 
     public void unregister() {
-        mContext.getContentResolver().unregisterContentObserver(mContentObserver);
+        if (mContentObserver != null) {
+            try {
+                mContext.getContentResolver().unregisterContentObserver(mContentObserver);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to unregister contacts content observer", e);
+            }
+            mContentObserver = null;
+        }
     }
 }

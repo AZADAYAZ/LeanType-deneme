@@ -27,6 +27,8 @@ class AppsManager(val context: Context) : BroadcastReceiver() {
         }
     }
 
+    private var isRegistered = false
+
     fun registerForUpdates(listener: AppsChangedListener) {
         this.listener = listener
         val useApps = context.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_USE_APPS, helium314.keyboard.latin.settings.Defaults.PREF_USE_APPS)
@@ -37,10 +39,18 @@ class AppsManager(val context: Context) : BroadcastReceiver() {
         packageFilter.addAction(Intent.ACTION_PACKAGE_REMOVED)
         packageFilter.addDataScheme("package")
         context.registerReceiver(this, packageFilter)
+        isRegistered = true
     }
 
     fun close() {
-        context.unregisterReceiver(this)
+        if (isRegistered) {
+            try {
+                context.unregisterReceiver(this)
+            } catch (e: Exception) {
+                // ignore
+            }
+            isRegistered = false
+        }
         listener = null
     }
 
