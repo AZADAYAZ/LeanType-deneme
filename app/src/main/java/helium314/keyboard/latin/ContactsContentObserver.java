@@ -41,6 +41,10 @@ public class ContactsContentObserver implements Runnable {
     }
 
     public void registerObserver(final ContactsChangedListener listener) {
+        if (!helium314.keyboard.latin.utils.KtxKt.prefs(mContext).getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_CONTACTS_OBSERVER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_CONTACTS_OBSERVER)) {
+            Log.i(TAG, "Contacts observer disabled in settings. Not registering.");
+            return;
+        }
         if (!PermissionsUtil.checkAllPermissionsGranted(
                 mContext, Manifest.permission.READ_CONTACTS)) {
             Log.i(TAG, "No permission to read contacts. Not registering the observer.");

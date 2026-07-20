@@ -98,6 +98,12 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VARIABLE_TOOLBAR_DIRECTION = "var_toolbar_direction";
     public static final String PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = "only_toolbar_with_hw_keyboard";
     public static final String PREF_ADDITIONAL_SUBTYPES = "additional_subtypes";
+
+    public static final String PREF_ENABLE_SPELL_CHECKER_SERVICE = "enable_spell_checker_service";
+    public static final String PREF_ENABLE_CONTACTS_OBSERVER = "enable_contacts_observer";
+    public static final String PREF_ENABLE_CLIPBOARD_LISTENER = "enable_clipboard_listener";
+    public static final String PREF_ENABLE_SMS_OTP_RECEIVER = "enable_sms_otp_receiver";
+    public static final String PREF_ENABLE_APP_SYNC_LISTENER = "enable_app_sync_listener";
     public static final String PREF_ENABLE_SPLIT_KEYBOARD = "split_keyboard";
     public static final String PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE = "split_keyboard_landscape";
     public static final String PREF_SPLIT_SPACER_SCALE_PREFIX = "split_spacer_scale";

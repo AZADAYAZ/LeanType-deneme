@@ -128,6 +128,11 @@ public class SettingsValues {
         public final boolean mAddToPersonalDictionary;
         public final boolean mUseContactsDictionary;
         public final boolean mUseAppsDictionary;
+        public final boolean mEnableSpellCheckerService;
+        public final boolean mEnableContactsObserver;
+        public final boolean mEnableClipboardListener;
+        public final boolean mEnableSmsOtpReceiver;
+        public final boolean mEnableAppSyncListener;
         public final boolean mCustomNavBarColor;
         public final float mKeyboardHeightScale;
         public final boolean mUrlDetectionEnabled;
@@ -247,6 +252,16 @@ public class SettingsValues {
                                                 Defaults.PREF_VARIABLE_TOOLBAR_DIRECTION);
                 mUsePersonalizedDicts = prefs.getBoolean(Settings.PREF_KEY_USE_PERSONALIZED_DICTS,
                                 Defaults.PREF_KEY_USE_PERSONALIZED_DICTS);
+                mEnableSpellCheckerService = prefs.getBoolean(Settings.PREF_ENABLE_SPELL_CHECKER_SERVICE,
+                                Defaults.PREF_ENABLE_SPELL_CHECKER_SERVICE);
+                mEnableContactsObserver = prefs.getBoolean(Settings.PREF_ENABLE_CONTACTS_OBSERVER,
+                                Defaults.PREF_ENABLE_CONTACTS_OBSERVER);
+                mEnableClipboardListener = prefs.getBoolean(Settings.PREF_ENABLE_CLIPBOARD_LISTENER,
+                                Defaults.PREF_ENABLE_CLIPBOARD_LISTENER);
+                mEnableSmsOtpReceiver = prefs.getBoolean(Settings.PREF_ENABLE_SMS_OTP_RECEIVER,
+                                Defaults.PREF_ENABLE_SMS_OTP_RECEIVER);
+                mEnableAppSyncListener = prefs.getBoolean(Settings.PREF_ENABLE_APP_SYNC_LISTENER,
+                                Defaults.PREF_ENABLE_APP_SYNC_LISTENER);
                 mUseDoubleSpacePeriod = prefs.getBoolean(Settings.PREF_KEY_USE_DOUBLE_SPACE_PERIOD,
                                 Defaults.PREF_KEY_USE_DOUBLE_SPACE_PERIOD)
                                 && inputAttributes.mIsGeneralTextInput;

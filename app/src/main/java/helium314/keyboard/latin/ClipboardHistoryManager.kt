@@ -153,9 +153,21 @@ class ClipboardHistoryManager(
         }
     }
 
+    fun stopListening() {
+        try {
+            if (::clipboardManager.isInitialized) {
+                clipboardManager.removePrimaryClipChangedListener(this)
+            }
+        } catch (e: Exception) {
+            // Ignore
+        }
+    }
+
     fun onCreate() {
         clipboardManager = latinIME.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboardManager.addPrimaryClipChangedListener(this)
+        if (latinIME.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_CLIPBOARD_LISTENER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_CLIPBOARD_LISTENER)) {
+            clipboardManager.addPrimaryClipChangedListener(this)
+        }
         clipboardDao = ClipboardDao.getInstance(latinIME)
         // ponytail: initialize last clip state
         try {

@@ -22,6 +22,7 @@ import helium314.keyboard.latin.databinding.OtpSuggestionBinding
 import helium314.keyboard.latin.permissions.PermissionsUtil
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.ToolbarKey
+import helium314.keyboard.latin.utils.prefs
 
 /**
  * Optional, opt-in helper that surfaces one-time passcodes (OTPs) from incoming SMS as a
@@ -69,6 +70,7 @@ class OtpSuggestionManager(private val latinIME: LatinIME) {
     /** Register the SMS receiver if the feature is enabled and the permission is granted. Idempotent. */
     fun start() {
         if (isRegistered) return
+        if (!latinIME.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_SMS_OTP_RECEIVER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_SMS_OTP_RECEIVER)) return
         if (!latinIME.mSettings.current.mAutoReadOtp) return
         if (!PermissionsUtil.checkAllPermissionsGranted(latinIME, Manifest.permission.RECEIVE_SMS)) return
         try {

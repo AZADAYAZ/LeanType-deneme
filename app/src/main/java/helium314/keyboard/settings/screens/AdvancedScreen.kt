@@ -100,6 +100,7 @@ fun AdvancedSettingsScreen(
         Settings.PREF_CUSTOM_CURRENCY_KEY,
         Settings.PREF_MORE_POPUP_KEYS,
         Settings.PREF_TIMESTAMP_FORMAT,
+        SettingsWithoutKey.BACKGROUND_SERVICES,
         SettingsWithoutKey.BACKUP_RESTORE,
         if (BuildConfig.DEBUG || prefs.getBoolean(DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS))
             SettingsWithoutKey.DEBUG_SETTINGS else null,
@@ -204,6 +205,13 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
     },
     Setting(context, SettingsWithoutKey.BACKUP_RESTORE, R.string.backup_restore_title) {
         BackupRestorePreference(it)
+    },
+    Setting(context, SettingsWithoutKey.BACKGROUND_SERVICES, R.string.settings_screen_advanced) {
+        Preference(
+            name = "Background Services & Processes",
+            description = "Manage active background services, memory locks, and observers",
+            onClick = { SettingsDestination.navigateTo(SettingsDestination.BackgroundServices) }
+        ) { NextScreenIcon() }
     },
     Setting(context, Settings.PREF_TIMESTAMP_FORMAT, R.string.timestamp_format_title) { setting ->
         TextInputPreference(setting, Defaults.PREF_TIMESTAMP_FORMAT) { checkTimestampFormat(it) }

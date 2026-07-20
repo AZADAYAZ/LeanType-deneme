@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import helium314.keyboard.latin.utils.prefs
 
 class AppsManager(val context: Context) : BroadcastReceiver() {
     private val mPackageManager: PackageManager = context.packageManager
@@ -28,6 +29,7 @@ class AppsManager(val context: Context) : BroadcastReceiver() {
 
     fun registerForUpdates(listener: AppsChangedListener) {
         this.listener = listener
+        if (!context.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_APP_SYNC_LISTENER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_APP_SYNC_LISTENER)) return
         val packageFilter = IntentFilter()
         packageFilter.addAction(Intent.ACTION_PACKAGE_ADDED)
         packageFilter.addAction(Intent.ACTION_PACKAGE_REMOVED)
