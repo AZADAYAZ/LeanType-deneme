@@ -5,9 +5,7 @@ All notable changes to LeanType will be documented in this file.
 ## [v4.0.2] - 2026-07-20
 
 ### Added
-- **Immediate Auto-Space Toggle**: Added setting to eliminate phantom space delay by committing auto-space immediately.
 - **Next-Word Suggestion Controls**: Added preference controls to enable/disable and customize next-word predictions.
-- **Gesture Library Required Toast**: Shows an explicit toast prompt to load or download the native gesture library when gesture typing is enabled and swiping is attempted without the library.
 
 ### Refactored
 - **Removed Java Gesture Engine**: Completely removed the experimental Java gesture engine in favor of the native C++ gesture engine, preventing crashes and reducing codebase bloat.

@@ -2,13 +2,9 @@
 
 ## 🚀 Key Highlights
 
-### ⚡ Immediate Auto-Space Toggle
-Introduced a new setting for immediate auto-spacing after punctuation or word selection, eliminating phantom space delays and ensuring smooth text input flow.
-
 ### 👆 Native Gesture Engine Cleanup & Safety
 - **Removed Experimental Java Gesture Engine**: Completely stripped the unstable Java gesture engine. Gesture typing now relies exclusively on the high-performance native C++ library (`libjni_latinimegoogle.so` / imported `libjni_latinime.so`).
 - **SIGSEGV Crash Protection**: Added strict validation during JNI library loading so incompatible libraries fail gracefully instead of crashing the process.
-- **Gesture Library Toast Prompt**: Swiping while gesture typing is enabled without a loaded native library now displays a helpful toast prompt directing the user to load or download the gesture library.
 
 ### 🛠️ Stability, Performance & Lifecycle Fixes
 - **IME Teardown ANR Fix**: Made dictionary closing non-blocking and cancelled active gesture indexing threads on `LatinIME.onDestroy()`.
