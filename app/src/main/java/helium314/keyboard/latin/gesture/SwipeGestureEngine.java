@@ -254,25 +254,34 @@ public class SwipeGestureEngine {
     public static GestureIndex buildIndex(helium314.keyboard.latin.DictionaryFacilitator facilitator, Keyboard keyboard) {
         Map<Character, float[]> charToPos = buildCharToPos(keyboard);
         Map<Character, List<IndexEntry>> byFirst = new HashMap<>();
-        facilitator.forEachMainDictionaryWord((raw, freqVal) -> {
-            if (raw == null) return;
-            if (facilitator.isBlacklisted(raw)) return;
-            int freq = freqVal != null ? freqVal : 0;
-            // ponytail: apply user boost to freq so self-learned words rank higher immediately
-            String lk = getLowerCase(raw);
-            Integer boost = sUserBoost.get(lk);
-            if (boost != null) freq = Math.min(freq + boost * 5, 255);
-            if (freq < 3) return;
-            String word = lk;
-            if (word.isEmpty()) return;
-            char first = word.charAt(0);
-            if (!charToPos.containsKey(first)) return;
-            float[] path = wordPath(word, charToPos);
-            byFirst.computeIfAbsent(first, k -> new ArrayList<>())
-                    .add(new IndexEntry(raw, path, freq));
-        });
-        for (List<IndexEntry> list : byFirst.values()) {
-            list.sort((a, b) -> Integer.compare(b.frequency, a.frequency));
+        try {
+            facilitator.forEachMainDictionaryWord((raw, freqVal) -> {
+                if (raw == null) return;
+                if (facilitator.isBlacklisted(raw)) return;
+                int freq = freqVal != null ? freqVal : 0;
+                // ponytail: apply user boost to freq so self-learned words rank higher immediately
+                String lk = getLowerCase(raw);
+                Integer boost = sUserBoost.get(lk);
+                if (boost != null) freq = Math.min(freq + boost * 5, 255);
+                if (freq < 12) return;
+                String word = lk;
+                if (word.isEmpty()) return;
+                char first = word.charAt(0);
+                if (!charToPos.containsKey(first)) return;
+                float[] path = wordPath(word, charToPos);
+                byFirst.computeIfAbsent(first, k -> new ArrayList<>())
+                        .add(new IndexEntry(raw, path, freq));
+            });
+            for (Map.Entry<Character, List<IndexEntry>> entry : byFirst.entrySet()) {
+                List<IndexEntry> list = entry.getValue();
+                list.sort((a, b) -> Integer.compare(b.frequency, a.frequency));
+                if (list.size() > 2000) {
+                    entry.setValue(new ArrayList<>(list.subList(0, 2000)));
+                }
+            }
+        } catch (OutOfMemoryError e) {
+            android.util.Log.e("SwipeGestureEngine", "OOM building gesture index, using partial index", e);
+            System.gc();
         }
         return new GestureIndex(byFirst, charToPos);
     }
