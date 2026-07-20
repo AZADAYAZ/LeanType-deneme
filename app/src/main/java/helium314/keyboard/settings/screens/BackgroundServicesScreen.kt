@@ -90,7 +90,9 @@ fun BackgroundServicesScreen(
                     prefs.edit().putBoolean(Settings.PREF_ENABLE_SPELL_CHECKER_SERVICE, enabled).apply()
                 },
                 onStopClicked = {
-                    Toast.makeText(context, "Spell Checker memory cache flushed", Toast.LENGTH_SHORT).show()
+                    spellCheckerEnabled = false
+                    prefs.edit().putBoolean(Settings.PREF_ENABLE_SPELL_CHECKER_SERVICE, false).apply()
+                    Toast.makeText(context, "Spell Checker stopped & memory flushed", Toast.LENGTH_SHORT).show()
                 }
             )
 
@@ -107,7 +109,9 @@ fun BackgroundServicesScreen(
                     prefs.edit().putBoolean(Settings.PREF_USE_CONTACTS, enabled).apply()
                 },
                 onStopClicked = {
-                    Toast.makeText(context, "Contacts observer unregistered", Toast.LENGTH_SHORT).show()
+                    contactsEnabled = false
+                    prefs.edit().putBoolean(Settings.PREF_USE_CONTACTS, false).apply()
+                    Toast.makeText(context, "Contacts observer stopped & unregistered", Toast.LENGTH_SHORT).show()
                 }
             )
 
@@ -124,6 +128,8 @@ fun BackgroundServicesScreen(
                     prefs.edit().putBoolean(Settings.PREF_ENABLE_CLIPBOARD_LISTENER, enabled).apply()
                 },
                 onStopClicked = {
+                    clipboardEnabled = false
+                    prefs.edit().putBoolean(Settings.PREF_ENABLE_CLIPBOARD_LISTENER, false).apply()
                     Toast.makeText(context, "Clipboard listener stopped", Toast.LENGTH_SHORT).show()
                 }
             )
@@ -141,7 +147,9 @@ fun BackgroundServicesScreen(
                     prefs.edit().putBoolean(Settings.PREF_AUTO_READ_OTP, enabled).apply()
                 },
                 onStopClicked = {
-                    Toast.makeText(context, "SMS Receiver unregistered", Toast.LENGTH_SHORT).show()
+                    smsOtpEnabled = false
+                    prefs.edit().putBoolean(Settings.PREF_AUTO_READ_OTP, false).apply()
+                    Toast.makeText(context, "SMS Receiver stopped & unregistered", Toast.LENGTH_SHORT).show()
                 }
             )
 
@@ -158,6 +166,8 @@ fun BackgroundServicesScreen(
                     prefs.edit().putBoolean(Settings.PREF_USE_APPS, enabled).apply()
                 },
                 onStopClicked = {
+                    appSyncEnabled = false
+                    prefs.edit().putBoolean(Settings.PREF_USE_APPS, false).apply()
                     Toast.makeText(context, "App sync listener stopped", Toast.LENGTH_SHORT).show()
                 }
             )
@@ -197,12 +207,14 @@ private fun ServiceCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onStopClicked,
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text("Stop & Free Memory")
+            if (enabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = onStopClicked,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Stop & Free Memory")
+                }
             }
         }
     }
