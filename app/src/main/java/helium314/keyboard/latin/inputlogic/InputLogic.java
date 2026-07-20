@@ -380,23 +380,21 @@ public final class InputLogic {
             return inputTransaction;
         }
 
+        mConnection.finishComposingText();
         commitChosenWord(settingsValues, suggestion, LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
                 LastComposedWord.NOT_A_SEPARATOR);
-        mConnection.endBatchEdit();
         if (settingsValues.mAutospaceAfterSuggestion) {
             if (settingsValues.mImmediateAutoSpace) {
                 mConnection.finishComposingText();
                 mConnection.commitText(" ", 1);
+                mConnection.finishComposingText();
                 resetComposingState(false);
-                final int newSel = mConnection.getExpectedSelectionStart();
-                if (newSel >= 0) {
-                    mConnection.setSelection(newSel, newSel);
-                }
                 mSpaceState = SpaceState.DOUBLE;
             } else {
                 mSpaceState = SpaceState.PHANTOM;
             }
         }
+        mConnection.endBatchEdit();
         inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
         setInlineEmojiSearchAction(false);
 
