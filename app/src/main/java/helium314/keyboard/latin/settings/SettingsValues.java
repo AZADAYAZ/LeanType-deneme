@@ -354,9 +354,8 @@ public class SettingsValues {
                 mEnableEmojiAltPhysicalKey = prefs.getBoolean(Settings.PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY,
                                 Defaults.PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY);
                 mGestureMethod = prefs.getString(Settings.PREF_GESTURE_METHOD, "fallback");
-                mGestureInputEnabled = JniUtils.sHaveGestureLib
-                                && prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
-                                && (!"native".equals(mGestureMethod) || JniUtils.sHaveNativeGestureLib);
+                mGestureInputEnabled = JniUtils.sHaveNativeGestureLib
+                                && prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT);
                 mGestureTrailEnabled = prefs.getBoolean(Settings.PREF_GESTURE_PREVIEW_TRAIL,
                                 Defaults.PREF_GESTURE_PREVIEW_TRAIL);
                 mGestureFloatingPreviewTextEnabled = !mInputAttributes.mDisableGestureFloatingPreviewText
