@@ -432,7 +432,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             newResults.removeAll { it.mWord.contains(' ') }
         }
-        helium314.keyboard.latin.utils.Log.d("NextWordDebug", "ngramContext=${ngramContext.extractPrevWordsContext()} results=${newResults.map { "${it.mWord}:${it.mSourceDict?.mDictType}:${it.mScore}" }}")
         nextWordSuggestionsCache.put(ngramContext, newResults)
         return newResults
     }
