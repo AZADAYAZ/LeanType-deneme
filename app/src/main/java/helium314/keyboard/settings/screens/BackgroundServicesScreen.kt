@@ -2,7 +2,9 @@
 package helium314.keyboard.settings.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,11 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -60,7 +62,7 @@ fun BackgroundServicesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Background Services & Processes") },
+                title = { Text("Background Services") },
                 navigationIcon = { BackButton(onClickBack) }
             )
         }
@@ -68,21 +70,20 @@ fun BackgroundServicesScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Manage active background services, observers, and memory locks.",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Manage background listeners and memory locks.",
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             // 1. Spell Checker Service
-            ServiceCard(
-                title = "System Spell Checker Service",
-                description = "Runs background dictionary checks for system spellchecking. May hold JNI native memory.",
+            CompactServiceCard(
+                title = "Spell Checker Service",
+                description = "System spellchecker & dictionary cache.",
                 status = if (spellCheckerEnabled) "ACTIVE" else "DISABLED",
                 enabled = spellCheckerEnabled,
                 onToggle = { enabled ->
@@ -96,12 +97,10 @@ fun BackgroundServicesScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             // 2. Contacts Observer
-            ServiceCard(
-                title = "Contacts Content Observer",
-                description = "Monitors contacts changes in the background to suggest contact names.",
+            CompactServiceCard(
+                title = "Contacts Observer",
+                description = "Monitors contact changes for name suggestions.",
                 status = if (contactsEnabled) "LISTENING" else "DISABLED",
                 enabled = contactsEnabled,
                 onToggle = { enabled ->
@@ -115,12 +114,10 @@ fun BackgroundServicesScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             // 3. Clipboard History Listener
-            ServiceCard(
+            CompactServiceCard(
                 title = "Clipboard Listener",
-                description = "Listens to system primary clip changes in the background.",
+                description = "Listens to system primary clip changes.",
                 status = if (clipboardEnabled) "LISTENING" else "DISABLED",
                 enabled = clipboardEnabled,
                 onToggle = { enabled ->
@@ -134,12 +131,10 @@ fun BackgroundServicesScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             // 4. SMS OTP Receiver
-            ServiceCard(
-                title = "SMS OTP Auto-Reader",
-                description = "Holds SMS broadcast receiver to automatically suggest incoming OTP passcodes.",
+            CompactServiceCard(
+                title = "SMS OTP Reader",
+                description = "Reads SMS to suggest OTP passcodes.",
                 status = if (smsOtpEnabled) "READY" else "DISABLED",
                 enabled = smsOtpEnabled,
                 onToggle = { enabled ->
@@ -153,12 +148,10 @@ fun BackgroundServicesScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             // 5. App Name Launcher Sync
-            ServiceCard(
-                title = "App Launcher Name Sync",
-                description = "Listens for package installations/removals to update app dictionary suggestions.",
+            CompactServiceCard(
+                title = "App Launcher Sync",
+                description = "Monitors app installs for app name suggestions.",
                 status = if (appSyncEnabled) "LISTENING" else "DISABLED",
                 enabled = appSyncEnabled,
                 onToggle = { enabled ->
@@ -176,7 +169,7 @@ fun BackgroundServicesScreen(
 }
 
 @Composable
-private fun ServiceCard(
+private fun CompactServiceCard(
     title: String,
     description: String,
     status: String,
@@ -187,33 +180,46 @@ private fun ServiceCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = title, style = MaterialTheme.typography.titleMedium)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(
+                            text = " • $status",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
                     Text(
-                        text = "Status: $status",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Switch(checked = enabled, onCheckedChange = onToggle)
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = onToggle,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (enabled) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(
                     onClick = onStopClicked,
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = Modifier.align(Alignment.End),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
                 ) {
-                    Text("Stop & Free Memory")
+                    Text("Stop & Free Memory", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
