@@ -52,10 +52,10 @@ object Defaults {
     const val PREF_USE_SYSTEM_EMOJI = false
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
-    const val PREF_ENABLE_CONTACTS_OBSERVER = true
+    const val PREF_ENABLE_CONTACTS_OBSERVER = false
     const val PREF_ENABLE_CLIPBOARD_LISTENER = true
     const val PREF_ENABLE_SMS_OTP_RECEIVER = true
-    const val PREF_ENABLE_APP_SYNC_LISTENER = true
+    const val PREF_ENABLE_APP_SYNC_LISTENER = false
 
 
     private const val DEFAULT_SIZE_SCALE = 1.0f // 100%

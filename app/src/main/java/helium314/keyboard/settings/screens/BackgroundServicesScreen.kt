@@ -45,7 +45,10 @@ fun BackgroundServicesScreen(
         mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_SPELL_CHECKER_SERVICE, Defaults.PREF_ENABLE_SPELL_CHECKER_SERVICE))
     }
     var contactsEnabled by remember {
-        mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_CONTACTS_OBSERVER, Defaults.PREF_ENABLE_CONTACTS_OBSERVER))
+        mutableStateOf(
+            prefs.getBoolean(Settings.PREF_USE_CONTACTS, Defaults.PREF_USE_CONTACTS) &&
+                    prefs.getBoolean(Settings.PREF_ENABLE_CONTACTS_OBSERVER, Defaults.PREF_ENABLE_CONTACTS_OBSERVER)
+        )
     }
     var clipboardEnabled by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_CLIPBOARD_LISTENER, Defaults.PREF_ENABLE_CLIPBOARD_LISTENER))
@@ -54,7 +57,10 @@ fun BackgroundServicesScreen(
         mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_SMS_OTP_RECEIVER, Defaults.PREF_ENABLE_SMS_OTP_RECEIVER))
     }
     var appSyncEnabled by remember {
-        mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_APP_SYNC_LISTENER, Defaults.PREF_ENABLE_APP_SYNC_LISTENER))
+        mutableStateOf(
+            prefs.getBoolean(Settings.PREF_USE_APPS, Defaults.PREF_USE_APPS) &&
+                    prefs.getBoolean(Settings.PREF_ENABLE_APP_SYNC_LISTENER, Defaults.PREF_ENABLE_APP_SYNC_LISTENER)
+        )
     }
 
     Scaffold(
@@ -104,7 +110,10 @@ fun BackgroundServicesScreen(
                 enabled = contactsEnabled,
                 onToggle = { enabled ->
                     contactsEnabled = enabled
-                    prefs.edit().putBoolean(Settings.PREF_ENABLE_CONTACTS_OBSERVER, enabled).apply()
+                    prefs.edit()
+                        .putBoolean(Settings.PREF_USE_CONTACTS, enabled)
+                        .putBoolean(Settings.PREF_ENABLE_CONTACTS_OBSERVER, enabled)
+                        .apply()
                 },
                 onStopClicked = {
                     Toast.makeText(context, "Contacts observer unregistered", Toast.LENGTH_SHORT).show()
@@ -155,7 +164,10 @@ fun BackgroundServicesScreen(
                 enabled = appSyncEnabled,
                 onToggle = { enabled ->
                     appSyncEnabled = enabled
-                    prefs.edit().putBoolean(Settings.PREF_ENABLE_APP_SYNC_LISTENER, enabled).apply()
+                    prefs.edit()
+                        .putBoolean(Settings.PREF_USE_APPS, enabled)
+                        .putBoolean(Settings.PREF_ENABLE_APP_SYNC_LISTENER, enabled)
+                        .apply()
                 },
                 onStopClicked = {
                     Toast.makeText(context, "App sync listener stopped", Toast.LENGTH_SHORT).show()
