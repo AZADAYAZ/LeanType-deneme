@@ -1144,7 +1144,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         suggestionsStrip.removeAllViews()
 
         val colors = Settings.getValues().mColors
-        val customTypeface = Settings.getInstance().customTypeface
+        val customTypeface = Settings.getInstance().customEmojiTypeface ?: Settings.getInstance().customTypeface
         val stripHeight = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_height)
 
         // Create a horizontal scroll container for emojis
