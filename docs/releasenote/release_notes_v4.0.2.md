@@ -1,6 +1,9 @@
 ### 💖 Support Our Work
 * We are committed to making our apps as powerful and polished as possible. As an entirely community-funded project, we rely on your support to keep going, please consider becoming a [sponsor](https://github.com/sponsors/LeanBitLab). A huge thank you to all our current supporters!
 
+### 🙏 Special Thanks
+* Special thanks to [@AZADAYAZ](https://github.com/AZADAYAZ) for thorough testing, bug reports, and detailed UX feedback for this release!
+
 ## 🚀 What's New in v4.0.2
 
 ### 👆 Native Gesture Engine Cleanup & Safety
