@@ -227,24 +227,11 @@ fun WelcomeWizard(
                     var showDialog by remember { mutableStateOf(false) }
                     val allSubtypes = remember { SubtypeSettings.getAllAvailableSubtypes() }
                     var enabledSubtypes by remember { mutableStateOf(SubtypeSettings.getEnabledSubtypes(true)) }
-                    
-                    val gestureMethods = listOf(
-                        stringResource(R.string.gesture_method_native) to "native",
-                        stringResource(R.string.gesture_method_fallback) to "fallback"
-                    )
-                    var selectedMethod by remember {
-                        mutableStateOf(
-                            ctx.prefs().getString(
-                                Settings.PREF_GESTURE_METHOD,
-                                "fallback"
-                            )!!
-                        )
-                    }
 
                     Step(
                         3,
                         "Language & Input Selection",
-                        "Configure your typing languages and choose the gesture typing engine type.",
+                        "Configure your typing languages.",
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
                         { step++ },
@@ -313,39 +300,6 @@ fun WelcomeWizard(
                                 getItemName = { it.displayName() }
                             )
                         }
-
-                        Spacer(Modifier.height(16.dp))
-
-                        WithSmallTitle("Gesture Typing Engine") {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
-                                    .padding(16.dp)
-                            ) {
-                                DropDownField(
-                                    items = gestureMethods,
-                                    selectedItem = gestureMethods.firstOrNull { it.second == selectedMethod } ?: gestureMethods.first(),
-                                    onSelected = { pair ->
-                                        selectedMethod = pair.second
-                                        ctx.prefs().edit { putString(Settings.PREF_GESTURE_METHOD, pair.second) }
-                                        refreshTrigger++
-                                    }
-                                ) { pair ->
-                                    Text(pair.first, style = MaterialTheme.typography.bodyLarge)
-                                }
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    text = if (selectedMethod == "native") {
-                                        "Note: Native engine provides high performance but requires swypelib to be downloaded in the next step."
-                                    } else {
-                                        "Note: Pure-Java engine works out of the box (Experimental)."
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
                     }
                 } else if (step == 4) {
                     Step(
@@ -361,7 +315,6 @@ fun WelcomeWizard(
                         val locale = helium314.keyboard.latin.RichInputMethodManager.getInstance().currentSubtype.locale
                         val emojiLibInstalled = java.io.File(helium314.keyboard.latin.utils.DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx), "emoji_${locale.language}.dict").exists()
                         val gestureLibInstalled = java.io.File(ctx.filesDir, "libjni_latinime.so").exists() || JniUtils.sHaveGestureLib
-                        val showGestureDownload = ctx.prefs().getString(Settings.PREF_GESTURE_METHOD, "fallback") == "native"
 
                         Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
                             LoadEmojiLibPreference(
@@ -372,20 +325,18 @@ fun WelcomeWizard(
                                 Icon(painterResource(R.drawable.ic_setup_check), null, Modifier.align(Alignment.CenterEnd).padding(end = 16.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                         }
-                        if (showGestureDownload) {
-                            Spacer(Modifier.height(8.dp))
-                            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
-                                LoadGestureLibPreference(
-                                    title = "Gesture Typing Library",
-                                    restartOnSuccess = false,
-                                    onSuccess = { 
-                                        requiresRestart = true
-                                        refreshTrigger++ 
-                                    }
-                                )
-                                if (gestureLibInstalled) {
-                                    Icon(painterResource(R.drawable.ic_setup_check), null, Modifier.align(Alignment.CenterEnd).padding(end = 16.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
+                            LoadGestureLibPreference(
+                                title = "Gesture Typing Library",
+                                restartOnSuccess = false,
+                                onSuccess = { 
+                                    requiresRestart = true
+                                    refreshTrigger++ 
                                 }
+                            )
+                            if (gestureLibInstalled) {
+                                Icon(painterResource(R.drawable.ic_setup_check), null, Modifier.align(Alignment.CenterEnd).padding(end = 16.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
