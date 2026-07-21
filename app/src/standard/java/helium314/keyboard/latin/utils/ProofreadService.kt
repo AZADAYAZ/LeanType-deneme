@@ -741,7 +741,7 @@ Text to proofread:
             val langName = try {
                 val clean = targetLanguage.trim()
                 if (clean.length in 2..3 && clean.all { it.isLetter() }) {
-                    val display = java.util.Locale(clean).getDisplayLanguage(java.util.Locale.ENGLISH)
+                    val display = java.util.Locale.forLanguageTag(clean).getDisplayLanguage(java.util.Locale.ENGLISH)
                     if (display.isNotBlank() && !display.equals(clean, ignoreCase = true)) display else targetLanguage
                 } else {
                     targetLanguage
