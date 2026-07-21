@@ -229,7 +229,25 @@ object ProofreadHelper {
             text = text,
             noTextErrorResId = R.string.translate_no_text,
             errorResId = R.string.translate_error,
-            apiCall = { service -> service.translate(text) },
+            apiCall = { service ->
+                val pluginProvider = helium314.keyboard.latin.translation.TranslationLoader.getProvider(context)
+                if (pluginProvider != null && pluginProvider.isAvailable()) {
+                    try {
+                        val targetLang = service.getTargetLanguage()
+                        val result = pluginProvider.translate(text, targetLang)
+                        if (result.isNotBlank()) {
+                            Result.success(result)
+                        } else {
+                            service.translate(text)
+                        }
+                    } catch (e: Throwable) {
+                        Log.e("ProofreadHelper", "Plugin translation failed, falling back to built-in AI", e)
+                        service.translate(text)
+                    }
+                } else {
+                    service.translate(text)
+                }
+            },
             onSuccess = onSuccess,
             onError = onError
         )

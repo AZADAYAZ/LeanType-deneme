@@ -27,6 +27,7 @@ import helium314.keyboard.settings.NextScreenIcon
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.preferences.LoadGestureLibPreference
 import helium314.keyboard.settings.preferences.LoadHandwritingPluginPreference
+import helium314.keyboard.settings.preferences.LoadTranslationPluginPreference
 import helium314.keyboard.latin.handwriting.HandwritingLoader
 import helium314.keyboard.latin.BuildConfig
 import helium314.keyboard.latin.common.Links
@@ -84,6 +85,14 @@ fun LibrariesHubScreen(
                                 summary = if (handwritingInstalled) stringResource(R.string.libraries_status_active) else stringResource(R.string.libraries_status_not_installed),
                                 icon = R.drawable.ic_edit,
                                 onSuccess = { handwritingInstalled = HandwritingLoader.hasPlugin(context) }
+                            )
+
+                            var translationInstalled by remember { mutableStateOf(helium314.keyboard.latin.translation.TranslationLoader.hasPlugin(context)) }
+                            LoadTranslationPluginPreference(
+                                title = "Translation Plugin",
+                                summary = if (translationInstalled) stringResource(R.string.libraries_status_active) else stringResource(R.string.libraries_status_not_installed),
+                                icon = R.drawable.ic_translate,
+                                onSuccess = { translationInstalled = helium314.keyboard.latin.translation.TranslationLoader.hasPlugin(context) }
                             )
                         }
 
