@@ -129,6 +129,7 @@ public final class InputLogic {
     private String mLastShortcutText = null;
     private int mLastExpandedCursorPosition = -1;
     private int mLastExpandedCursorOffset = -1;
+    private String mJustRevertedExpandedShortcut = null;
 
     private boolean mJustRevertedACommit = false;
 
@@ -444,6 +445,7 @@ public final class InputLogic {
                 mLastShortcutText = null;
                 mLastExpandedCursorPosition = -1;
                 mLastExpandedCursorOffset = -1;
+                mJustRevertedExpandedShortcut = null;
             }
         }
 
@@ -556,6 +558,7 @@ public final class InputLogic {
             mLastShortcutText = null;
             mLastExpandedCursorPosition = -1;
             mLastExpandedCursorOffset = -1;
+            mJustRevertedExpandedShortcut = null;
         }
         mLastKeyTime = inputTransaction.getTimestamp();
         mConnection.beginBatchEdit();
@@ -1480,13 +1483,18 @@ public final class InputLogic {
                     final helium314.keyboard.latin.utils.TextExpanderUtils.ExpandedResult result =
                             helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWordForTyped(typedWord, textStr, mLatinIME);
                     if (result != null) {
-                        if (result.getPrefixLength() > 0) {
-                            mConnection.commitText("", 1);
-                            mConnection.deleteTextBeforeCursor(result.getPrefixLength());
+                        if (mJustRevertedExpandedShortcut != null
+                                && result.getMatchedString().equalsIgnoreCase(mJustRevertedExpandedShortcut)) {
+                            // Skip re-expanding a shortcut that was just reverted by backspace
+                        } else {
+                            if (result.getPrefixLength() > 0) {
+                                mConnection.commitText("", 1);
+                                mConnection.deleteTextBeforeCursor(result.getPrefixLength());
+                            }
+                            commitExpandedText(result.getMatchedString(), result.getExpandedText());
+                            resetComposingState(true);
+                            didExpand = true;
                         }
-                        commitExpandedText(result.getMatchedString(), result.getExpandedText());
-                        resetComposingState(true);
-                        didExpand = true;
                     }
                     shouldDeferSegmentation = !didExpand
                             && ScriptUtils.needsWordSegmentation(settingsValues.mLocale)
@@ -1777,6 +1785,7 @@ public final class InputLogic {
                 final String expectedAfter = mLastExpandedText.substring(beforeLen);
                 if (textBefore != null && textBefore.toString().equals(expectedBefore)
                         && textAfter != null && textAfter.toString().equals(expectedAfter)) {
+                    mJustRevertedExpandedShortcut = mLastShortcutText;
                     mConnection.setSelection(expectedCursor - beforeLen, expectedCursor + afterLen);
                     mConnection.commitText(mLastShortcutText, 1);
                     mLastExpandedText = null;
@@ -3175,11 +3184,16 @@ public final class InputLogic {
                 final helium314.keyboard.latin.utils.TextExpanderUtils.ExpandedResult result =
                         helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWordForTyped(chosenWord, textStr, mLatinIME);
                 if (result != null) {
-                    mConnection.commitText(getTextWithSuggestionSpan(mLatinIME, chosenWord, mSuggestedWords, getDictionaryFacilitatorLocale()), 1);
-                    mConnection.deleteTextBeforeCursor(result.getPrefixLength() + chosenWord.length());
-                    commitExpandedText(result.getMatchedString(), result.getExpandedText());
-                    resetComposingState(true);
-                    return;
+                    if (mJustRevertedExpandedShortcut != null
+                            && result.getMatchedString().equalsIgnoreCase(mJustRevertedExpandedShortcut)) {
+                        // Skip re-expanding a shortcut that was just reverted by backspace
+                    } else {
+                        mConnection.commitText(getTextWithSuggestionSpan(mLatinIME, chosenWord, mSuggestedWords, getDictionaryFacilitatorLocale()), 1);
+                        mConnection.deleteTextBeforeCursor(result.getPrefixLength() + chosenWord.length());
+                        commitExpandedText(result.getMatchedString(), result.getExpandedText());
+                        resetComposingState(true);
+                        return;
+                    }
                 }
             }
         }
