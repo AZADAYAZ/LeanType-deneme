@@ -29,7 +29,7 @@ object TextExpanderUtils {
     }
 
     fun isBackspaceRevertsEnabled(context: Context): Boolean {
-        return context.prefs().getBoolean(PREF_BACKSPACE_REVERTS, true)
+        return context.prefs().getBoolean(PREF_BACKSPACE_REVERTS, false)
     }
 
 

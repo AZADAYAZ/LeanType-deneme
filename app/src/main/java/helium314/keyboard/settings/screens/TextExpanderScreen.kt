@@ -330,7 +330,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                     SwitchPreference(
                         name = "Backspace undoes expansion",
                         key = TextExpanderUtils.PREF_BACKSPACE_REVERTS,
-                        default = true,
+                        default = false,
                         description = "Revert expanded text back to shortcut on backspace.",
                         enabled = isExpanderEnabled,
                         onCheckedChange = { isBackspaceRevertsEnabled = it }
