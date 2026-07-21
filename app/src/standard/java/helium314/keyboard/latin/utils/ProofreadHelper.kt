@@ -227,24 +227,27 @@ object ProofreadHelper {
         onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
+        val translationMethod = context.prefs().getString("pref_translation_method", "auto") ?: "auto"
         val hasPlugin = helium314.keyboard.latin.translation.TranslationLoader.hasPlugin(context)
+        val usePlugin = when (translationMethod) {
+            "plugin" -> hasPlugin
+            "ai" -> false
+            else -> hasPlugin
+        }
         performAsyncOperation(
             context = context,
             text = text,
             noTextErrorResId = R.string.translate_no_text,
             errorResId = R.string.translate_error,
-            skipApiKeyCheck = hasPlugin,
+            skipApiKeyCheck = usePlugin,
             apiCall = { service ->
-                val pluginProvider = helium314.keyboard.latin.translation.TranslationLoader.getProvider(context)
+                val pluginProvider = if (usePlugin) helium314.keyboard.latin.translation.TranslationLoader.getProvider(context) else null
                 if (pluginProvider != null && pluginProvider.isAvailable()) {
                     try {
                         val targetLang = service.getTargetLanguage()
                         Log.i("ProofreadHelper", "Translating via Translation Plugin (target: $targetLang)")
                         val result = pluginProvider.translate(text, targetLang)
                         if (result.isNotBlank()) {
-                            mainHandler.post {
-                                KeyboardSwitcher.getInstance().showToast("Translated (Plugin)", false)
-                            }
                             Result.success(result)
                         } else {
                             Log.w("ProofreadHelper", "Plugin returned blank, falling back to AI")

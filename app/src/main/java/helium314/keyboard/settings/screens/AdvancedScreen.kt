@@ -43,6 +43,7 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.checkTimestampFormat
 import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.settings.dialogs.ConfirmationDialog
 import helium314.keyboard.settings.NextScreenIcon
 import helium314.keyboard.settings.SettingsContainer
 import helium314.keyboard.settings.preferences.ListPreference
@@ -467,6 +468,17 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
     Setting(context, SettingsWithoutKey.AI_ALLOW_INSECURE_CONNECTIONS, R.string.ai_allow_insecure_connections_title, R.string.ai_allow_insecure_connections_summary) { setting ->
         SwitchPreference(setting, Defaults.PREF_AI_ALLOW_INSECURE_CONNECTIONS)
     },
+    Setting(context, "pref_translation_method", R.string.translation_engine_title, R.string.translation_engine_summary) { setting ->
+        ListPreference(
+            setting = setting,
+            items = listOf(
+                "Auto (Plugin if loaded, else AI)" to "auto",
+                "Translation Plugin" to "plugin",
+                "Built-in AI (Gemini/Groq/OpenAI)" to "ai"
+            ),
+            default = "auto"
+        )
+    },
     Setting(context, SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, R.string.translate_target_language_title, R.string.translate_target_language_summary) { setting ->
         val ctx = LocalContext.current
         val service = remember { helium314.keyboard.latin.utils.ProofreadService(ctx) }
@@ -474,20 +486,26 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
         val languageCodes = ctx.resources.getStringArray(helium314.keyboard.latin.R.array.translate_language_codes)
         var selectedLanguage by remember { mutableStateOf(service.getTargetLanguage()) }
         var showCustomDialog by remember { mutableStateOf(false) }
+        var showDeleteDialog by remember { mutableStateOf(false) }
 
-        val items = remember(selectedLanguage) {
+        val items = remember(selectedLanguage, showDeleteDialog) {
             val zipped = languageNames.zip(languageCodes).toMutableList()
             val history = helium314.keyboard.latin.utils.TranslationUtils.getLanguageHistory(ctx.prefs())
+            val removed = helium314.keyboard.latin.utils.TranslationUtils.getRemovedLanguages(ctx.prefs())
+            val filteredZipped = zipped.filter { it.first.lowercase() !in removed && it.second.lowercase() !in removed }.toMutableList()
             for (h in history.reversed()) {
-                if (zipped.none { helium314.keyboard.latin.utils.TranslationUtils.isSameLanguage(it, h) }) {
-                    zipped.add(0, h.first to h.second)
+                if (h.first.lowercase() !in removed && h.second.lowercase() !in removed && filteredZipped.none { helium314.keyboard.latin.utils.TranslationUtils.isSameLanguage(it, h) }) {
+                    filteredZipped.add(0, h.first to h.second)
                 }
             }
-            if (selectedLanguage.isNotEmpty() && selectedLanguage != "custom" && zipped.none { it.second.equals(selectedLanguage, ignoreCase = true) }) {
-                zipped.add(0, selectedLanguage to selectedLanguage)
+            if (selectedLanguage.isNotEmpty() && selectedLanguage != "custom" && selectedLanguage != "delete_custom" && filteredZipped.none { it.second.equals(selectedLanguage, ignoreCase = true) }) {
+                filteredZipped.add(0, selectedLanguage to selectedLanguage)
             }
-            zipped.add("Custom..." to "custom")
-            zipped
+            filteredZipped.add("Custom..." to "custom")
+            if (history.isNotEmpty()) {
+                filteredZipped.add("Delete Language..." to "delete_custom")
+            }
+            filteredZipped
         }
 
         ListPreference(
@@ -495,12 +513,14 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
             items = items,
             default = selectedLanguage,
             onChanged = { newLanguage ->
-                if (newLanguage == "custom") {
-                    showCustomDialog = true
-                } else {
-                    service.setTargetLanguage(newLanguage)
-                    helium314.keyboard.latin.utils.TranslationUtils.saveLanguageHistory(ctx.prefs(), newLanguage, newLanguage)
-                    selectedLanguage = newLanguage
+                when (newLanguage) {
+                    "custom" -> showCustomDialog = true
+                    "delete_custom" -> showDeleteDialog = true
+                    else -> {
+                        service.setTargetLanguage(newLanguage)
+                        helium314.keyboard.latin.utils.TranslationUtils.saveLanguageHistory(ctx.prefs(), newLanguage, newLanguage)
+                        selectedLanguage = newLanguage
+                    }
                 }
             }
         )
@@ -511,7 +531,7 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
                     ctx.prefs().edit().putString(setting.key, selectedLanguage).apply()
                     showCustomDialog = false
                 },
-                textInputLabel = { Text("Language name or code (e.g. Esperanto, de)") },
+                textInputLabel = { Text("Language name or code (e.g. Esperanto, Malayalam, de)") },
                 initialText = if (selectedLanguage == "custom") "" else selectedLanguage,
                 onConfirmed = { customLang ->
                     val trimmed = customLang.trim()
@@ -526,6 +546,37 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
                     showCustomDialog = false
                 },
                 title = { Text("Custom Target Language") }
+            )
+        }
+
+        if (showDeleteDialog) {
+            val history = remember { helium314.keyboard.latin.utils.TranslationUtils.getLanguageHistory(ctx.prefs()) }
+            ConfirmationDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                onConfirmed = { showDeleteDialog = false },
+                confirmButtonText = "Close",
+                title = { Text("Delete Language from History") },
+                content = {
+                    androidx.compose.foundation.layout.Column {
+                        Text("Select a custom language to delete:")
+                        androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
+                        history.forEach { (name, code) ->
+                            androidx.compose.material3.TextButton(
+                                onClick = {
+                                    helium314.keyboard.latin.utils.TranslationUtils.removeLanguageHistory(ctx.prefs(), code)
+                                    if (selectedLanguage.equals(code, ignoreCase = true) || selectedLanguage.equals(name, ignoreCase = true)) {
+                                        val fallback = "English"
+                                        service.setTargetLanguage(fallback)
+                                        selectedLanguage = fallback
+                                    }
+                                    showDeleteDialog = false
+                                }
+                            ) {
+                                Text("Delete: $name ($code)")
+                            }
+                        }
+                    }
+                }
             )
         }
     },
