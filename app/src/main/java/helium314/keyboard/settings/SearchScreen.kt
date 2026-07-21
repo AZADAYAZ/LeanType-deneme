@@ -258,7 +258,7 @@ fun <T: Any?> SearchScreen(
                         contentWindowInsets = WindowInsets(0)
                     ) { innerPadding ->
                         LazyColumn(contentPadding = innerPadding) {
-                            items(items, key = { it?.toString() ?: "null" }) {
+                            items(items) {
                                 itemContent(it)
                             }
                         }
