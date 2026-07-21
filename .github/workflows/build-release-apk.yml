@@ -39,7 +39,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Release APKs
-        run: ./gradlew assembleStandardRelease assembleStandardfullRelease assembleOfflineRelease assembleOfflineliteRelease
+        run: |
+          if [[ "${{ github.ref_name }}" == beta-* ]]; then
+            ./gradlew assembleStandardfullRelease
+          else
+            ./gradlew assembleStandardRelease assembleStandardfullRelease assembleOfflineRelease assembleOfflineliteRelease
+          fi
 
       - name: Generate Release Notes
         # ponytail: generate release notes from changelog during build
