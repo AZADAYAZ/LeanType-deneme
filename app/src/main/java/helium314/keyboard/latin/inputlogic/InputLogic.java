@@ -1783,6 +1783,7 @@ public final class InputLogic {
                     mLastShortcutText = null;
                     mLastExpandedCursorPosition = -1;
                     mLastExpandedCursorOffset = -1;
+                    mLastComposedWord = LastComposedWord.NOT_A_COMPOSED_WORD;
                     return;
                 }
             }
