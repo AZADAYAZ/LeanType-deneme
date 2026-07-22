@@ -565,16 +565,28 @@ public final class EmojiPalettesView extends LinearLayout
             public void onCodeInput(int primaryCode, int x, int y, boolean isKeyRepeat) {
                 if (primaryCode == KeyCode.DELETE) {
                     Editable text = mSearchBar.getText();
-                    if (text != null && text.length() > 0)
-                        text.delete(text.length() - 1, text.length());
+                    if (text != null && text.length() > 0) {
+                        int selStart = mSearchBar.getSelectionStart();
+                        int selEnd = mSearchBar.getSelectionEnd();
+                        if (selStart >= 0 && selEnd > selStart) {
+                            text.delete(selStart, selEnd);
+                        } else if (selStart > 0) {
+                            text.delete(selStart - 1, selStart);
+                        }
+                    }
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_SPACE) {
-                    mSearchBar.append(" ");
+                    Editable text = mSearchBar.getText();
+                    int sel = mSearchBar.getSelectionStart();
+                    if (sel < 0) sel = text.length();
+                    text.insert(sel, " ");
                 } else if (primaryCode > 0) {
-                    mSearchBar.append(String.valueOf((char) primaryCode));
+                    Editable text = mSearchBar.getText();
+                    int sel = mSearchBar.getSelectionStart();
+                    if (sel < 0) sel = text.length();
+                    text.insert(sel, String.valueOf((char) primaryCode));
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_ENTER) {
                     stopSearchMode();
                 } else {
-                    stopSearchMode();
                     mOriginalActionListener.onCodeInput(primaryCode, x, y, isKeyRepeat);
                 }
             }
@@ -593,7 +605,10 @@ public final class EmojiPalettesView extends LinearLayout
 
             @Override
             public void onTextInput(String t) {
-                mSearchBar.append(t);
+                Editable text = mSearchBar.getText();
+                int sel = mSearchBar.getSelectionStart();
+                if (sel < 0) sel = text.length();
+                text.insert(sel, t);
             }
 
             @Override
