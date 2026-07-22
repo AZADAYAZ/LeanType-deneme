@@ -100,6 +100,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
         }
+        if (!Settings.getValues().mSuggestEmojis) {
+            suggestionResults.removeAll { it.isEmoji || it.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI }
+        }
         val trailingSingleQuotesCount = StringUtils.getTrailingSingleQuotesCount(typedWordString)
         val suggestionsContainer = getTransformedSuggestedWordInfoList(wordComposer, suggestionResults,
             trailingSingleQuotesCount, mDictionaryFacilitator.mainLocale, keyboard)
@@ -348,6 +351,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         // ponytail: filter out multi-word suggestions if enabled
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
+        }
+        if (!Settings.getValues().mSuggestEmojis) {
+            suggestionResults.removeAll { it.isEmoji || it.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI }
         }
         replaceSingleLetterFirstSuggestion(suggestionResults)
         adjustToTooSuggestions(suggestionResults, pointers, keyboard)
