@@ -587,16 +587,14 @@ public final class EmojiPalettesView extends LinearLayout
                     text.insert(sel, String.valueOf((char) primaryCode));
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_ENTER) {
                     stopSearchMode();
-                } else if (primaryCode == KeyCode.SYMBOL || primaryCode == KeyCode.SYMBOL_ALPHA) {
+                } else if (primaryCode == KeyCode.SYMBOL || primaryCode == KeyCode.SYMBOL_ALPHA || primaryCode == KeyCode.ALPHA) {
                     if (mSearchKeyboardLayoutSet != null) {
                         MainKeyboardView bottomRow = findViewById(R.id.bottom_row_keyboard);
-                        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_SYMBOLS));
-                        bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
-                    }
-                } else if (primaryCode == KeyCode.ALPHA) {
-                    if (mSearchKeyboardLayoutSet != null) {
-                        MainKeyboardView bottomRow = findViewById(R.id.bottom_row_keyboard);
-                        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
+                        int currentElementId = bottomRow.getKeyboard().mId.mElementId;
+                        boolean isOnSymbols = currentElementId == KeyboardId.ELEMENT_SYMBOLS
+                                || currentElementId == KeyboardId.ELEMENT_SYMBOLS_SHIFTED;
+                        int targetId = isOnSymbols ? KeyboardId.ELEMENT_ALPHABET : KeyboardId.ELEMENT_SYMBOLS;
+                        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(targetId));
                         bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
                     }
                 } else {
