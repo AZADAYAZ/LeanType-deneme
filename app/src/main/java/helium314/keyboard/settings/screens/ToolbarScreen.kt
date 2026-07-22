@@ -71,6 +71,7 @@ fun ToolbarScreen(
     val items = listOf(
         Settings.PREF_TOOLBAR_MODE,
         Settings.PREF_SPLIT_TOOLBAR,
+        Settings.PREF_AUTO_SPAN_TOOLBAR_KEYS,
         if (toolbarMode == ToolbarMode.HIDDEN) Settings.PREF_TOOLBAR_HIDING_GLOBAL else null,
         Settings.PREF_TOOLBAR_KEYS,
         if (!isSplitToolbar) Settings.PREF_PINNED_TOOLBAR_KEYS else null,
@@ -119,6 +120,11 @@ fun createToolbarSettings(context: Context): List<Setting> {
         },
         Setting(context, Settings.PREF_TOOLBAR_HIDING_GLOBAL, R.string.toolbar_hiding_global) {
             SwitchPreference(it, Defaults.PREF_TOOLBAR_HIDING_GLOBAL) {
+                KeyboardSwitcher.getInstance().setThemeNeedsReload()
+            }
+        },
+        Setting(context, Settings.PREF_AUTO_SPAN_TOOLBAR_KEYS, R.string.auto_span_toolbar_keys, R.string.auto_span_toolbar_keys_summary) {
+            SwitchPreference(it, Defaults.PREF_AUTO_SPAN_TOOLBAR_KEYS) {
                 KeyboardSwitcher.getInstance().setThemeNeedsReload()
             }
         },

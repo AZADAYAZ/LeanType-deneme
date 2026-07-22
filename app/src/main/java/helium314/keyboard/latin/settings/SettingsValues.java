@@ -142,6 +142,7 @@ public class SettingsValues {
         public final ToolbarMode mToolbarMode;
         public final boolean mToolbarHidingGlobal;
         public final boolean mSplitToolbar;
+        public final boolean mAutoSpanToolbarKeys;
         public final boolean mShowDownloadButtonInToolbar;
         public final boolean mAutoShowToolbar;
         public final boolean mAutoShowToolbarOnSelect;
@@ -213,6 +214,7 @@ public class SettingsValues {
                 mToolbarHidingGlobal = prefs.getBoolean(Settings.PREF_TOOLBAR_HIDING_GLOBAL,
                                 Defaults.PREF_TOOLBAR_HIDING_GLOBAL);
                 mSplitToolbar = prefs.getBoolean(Settings.PREF_SPLIT_TOOLBAR, Defaults.PREF_SPLIT_TOOLBAR);
+                mAutoSpanToolbarKeys = prefs.getBoolean(Settings.PREF_AUTO_SPAN_TOOLBAR_KEYS, Defaults.PREF_AUTO_SPAN_TOOLBAR_KEYS);
                 mShowDownloadButtonInToolbar = prefs.getBoolean(Settings.PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR,
                                 Defaults.PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR);
                 mAutoCap = prefs.getBoolean(Settings.PREF_AUTO_CAP, Defaults.PREF_AUTO_CAP)

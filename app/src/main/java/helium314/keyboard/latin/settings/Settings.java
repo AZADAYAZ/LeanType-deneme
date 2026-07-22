@@ -234,6 +234,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_TOOLBAR_MODE = "toolbar_mode";
     public static final String PREF_TOOLBAR_HIDING_GLOBAL = "toolbar_hiding_global";
     public static final String PREF_SPLIT_TOOLBAR = "split_toolbar";
+    public static final String PREF_AUTO_SPAN_TOOLBAR_KEYS = "auto_span_toolbar_keys";
     public static final String PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR = "show_download_button_in_toolbar";
 
     // Emoji

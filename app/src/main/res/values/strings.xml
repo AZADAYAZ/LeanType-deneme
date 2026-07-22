@@ -502,6 +502,8 @@
     <string name="ai_provider_gemini">Google Gemini</string>
     <string name="split_toolbar">Split toolbar</string>
     <string name="split_toolbar_summary">Separate suggestions from toolbar</string>
+    <string name="auto_span_toolbar_keys">Auto-span toolbar keys</string>
+    <string name="auto_span_toolbar_keys_summary">Expand toolbar keys to fill available free space</string>
     <string name="show_download_button_in_toolbar">Show download button in toolbar</string>
     <string name="show_download_button_in_toolbar_summary">Show dictionary download icon in suggestion strip when main dictionary is missing</string>
     <string name="ai_provider_huggingface">Groq</string>

@@ -1080,9 +1080,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val singleKeyWidth = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
         val totalKeysWidth = count * singleKeyWidth
 
+        val isAutoSpan = Settings.getValues().mAutoSpanToolbarKeys
         val isSplit = Settings.getValues().mSplitToolbar
         val isToolbarVisible = toolbarContainer.isVisible && (isExpanded || isSplit)
-        val useEqualSpacing = isToolbarVisible && containerWidth > 0 && totalKeysWidth <= containerWidth
+        val useEqualSpacing = isAutoSpan && isToolbarVisible && containerWidth > 0 && totalKeysWidth <= containerWidth
 
         for (i in 0 until count) {
             val child = toolbar.getChildAt(i) ?: continue
