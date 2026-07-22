@@ -66,6 +66,7 @@ fun LoadGestureLibPreference(
         prefs.edit(commit = true) {
             putString(Settings.PREF_LIBRARY_CHECKSUM, checksum)
             putBoolean("pref_gesture_lib_just_installed", true)
+            putBoolean(Settings.PREF_GESTURE_INPUT, true)
         }
         file.copyTo(libFile)
         libFile.setReadOnly()
