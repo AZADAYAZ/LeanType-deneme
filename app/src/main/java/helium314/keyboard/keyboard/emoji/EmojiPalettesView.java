@@ -586,6 +586,10 @@ public final class EmojiPalettesView extends LinearLayout
                     text.insert(sel, String.valueOf((char) primaryCode));
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_ENTER) {
                     stopSearchMode();
+                } else if (primaryCode == KeyCode.SYMBOL || primaryCode == KeyCode.ALPHA
+                        || primaryCode == KeyCode.NUMPAD || primaryCode == KeyCode.SYMBOL_ALPHA) {
+                    // Layout-switching keys — forwarding to the original listener would
+                    // trigger KeyboardSwitcher.setKeyboard() which hides the emoji panel.
                 } else {
                     mOriginalActionListener.onCodeInput(primaryCode, x, y, isKeyRepeat);
                 }
@@ -593,14 +597,20 @@ public final class EmojiPalettesView extends LinearLayout
 
             @Override
             public void onPressKey(int p, int r, boolean s, HapticEvent h) {
-                mOriginalActionListener.onPressKey(p, r, s, h);
+                if (p != KeyCode.SYMBOL && p != KeyCode.ALPHA
+                        && p != KeyCode.NUMPAD && p != KeyCode.SYMBOL_ALPHA) {
+                    mOriginalActionListener.onPressKey(p, r, s, h);
+                }
             }
 
             @Override
             public void onReleaseKey(int p, boolean w) {
                 mDeleteSwipeStartSel = -1;
                 mCurrentDeleteSwipeStart = -1;
-                mOriginalActionListener.onReleaseKey(p, w);
+                if (p != KeyCode.SYMBOL && p != KeyCode.ALPHA
+                        && p != KeyCode.NUMPAD && p != KeyCode.SYMBOL_ALPHA) {
+                    mOriginalActionListener.onReleaseKey(p, w);
+                }
             }
 
             @Override
