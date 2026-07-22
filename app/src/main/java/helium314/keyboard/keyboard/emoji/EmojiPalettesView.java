@@ -271,10 +271,14 @@ public final class EmojiPalettesView extends LinearLayout
         // The main keyboard expands to the entire this {@link KeyboardView}.
         final int width = ResourceUtils.getKeyboardWidth(getContext(), Settings.getValues())
                 + getPaddingLeft() + getPaddingRight();
-        final int height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues())
-                + getPaddingTop() + getPaddingBottom();
+        if (!mInSearchMode) {
+            final int height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues())
+                    + getPaddingTop() + getPaddingBottom();
+            setMeasuredDimension(width, height);
+        } else {
+            setMeasuredDimension(width, getMeasuredHeight());
+        }
         mEmojiCategoryPageIndicatorView.mWidth = width;
-        setMeasuredDimension(width, height);
     }
 
     public void initialize() { // needs to be delayed for access to EmojiTabStrip, which is not a child of this
@@ -728,6 +732,7 @@ public final class EmojiPalettesView extends LinearLayout
 
         // Focus
         mSearchBar.requestFocus();
+        requestLayout();
     }
 
     private void stopSearchMode() {
@@ -758,6 +763,7 @@ public final class EmojiPalettesView extends LinearLayout
         if (mSearchBar != null)
             mSearchBar.setText(""); // Clear text
         mSearchBar = null; // Clear reference
+        requestLayout();
     }
 
     private void performSearch(String query) {
