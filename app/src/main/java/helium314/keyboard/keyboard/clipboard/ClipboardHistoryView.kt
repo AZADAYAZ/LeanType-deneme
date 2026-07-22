@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -657,6 +658,8 @@ class ClipboardHistoryView @JvmOverloads constructor(
 
         val isAutoSpan = Settings.getValues().mAutoSpanToolbarKeys
         val useEqualSpacing = isAutoSpan && containerWidth > 0 && totalKeysWidth <= containerWidth
+
+        clipboardStrip.gravity = if (useEqualSpacing) Gravity.NO_GRAVITY else Gravity.END
 
         val toolbarKeyLayoutParams = LinearLayout.LayoutParams(
             context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
