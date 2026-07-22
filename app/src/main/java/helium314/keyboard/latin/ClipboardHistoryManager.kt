@@ -179,6 +179,9 @@ class ClipboardHistoryManager(
                                 val contentUri = android.content.ContentUris.withAppendedId(
                                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id
                                 )
+                                if (cachedScreenshotInfo?.uri != contentUri) {
+                                    dontShowCurrentSuggestion = false
+                                }
                                 cachedScreenshotInfo = ScreenshotInfo(contentUri, fileName, fullPath, dateAdded)
                                 
                                 if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
@@ -246,6 +249,11 @@ class ClipboardHistoryManager(
     }
 
     fun onStartInputView() {
+        val prefs = latinIME.prefs()
+        val lastDismissed = prefs.getString("last_dismissed_screenshot_uri", "")
+        if (cachedScreenshotInfo != null && cachedScreenshotInfo?.uri?.toString() != lastDismissed) {
+            dontShowCurrentSuggestion = false
+        }
         if (latinIME.mSettings.current.mSuggestScreenshots) {
             updateLatestScreenshotCache()
         }
