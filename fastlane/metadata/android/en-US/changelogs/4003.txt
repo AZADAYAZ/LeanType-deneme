@@ -1,0 +1,4 @@
+- Fixed SettingsContainer exception logging to print exact setting key names instead of object hashcodes.
+- Fixed word list duplication in Personal Dictionary UI.
+- Fixed duplicate item keys in Settings Search LazyColumn.
+- CI pipeline improvements for beta release triggers.
