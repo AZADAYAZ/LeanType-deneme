@@ -685,7 +685,11 @@ public class LatinIME extends InputMethodService implements
         // been displayed. Opening dictionaries never affects responsivity as
         // dictionaries are
         // asynchronously loaded.
-        if (!mHandler.hasPendingReopenDictionaries()) {
+        final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
+        if (prefs.getBoolean("pref_gesture_lib_just_installed", false)) {
+            prefs.edit().remove("pref_gesture_lib_just_installed").apply();
+            resetSuggestMainDict();
+        } else if (!mHandler.hasPendingReopenDictionaries()) {
             resetDictionaryFacilitatorIfNecessary();
         }
         refreshPersonalizationDictionarySession(currentSettingsValues);

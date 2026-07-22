@@ -63,10 +63,18 @@ fun LoadGestureLibPreference(
         libFile.setWritable(true)
         libFile.delete()
         // store checksum in default preferences (see JniUtils)
-        prefs.edit(commit = true) { putString(Settings.PREF_LIBRARY_CHECKSUM, checksum) }
+        prefs.edit(commit = true) {
+            putString(Settings.PREF_LIBRARY_CHECKSUM, checksum)
+            putBoolean("pref_gesture_lib_just_installed", true)
+        }
         file.copyTo(libFile)
         libFile.setReadOnly()
         file.delete()
+        try {
+            ctx.sendBroadcast(Intent(helium314.keyboard.dictionarypack.DictionaryPackConstants.NEW_DICTIONARY_INTENT_ACTION))
+        } catch (e: Exception) {
+            // Ignore broadcast failure if context is unattached
+        }
         onSuccess?.invoke()
         isDownloading = false
         showDialog = false
