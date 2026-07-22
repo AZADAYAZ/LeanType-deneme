@@ -3,7 +3,10 @@
 
 ## 🚀 What's New in v4.0.3
 
-### 🛠️ Bug Fixes & Stability Improvements
+### 🛠️ Bug Fixes & Features
+- **Custom Emoji Font in Emoji Search**: Applied custom emoji font typeface (`customEmojiTypeface`) to horizontal emoji search results in emoji picker palette.
+- **Auto-Span Toolbar Keys**: Added "Auto-span toolbar keys" toggle in Settings → Toolbar for both main and clipboard toolbars with right-alignment fallback when disabled.
+- **Toolbar & Clipboard Transition**: Eliminated layout jerkiness and optimized single-pass layout measurements when switching between keyboard and clipboard in Split Toolbar mode.
 - **Settings Exception Logging**: Fixed `SettingsContainer` error reporting to output exact duplicate setting key string names instead of raw object memory references (`Setting@<hashcode>`).
 - **Personal Dictionary Deduplication**: Fixed UI word list duplication in Personal Dictionary settings view.
 - **Search Screen Stability**: Removed duplicate key definitions in `SearchScreen` `LazyColumn` items to prevent UI crashes.
