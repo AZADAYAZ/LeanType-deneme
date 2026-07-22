@@ -238,6 +238,7 @@ public final class EmojiPalettesView extends LinearLayout
     private boolean mInSearchMode = false;
     private boolean mIsDownloadingEmojiDict = false;
     private KeyboardActionListener mOriginalActionListener;
+    private KeyboardLayoutSet mSearchKeyboardLayoutSet;
 
     private EditorInfo mEditorInfo;
 
@@ -586,10 +587,18 @@ public final class EmojiPalettesView extends LinearLayout
                     text.insert(sel, String.valueOf((char) primaryCode));
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_ENTER) {
                     stopSearchMode();
-                } else if (primaryCode == KeyCode.SYMBOL || primaryCode == KeyCode.ALPHA
-                        || primaryCode == KeyCode.NUMPAD || primaryCode == KeyCode.SYMBOL_ALPHA) {
-                    // Layout-switching keys — forwarding to the original listener would
-                    // trigger KeyboardSwitcher.setKeyboard() which hides the emoji panel.
+                } else if (primaryCode == KeyCode.SYMBOL || primaryCode == KeyCode.SYMBOL_ALPHA) {
+                    if (mSearchKeyboardLayoutSet != null) {
+                        MainKeyboardView bottomRow = findViewById(R.id.bottom_row_keyboard);
+                        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_SYMBOLS));
+                        bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
+                    }
+                } else if (primaryCode == KeyCode.ALPHA) {
+                    if (mSearchKeyboardLayoutSet != null) {
+                        MainKeyboardView bottomRow = findViewById(R.id.bottom_row_keyboard);
+                        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
+                        bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
+                    }
                 } else {
                     mOriginalActionListener.onCodeInput(primaryCode, x, y, isKeyRepeat);
                 }
@@ -751,8 +760,8 @@ public final class EmojiPalettesView extends LinearLayout
         builder.setKeyboardGeometry(ResourceUtils.getKeyboardWidth(ctx, Settings.getValues()),
                 ResourceUtils.getSecondaryKeyboardHeight(ctx.getResources(), Settings.getValues()));
 
-        KeyboardLayoutSet kls = builder.build();
-        bottomRow.setKeyboard(kls.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
+        mSearchKeyboardLayoutSet = builder.build();
+        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
         bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
 
         // Focus
@@ -788,6 +797,7 @@ public final class EmojiPalettesView extends LinearLayout
         if (mSearchBar != null)
             mSearchBar.setText(""); // Clear text
         mSearchBar = null; // Clear reference
+        mSearchKeyboardLayoutSet = null;
         requestLayout();
     }
 
