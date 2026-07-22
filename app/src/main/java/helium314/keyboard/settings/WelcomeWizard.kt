@@ -228,6 +228,15 @@ fun WelcomeWizard(
                     val allSubtypes = remember { SubtypeSettings.getAllAvailableSubtypes() }
                     var enabledSubtypes by remember { mutableStateOf(SubtypeSettings.getEnabledSubtypes(true)) }
 
+                    LaunchedEffect(Unit) {
+                        if (SubtypeSettings.getEnabledSubtypes(false).isEmpty()) {
+                            enabledSubtypes.forEach { subtype ->
+                                SubtypeSettings.addEnabledSubtype(ctx.prefs(), subtype)
+                            }
+                            enabledSubtypes = SubtypeSettings.getEnabledSubtypes(true)
+                        }
+                    }
+
                     Step(
                         3,
                         "Language & Input Selection",
@@ -513,6 +522,11 @@ fun WelcomeWizard(
                         stringResource(R.string.setup_finish_action),
                         painterResource(R.drawable.ic_setup_check),
                         {
+                            if (SubtypeSettings.getEnabledSubtypes(false).isEmpty()) {
+                                SubtypeSettings.getEnabledSubtypes(true).forEach { subtype ->
+                                    SubtypeSettings.addEnabledSubtype(ctx.prefs(), subtype)
+                                }
+                            }
                             finish()
                             if (requiresRestart) {
                                 Runtime.getRuntime().exit(0)

@@ -218,6 +218,11 @@ object SubtypeSettings {
         loadResourceSubtypes(context.resources)
         loadAdditionalSubtypes(context.prefs())
         loadEnabledSubtypes(context)
+
+        if (enabledSubtypes.isEmpty()) {
+            val defaults = getDefaultEnabledSubtypes()
+            defaults.forEach { addEnabledSubtype(context.prefs(), it) }
+        }
     }
 
     @Suppress("SameReturnValue")
