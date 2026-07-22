@@ -20,7 +20,7 @@ class SettingsContainer(context: Context) {
     private val map: Map<String, Setting> = HashMap<String, Setting>(list.size).apply {
         list.forEach {
             if (put(it.key, it) != null)
-                throw IllegalArgumentException("key $it added twice")
+                throw IllegalArgumentException("key ${it.key} added twice")
         }
     }
 
