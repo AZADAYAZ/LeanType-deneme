@@ -447,7 +447,7 @@
     <!-- Libraries Hub -->
     <string name="libraries_hub_title">Sözlük Kütüphaneleri</string>
     <string name="libraries_hub_summary">Hareketle yazma kütüphanesini, sözlükleri ve emoji kütüphanelerini yönetin.</string>
-    <string name="libraries_hub_gesture_title">Gesture Typing Library</string>
+    <string name="libraries_hub_gesture_title">Hareketle Yazma Kütüphanesi</string>
     <string name="libraries_hub_dictionary_title">Ana Sözlükler</string>
     <string name="libraries_hub_emoji_title">Emoji Kütüphaneleri</string>
     <string name="libraries_hub_handwriting_title">El Yazısı Giriş Eklentisi</string>
