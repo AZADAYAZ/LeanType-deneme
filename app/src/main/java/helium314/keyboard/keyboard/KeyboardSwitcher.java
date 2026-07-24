@@ -836,7 +836,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     }
 
     public boolean isShowingEmojiPalettes() {
-        return mEmojiPalettesView != null && mEmojiPalettesView.isShown();
+        return mEmojiPalettesView != null && (mEmojiPalettesView.isShown() || mEmojiPalettesView.getVisibility() == View.VISIBLE);
     }
 
     public boolean isShowingClipboardHistory() {

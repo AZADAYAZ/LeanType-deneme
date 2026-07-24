@@ -126,6 +126,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val pinnedKeys: ViewGroup = findViewById(R.id.pinned_keys)
     private val suggestionsStrip: ViewGroup = findViewById(R.id.suggestions_strip)
     private val toolbarExpandKey = findViewById<ImageButton>(R.id.suggestions_strip_toolbar_key)
+    private var toolbarRow: LinearLayout? = null
     private var dictDownloadButton: ImageButton? = null
     private val toolbarArrowIcon = KeyboardIconsSet.instance.getNewDrawable(KeyboardIconsSet.NAME_TOOLBAR_KEY, context)
     private val defaultToolbarBackground: Drawable = toolbarExpandKey.background
@@ -207,9 +208,9 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             wrapper.orientation = LinearLayout.VERTICAL
             
             // Create toolbar row for Expand Key, Toolbar, Pinned Keys
-            val toolbarRow = LinearLayout(context)
-            toolbarRow.orientation = LinearLayout.HORIZONTAL
-            toolbarRow.layoutParams = LinearLayout.LayoutParams(
+            toolbarRow = LinearLayout(context)
+            toolbarRow!!.orientation = LinearLayout.HORIZONTAL
+            toolbarRow!!.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 stripHeight
             )
@@ -240,12 +241,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             pinnedKeys.layoutParams = pinnedParams
             
             // Add views to toolbar row
-            toolbarRow.addView(toolbarExpandKey)
-            toolbarRow.addView(toolbarContainer)
-            toolbarRow.addView(pinnedKeys)
+            toolbarRow!!.addView(toolbarExpandKey)
+            toolbarRow!!.addView(toolbarContainer)
+            toolbarRow!!.addView(pinnedKeys)
             
             // Add toolbar row to wrapper at the START (Top) - Toolbar at top, Suggestions at bottom
-            wrapper.addView(toolbarRow, 0)
+            wrapper.addView(toolbarRow!!, 0)
             
             // Set suggestions strip params - use weight to fill remaining space
             val suggestionsParams = LinearLayout.LayoutParams(
@@ -355,8 +356,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         // In split mode, show only full toolbar, hide pinned keys
         if (split) {
             // suggestionsStrip visibility is handled dynamically in updateSplitToolbarState
-            toolbarContainer.isVisible = !locked // Show full toolbar in split mode
-            toolbar.visibility = VISIBLE
+            val isEmojiView = isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes
+            toolbarRow?.isVisible = !isEmojiView
+            toolbarContainer.isVisible = !locked && !isEmojiView
+            toolbar.visibility = if (isEmojiView) GONE else VISIBLE
             pinnedKeys.isVisible = false // Hide pinned keys
             toolbarExpandKey.isVisible = false // Hide expand key
             updateSplitToolbarState()
@@ -924,8 +927,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             toolbarExpandKey.isVisible = settingsValues.mToolbarMode == ToolbarMode.EXPANDABLE
             setToolbarVisibility(isToolbarManuallyOpen, saveState = false)
         } else {
-            toolbarContainer.isVisible = !isDeviceLocked(context)
-            toolbar.visibility = VISIBLE
+            val isEmojiView = isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes
+            toolbarRow?.isVisible = !isEmojiView
+            toolbarContainer.isVisible = !isDeviceLocked(context) && !isEmojiView
+            toolbar.visibility = if (isEmojiView) GONE else VISIBLE
             updateSplitToolbarState()
         }
 
@@ -948,8 +953,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             toolbarExpandKey.isVisible = false
             pinnedKeys.isVisible = false // Hide pinned keys completely in split mode
 
-            toolbarContainer.isVisible = !hideToolbarKeys // Show full toolbar container
-            toolbar.visibility = VISIBLE // Show toolbar
+            val isEmojiView = isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes
+            toolbarRow?.isVisible = !isEmojiView
+            toolbarContainer.isVisible = !hideToolbarKeys && !isEmojiView
+            toolbar.visibility = if (isEmojiView) GONE else VISIBLE
 
             updateVoiceKey() // Re-apply voice logic to pinned keys
             layoutHelper.setSuggestionsCountInStrip(5)
@@ -1104,10 +1111,15 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     private fun updateSplitToolbarState() {
         if (!Settings.getValues().mSplitToolbar) return
-        if (isShowingEmojiSuggestions) {
+        val isEmojiView = isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes
+        if (isEmojiView) {
+            toolbarRow?.isVisible = false
+            toolbarContainer.isVisible = false
             suggestionsStrip.isVisible = true
             return
         }
+        toolbarRow?.isVisible = true
+        toolbarContainer.isVisible = !isDeviceLocked(context)
         // Clipboard/screenshot suggestions are LinearLayout roots, not TextViews —
         // skip placeholder logic entirely so the external view is not obscured.
         if (isExternalSuggestionVisible) {
