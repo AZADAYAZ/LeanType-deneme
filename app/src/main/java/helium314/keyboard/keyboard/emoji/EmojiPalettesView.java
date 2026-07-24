@@ -597,6 +597,28 @@ public final class EmojiPalettesView extends LinearLayout
                         bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(targetId));
                         bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
                     }
+                } else if (primaryCode == KeyCode.SHIFT) {
+                    if (mSearchKeyboardLayoutSet != null) {
+                        MainKeyboardView bottomRow = findViewById(R.id.bottom_row_keyboard);
+                        int currentElementId = bottomRow.getKeyboard().mId.mElementId;
+                        int targetId = switch (currentElementId) {
+                            case KeyboardId.ELEMENT_SYMBOLS -> KeyboardId.ELEMENT_SYMBOLS_SHIFTED;
+                            case KeyboardId.ELEMENT_SYMBOLS_SHIFTED -> KeyboardId.ELEMENT_SYMBOLS;
+                            case KeyboardId.ELEMENT_ALPHABET -> KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED;
+                            default -> KeyboardId.ELEMENT_ALPHABET;
+                        };
+                        bottomRow.setKeyboard(mSearchKeyboardLayoutSet.getKeyboard(targetId));
+                        bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
+                    }
+                } else if (primaryCode == KeyCode.EMOJI) {
+                    stopSearchMode();
+                } else if (primaryCode == KeyCode.CLIPBOARD) {
+                    stopSearchMode();
+                    mOriginalActionListener.onCodeInput(primaryCode, x, y, isKeyRepeat);
+                } else if (primaryCode == KeyCode.LANGUAGE_SWITCH
+                        || primaryCode == KeyCode.CUSTOM1 || primaryCode == KeyCode.CUSTOM2
+                        || primaryCode == KeyCode.CUSTOM3 || primaryCode == KeyCode.CUSTOM4
+                        || primaryCode == KeyCode.CUSTOM5) {
                 } else {
                     mOriginalActionListener.onCodeInput(primaryCode, x, y, isKeyRepeat);
                 }
@@ -605,7 +627,13 @@ public final class EmojiPalettesView extends LinearLayout
             @Override
             public void onPressKey(int p, int r, boolean s, HapticEvent h) {
                 if (p != KeyCode.SYMBOL && p != KeyCode.ALPHA
-                        && p != KeyCode.NUMPAD && p != KeyCode.SYMBOL_ALPHA) {
+                        && p != KeyCode.NUMPAD && p != KeyCode.SYMBOL_ALPHA
+                        && p != KeyCode.SHIFT
+                        && p != KeyCode.EMOJI && p != KeyCode.CLIPBOARD
+                        && p != KeyCode.LANGUAGE_SWITCH
+                        && p != KeyCode.CUSTOM1 && p != KeyCode.CUSTOM2
+                        && p != KeyCode.CUSTOM3 && p != KeyCode.CUSTOM4
+                        && p != KeyCode.CUSTOM5) {
                     mOriginalActionListener.onPressKey(p, r, s, h);
                 }
             }
@@ -615,7 +643,13 @@ public final class EmojiPalettesView extends LinearLayout
                 mDeleteSwipeStartSel = -1;
                 mCurrentDeleteSwipeStart = -1;
                 if (p != KeyCode.SYMBOL && p != KeyCode.ALPHA
-                        && p != KeyCode.NUMPAD && p != KeyCode.SYMBOL_ALPHA) {
+                        && p != KeyCode.NUMPAD && p != KeyCode.SYMBOL_ALPHA
+                        && p != KeyCode.SHIFT
+                        && p != KeyCode.EMOJI && p != KeyCode.CLIPBOARD
+                        && p != KeyCode.LANGUAGE_SWITCH
+                        && p != KeyCode.CUSTOM1 && p != KeyCode.CUSTOM2
+                        && p != KeyCode.CUSTOM3 && p != KeyCode.CUSTOM4
+                        && p != KeyCode.CUSTOM5) {
                     mOriginalActionListener.onReleaseKey(p, w);
                 }
             }
