@@ -68,13 +68,6 @@ fun LibrariesHubScreen(
                     )
                 ) {
                     Column {
-                        // Gesture Library
-                        LoadGestureLibPreference(
-                            title = stringResource(R.string.libraries_hub_gesture_title),
-                            icon = R.drawable.ic_settings_gesture,
-                            summary = if (gestureInstalled) stringResource(R.string.libraries_status_active) else stringResource(R.string.libraries_status_not_installed)
-                        )
-
                         // Dictionaries
                         Preference(
                             name = stringResource(R.string.libraries_hub_dictionary_title),

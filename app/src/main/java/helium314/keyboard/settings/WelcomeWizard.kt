@@ -348,6 +348,38 @@ fun WelcomeWizard(
                                 Icon(painterResource(R.drawable.ic_setup_check), null, Modifier.align(Alignment.CenterEnd).padding(end = 16.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                         }
+                        Spacer(Modifier.height(8.dp))
+                        var gestureEnabled by remember {
+                            mutableStateOf(ctx.prefs().getBoolean(Settings.PREF_GESTURE_INPUT, helium314.keyboard.latin.settings.Defaults.PREF_GESTURE_INPUT))
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Enable Gesture Typing",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Slide across keys to type words",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                            androidx.compose.material3.Switch(
+                                checked = gestureEnabled,
+                                onCheckedChange = { checked ->
+                                    gestureEnabled = checked
+                                    ctx.prefs().edit().putBoolean(Settings.PREF_GESTURE_INPUT, checked).apply()
+                                }
+                            )
+                        }
                     }
                 } else if (step == 5) {
                     Step(
