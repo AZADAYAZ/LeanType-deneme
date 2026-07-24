@@ -93,10 +93,8 @@ fun LoadGestureLibPreference(
         showDialog = false
         if (restartOnSuccess) {
             scope.launch {
-                for (i in 3 downTo 1) {
-                    FeedbackManager.message(ctx, "Gesture library loaded. Restarting in $i...")
-                    delay(1000)
-                }
+                FeedbackManager.message(ctx, "Gesture library loaded. Restarting...")
+                delay(3000)
                 Runtime.getRuntime().exit(0)
             }
         }
@@ -250,10 +248,8 @@ fun LoadGestureLibPreference(
                                         showDialog = false
                                         if (restartOnSuccess) {
                                             scope.launch {
-                                                for (i in 3 downTo 1) {
-                                                    FeedbackManager.message(ctx, "Gesture library removed. Restarting in $i...")
-                                                    delay(1000)
-                                                }
+                                                FeedbackManager.message(ctx, "Gesture library removed. Restarting...")
+                                                delay(3000)
                                                 Runtime.getRuntime().exit(0)
                                             }
                                         }
