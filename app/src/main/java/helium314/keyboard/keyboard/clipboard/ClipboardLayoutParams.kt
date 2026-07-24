@@ -64,12 +64,15 @@ class ClipboardLayoutParams(ctx: Context) {
 
         val rowCount = KeyboardParams.DEFAULT_KEYBOARD_ROWS + if (sv.mShowsNumberRow) 1 else 0
         bottomRowKeyboardHeight = (defaultKeyboardHeight - bottomPadding - topPadding) / rowCount - keyVerticalGap / 2
-        listHeight = defaultKeyboardHeight - bottomRowKeyboardHeight
+        val listTopMargin = (res.displayMetrics.density * 10).toInt()
+        listHeight = defaultKeyboardHeight - bottomRowKeyboardHeight - listTopMargin
     }
 
     fun setListProperties(recycler: RecyclerView) {
+        val listTopMargin = (recycler.context.resources.displayMetrics.density * 10).toInt()
         (recycler.layoutParams as FrameLayout.LayoutParams).apply {
             height = listHeight
+            topMargin = listTopMargin
             recycler.layoutParams = this
         }
     }
