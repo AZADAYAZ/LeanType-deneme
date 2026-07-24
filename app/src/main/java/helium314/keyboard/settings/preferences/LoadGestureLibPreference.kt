@@ -46,7 +46,7 @@ import androidx.annotation.DrawableRes
 @Composable
 fun LoadGestureLibPreference(
     title: String,
-    summary: String? = null,
+    summary: String? = if (JniUtils.sHaveNativeGestureLib) stringResource(R.string.libraries_status_active) else stringResource(R.string.libraries_status_not_installed),
     @DrawableRes icon: Int? = null,
     restartOnSuccess: Boolean = true,
     onSuccess: (() -> Unit)? = null,
