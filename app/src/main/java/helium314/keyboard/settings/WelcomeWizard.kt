@@ -112,7 +112,7 @@ fun WelcomeWizard(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            if (JniUtils.sHaveGestureLib && step == 0) {
+            if (JniUtils.sHaveNativeGestureLib && step == 0) {
                 Text(
                     stringResource(R.string.setup_welcome_additional_description),
                     style = MaterialTheme.typography.bodyLarge,
@@ -323,7 +323,7 @@ fun WelcomeWizard(
                         val trigger = refreshTrigger // Force recomposition
                         val locale = helium314.keyboard.latin.RichInputMethodManager.getInstance().currentSubtype.locale
                         val emojiLibInstalled = java.io.File(helium314.keyboard.latin.utils.DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx), "emoji_${locale.language}.dict").exists()
-                        val gestureLibInstalled = java.io.File(ctx.filesDir, "libjni_latinime.so").exists() || JniUtils.sHaveGestureLib
+                        val gestureLibInstalled = java.io.File(ctx.filesDir, "libjni_latinime.so").exists() || JniUtils.sHaveNativeGestureLib
 
                         Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
                             LoadEmojiLibPreference(
