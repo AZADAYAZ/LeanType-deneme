@@ -279,6 +279,11 @@ public final class EmojiPalettesView extends LinearLayout
                     defaultKeyboardHeight, defaultKeyboardHeight) * sv.mBottomPaddingScale);
             final int topPadding = (int) res.getFraction(R.fraction.config_keyboard_top_padding_holo,
                     defaultKeyboardHeight, defaultKeyboardHeight);
+            setPadding(getPaddingLeft(), topPadding, getPaddingRight(), 0);
+            View bottomRow = findViewById(R.id.bottom_row_keyboard);
+            if (bottomRow != null) {
+                bottomRow.setPadding(bottomRow.getPaddingLeft(), 0, bottomRow.getPaddingRight(), bottomPadding);
+            }
             final int height = defaultKeyboardHeight + topPadding + bottomPadding;
             setMeasuredDimension(width, height);
         } else {
