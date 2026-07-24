@@ -50,12 +50,13 @@ internal class EmojiLayoutParams(res: Resources) {
         emojiCategoryPageIdViewHeight = pageIdHeight.toInt()
         val emojiListHeight = defaultKeyboardHeight - bottomRowKeyboardHeight
         emojiListBottomMargin = 0
-        emojiKeyboardHeight = emojiListHeight - emojiCategoryPageIdViewHeight - emojiListBottomMargin
+        emojiKeyboardHeight = emojiListHeight - emojiCategoryPageIdViewHeight * 2 - emojiListBottomMargin
     }
 
     fun setEmojiListProperties(vp: ViewPager2) {
         val lp = vp.layoutParams as LinearLayout.LayoutParams
         lp.height = emojiKeyboardHeight
+        lp.topMargin = emojiCategoryPageIdViewHeight
         lp.bottomMargin = emojiListBottomMargin
         vp.layoutParams = lp
     }
