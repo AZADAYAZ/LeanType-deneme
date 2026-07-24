@@ -270,11 +270,16 @@ public final class EmojiPalettesView extends LinearLayout
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         final Resources res = getContext().getResources();
         // The main keyboard expands to the entire this {@link KeyboardView}.
-        final int width = ResourceUtils.getKeyboardWidth(getContext(), Settings.getValues())
+        final SettingsValues sv = Settings.getValues();
+        final int width = ResourceUtils.getKeyboardWidth(getContext(), sv)
                 + getPaddingLeft() + getPaddingRight();
         if (!mInSearchMode) {
-            final int height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues())
-                    + getPaddingTop() + getPaddingBottom();
+            final int defaultKeyboardHeight = ResourceUtils.getSecondaryKeyboardHeight(res, sv);
+            final int bottomPadding = (int) (res.getFraction(R.fraction.config_keyboard_bottom_padding_holo,
+                    defaultKeyboardHeight, defaultKeyboardHeight) * sv.mBottomPaddingScale);
+            final int topPadding = (int) res.getFraction(R.fraction.config_keyboard_top_padding_holo,
+                    defaultKeyboardHeight, defaultKeyboardHeight);
+            final int height = defaultKeyboardHeight + topPadding + bottomPadding;
             setMeasuredDimension(width, height);
         } else {
             setMeasuredDimension(width, getMeasuredHeight());

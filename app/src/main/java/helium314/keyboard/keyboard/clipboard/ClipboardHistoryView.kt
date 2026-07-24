@@ -84,9 +84,14 @@ class ClipboardHistoryView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val res = context.resources
-        // The main keyboard expands to the entire this {@link KeyboardView}.
-        val width = ResourceUtils.getKeyboardWidth(context, Settings.getValues()) + paddingLeft + paddingRight
-        val height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues()) + paddingTop + paddingBottom
+        val sv = Settings.getValues()
+        val defaultKeyboardHeight = ResourceUtils.getSecondaryKeyboardHeight(res, sv)
+        val bottomPadding = (res.getFraction(R.fraction.config_keyboard_bottom_padding_holo,
+                defaultKeyboardHeight, defaultKeyboardHeight) * sv.mBottomPaddingScale).toInt()
+        val topPadding = res.getFraction(R.fraction.config_keyboard_top_padding_holo,
+                defaultKeyboardHeight, defaultKeyboardHeight).toInt()
+        val width = ResourceUtils.getKeyboardWidth(context, sv) + paddingLeft + paddingRight
+        val height = defaultKeyboardHeight + topPadding + bottomPadding
         setMeasuredDimension(width, height)
     }
 
