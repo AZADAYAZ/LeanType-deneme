@@ -284,8 +284,7 @@ public final class EmojiPalettesView extends LinearLayout
             if (bottomRow != null) {
                 bottomRow.setPadding(bottomRow.getPaddingLeft(), 0, bottomRow.getPaddingRight(), bottomPadding);
             }
-            final int height = defaultKeyboardHeight + topPadding + bottomPadding;
-            setMeasuredDimension(width, height);
+            setMeasuredDimension(width, defaultKeyboardHeight);
         } else {
             setMeasuredDimension(width, getMeasuredHeight());
         }
