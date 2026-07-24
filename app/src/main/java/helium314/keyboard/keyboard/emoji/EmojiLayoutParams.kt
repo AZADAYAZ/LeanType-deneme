@@ -48,7 +48,7 @@ internal class EmojiLayoutParams(res: Resources) {
 
         val pageIdHeight = res.getDimension(R.dimen.config_emoji_category_page_id_height)
         emojiCategoryPageIdViewHeight = pageIdHeight.toInt()
-        val emojiListHeight = defaultKeyboardHeight - bottomRowKeyboardHeight - topPadding - bottomPadding
+        val emojiListHeight = defaultKeyboardHeight - bottomRowKeyboardHeight
         emojiListBottomMargin = 0
         emojiKeyboardHeight = emojiListHeight - emojiCategoryPageIdViewHeight - emojiListBottomMargin
     }
