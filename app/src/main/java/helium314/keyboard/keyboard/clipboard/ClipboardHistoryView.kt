@@ -90,6 +90,9 @@ class ClipboardHistoryView @JvmOverloads constructor(
                 defaultKeyboardHeight, defaultKeyboardHeight) * sv.mBottomPaddingScale).toInt()
         val topPadding = res.getFraction(R.fraction.config_keyboard_top_padding_holo,
                 defaultKeyboardHeight, defaultKeyboardHeight).toInt()
+        setPadding(paddingLeft, topPadding, paddingRight, 0)
+        val bottomRow = findViewById<View>(R.id.bottom_row_keyboard)
+        bottomRow?.setPadding(bottomRow.paddingLeft, 0, bottomRow.paddingRight, bottomPadding)
         val width = ResourceUtils.getKeyboardWidth(context, sv) + paddingLeft + paddingRight
         val height = defaultKeyboardHeight + topPadding + bottomPadding
         setMeasuredDimension(width, height)
