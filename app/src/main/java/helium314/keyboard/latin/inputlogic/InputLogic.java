@@ -3551,15 +3551,14 @@ public final class InputLogic {
             return null;
         }
 
-        if (Character.isWhitespace(text.codePointAt(markerIndex + 1))) {
-            return null;
+        var searchString = text.substring(markerIndex + 1);
+        for (int i = 0; i < searchString.length(); i++) {
+            if (Character.isWhitespace(searchString.charAt(i))) {
+                return null;
+            }
         }
 
-        if (text.indexOf('\n', markerIndex + 2) >= 0) {
-            return null;
-        }
-
-        return text.substring(markerIndex + 1);
+        return searchString;
     }
 
     // public for testing
