@@ -364,11 +364,13 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             toolbarExpandKey.isVisible = false // Hide expand key
             updateSplitToolbarState()
         } else {
-            // When toolbar expands: show toolbar container, hide pinnedKeys container and suggestions
-            // When toolbar collapsed: show suggestions + pinnedKeys container, hide toolbar container
-            pinnedKeys.isVisible = !locked && !toolbarVisible
-            suggestionsStrip.isVisible = locked || !toolbarVisible
-            toolbarContainer.isVisible = !locked && toolbarVisible
+            val mode = Settings.getValues().mToolbarMode
+            val forceToolbar = mode == ToolbarMode.TOOLBAR_KEYS
+            val effectiveToolbarVisible = forceToolbar || toolbarVisible
+            val showPinned = !locked && !effectiveToolbarVisible && mode != ToolbarMode.SUGGESTION_STRIP
+            pinnedKeys.isVisible = showPinned
+            suggestionsStrip.isVisible = locked || !effectiveToolbarVisible
+            toolbarContainer.isVisible = !locked && effectiveToolbarVisible
         }
 
         if (DEBUG_SUGGESTIONS) {
