@@ -270,21 +270,12 @@ public final class EmojiPalettesView extends LinearLayout
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         final Resources res = getContext().getResources();
         // The main keyboard expands to the entire this {@link KeyboardView}.
-        final SettingsValues sv = Settings.getValues();
-        final int width = ResourceUtils.getKeyboardWidth(getContext(), sv)
+        final int width = ResourceUtils.getKeyboardWidth(getContext(), Settings.getValues())
                 + getPaddingLeft() + getPaddingRight();
         if (!mInSearchMode) {
-            final int defaultKeyboardHeight = ResourceUtils.getSecondaryKeyboardHeight(res, sv);
-            final int bottomPadding = (int) (res.getFraction(R.fraction.config_keyboard_bottom_padding_holo,
-                    defaultKeyboardHeight, defaultKeyboardHeight) * sv.mBottomPaddingScale);
-            final int topPadding = (int) res.getFraction(R.fraction.config_keyboard_top_padding_holo,
-                    defaultKeyboardHeight, defaultKeyboardHeight);
-            setPadding(getPaddingLeft(), topPadding, getPaddingRight(), 0);
-            View bottomRow = findViewById(R.id.bottom_row_keyboard);
-            if (bottomRow != null) {
-                bottomRow.setPadding(bottomRow.getPaddingLeft(), 0, bottomRow.getPaddingRight(), bottomPadding);
-            }
-            setMeasuredDimension(width, defaultKeyboardHeight);
+            final int height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues())
+                    + getPaddingTop() + getPaddingBottom();
+            setMeasuredDimension(width, height);
         } else {
             setMeasuredDimension(width, getMeasuredHeight());
         }
@@ -816,15 +807,7 @@ public final class EmojiPalettesView extends LinearLayout
             return;
         mInSearchMode = false;
 
-        // Return to alphabet keyboard directly upon closing search
-        // EXCEPTION: do not do this if we are being detached from the window,
-        // as this will corrupt the KeyboardSwitcher state and hide the toolbar.
-        if (mOriginalActionListener != null && isAttachedToWindow()) {
-            mOriginalActionListener.onCodeInput(KeyCode.ALPHA,
-                    helium314.keyboard.latin.common.Constants.NOT_A_COORDINATE,
-                    helium314.keyboard.latin.common.Constants.NOT_A_COORDINATE, false);
-        }
-
+        // 1. Reset bottom row & internal UI state first
         setupBottomRowKeyboard(null, mOriginalActionListener);
 
         // Restore UI internally
@@ -839,6 +822,17 @@ public final class EmojiPalettesView extends LinearLayout
             mSearchBar.setText(""); // Clear text
         mSearchBar = null; // Clear reference
         mSearchKeyboardLayoutSet = null;
+
+        // 2. Restore main action listener
+        if (mOriginalActionListener != null) {
+            PointerTracker.setKeyboardActionListener(mOriginalActionListener);
+        }
+
+        // 3. Switch to Alphabet Keyboard LAST so PointerTracker.sDrawingProxy remains mKeyboardView
+        if (isAttachedToWindow()) {
+            KeyboardSwitcher.getInstance().setAlphabetKeyboard();
+        }
+
         requestLayout();
     }
 

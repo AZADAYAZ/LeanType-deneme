@@ -25,8 +25,8 @@ public final class JniUtils {
     public static final String JNI_LIB_IMPORT_FILE_NAME = "libjni_latinime.so";
     private static final String CHECKSUM_ARM64 = "b1049983e6ac5cfc6d1c66e38959751044fad213dff0637a6cf1d2a2703e754f";
     private static final String CHECKSUM_ARM32 = "442a2a8bfcb25489564bc9433a916fa4dc0dba9000fe6f6f03f5939b985091e6";
-    private static final String CHECKSUM_X86_64 = "bd946d126c957b5a6dea3bafa07fa36a27950b30e2b684dffc60746d0a1c7ad8";
-    private static final String CHECKSUM_X86 = "c882e12e6d48dd946e0b644c66868a720bd11ac3fecf152000e21a3d5abd59c9";
+    private static final String CHECKSUM_X86_64 = "c882e12e6d48dd946e0b644c66868a720bd11ac3fecf152000e21a3d5abd59c9";
+    private static final String CHECKSUM_X86 = "bd946d126c957b5a6dea3bafa07fa36a27950b30e2b684dffc60746d0a1c7ad8";
 
     public static String expectedDefaultChecksum() {
         final String abi = Build.SUPPORTED_ABIS[0];

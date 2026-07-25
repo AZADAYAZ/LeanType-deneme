@@ -44,19 +44,19 @@ internal class EmojiLayoutParams(res: Resources) {
             defaultKeyboardHeight, defaultKeyboardHeight).toInt()
 
         val rowCount = KeyboardParams.DEFAULT_KEYBOARD_ROWS + if (sv.mShowsNumberRow) 1 else 0
-        bottomRowKeyboardHeight = (defaultKeyboardHeight - bottomPadding - topPadding + keyVerticalGap) / rowCount
+        bottomRowKeyboardHeight = (defaultKeyboardHeight - bottomPadding - topPadding) / rowCount - keyVerticalGap / 2
 
         val pageIdHeight = res.getDimension(R.dimen.config_emoji_category_page_id_height)
         emojiCategoryPageIdViewHeight = pageIdHeight.toInt()
-        val emojiListHeight = defaultKeyboardHeight - bottomRowKeyboardHeight
+        val offset = 1.25f * res.displayMetrics.density * sv.mKeyboardHeightScale // like ClipboardLayoutParams
+        val emojiListHeight = defaultKeyboardHeight - bottomRowKeyboardHeight - bottomPadding + (offset.toInt())
         emojiListBottomMargin = 0
-        emojiKeyboardHeight = emojiListHeight - emojiCategoryPageIdViewHeight * 2 - emojiListBottomMargin
+        emojiKeyboardHeight = emojiListHeight - emojiCategoryPageIdViewHeight - emojiListBottomMargin
     }
 
     fun setEmojiListProperties(vp: ViewPager2) {
         val lp = vp.layoutParams as LinearLayout.LayoutParams
         lp.height = emojiKeyboardHeight
-        lp.topMargin = emojiCategoryPageIdViewHeight
         lp.bottomMargin = emojiListBottomMargin
         vp.layoutParams = lp
     }

@@ -84,14 +84,10 @@ class ClipboardHistoryView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val res = context.resources
-        val sv = Settings.getValues()
-        val defaultKeyboardHeight = ResourceUtils.getSecondaryKeyboardHeight(res, sv)
-        val bottomPadding = (res.getFraction(R.fraction.config_keyboard_bottom_padding_holo,
-                defaultKeyboardHeight, defaultKeyboardHeight) * sv.mBottomPaddingScale).toInt()
-        val bottomRow = findViewById<View>(R.id.bottom_row_keyboard)
-        bottomRow?.setPadding(bottomRow.paddingLeft, 0, bottomRow.paddingRight, bottomPadding)
-        val width = ResourceUtils.getKeyboardWidth(context, sv) + paddingLeft + paddingRight
-        setMeasuredDimension(width, defaultKeyboardHeight)
+        // The main keyboard expands to the entire this {@link KeyboardView}.
+        val width = ResourceUtils.getKeyboardWidth(context, Settings.getValues()) + paddingLeft + paddingRight
+        val height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues()) + paddingTop + paddingBottom
+        setMeasuredDimension(width, height)
     }
 
     private lateinit var searchBar: android.widget.EditText
