@@ -210,6 +210,9 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public void beginBatchEdit() {
+        if (mNestLevel < 0) {
+            mNestLevel = 0;
+        }
         if (++mNestLevel == 1) {
             mIC = mParent.getCurrentInputConnection();
             if (isConnected()) {
@@ -228,8 +231,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public void endBatchEdit() {
-        if (mNestLevel <= 0)
+        if (mNestLevel <= 0) {
+            mNestLevel = 0;
             Log.e(TAG, "Batch edit not in progress!"); // TODO: exception instead
+            return;
+        }
         if (--mNestLevel == 0 && isConnected()) {
             mIC.endBatchEdit();
         }
@@ -293,7 +299,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
      *
      * @return true if successful
      */
-    private boolean reloadTextCache() {
+    public boolean reloadTextCache() {
         mCommittedTextBeforeComposingText.setLength(0);
         // Clearing composing text was not in original AOSP and OpenBoard, but why?
         // should actually
@@ -384,6 +390,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         mExpectedSelStart += text.length() - mComposingText.length();
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
+        mIC = mParent.getCurrentInputConnection();
         if (isConnected()) {
             mTempObjectForCommitText.clear();
             mTempObjectForCommitText.append(text);
@@ -875,6 +882,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         // TODO: support values of newCursorPosition != 1. At this time, this is never
         // called with
         // newCursorPosition != 1.
+        mIC = mParent.getCurrentInputConnection();
         if (isConnected()) {
             if (DebugFlags.DEBUG_ENABLED)
                 Log.d(TAG, "setting composing text of length " + text.length()); // don't log actual text

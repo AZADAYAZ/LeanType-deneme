@@ -987,6 +987,7 @@ public class LatinIME extends InputMethodService implements
         mRichImm.onSubtypeChanged(subtype);
         mInputLogic.onSubtypeChanged(SubtypeLocaleUtils.getCombiningRulesExtraValue(subtype),
                 mSettings.getCurrent());
+        mInputLogic.getConnection().reloadTextCache();
         loadKeyboard();
         if (hasSuggestionStripView()) {
             mSuggestionStripView.setRtl(mRichImm.getCurrentSubtype().isRtlSubtype());
@@ -1589,6 +1590,22 @@ public class LatinIME extends InputMethodService implements
     // called when language switch key is pressed (either the keyboard key, or
     // long-press comma)
     public void switchToNextSubtype() {
+        final java.util.List<InputMethodSubtype> subtypes = helium314.keyboard.latin.utils.SubtypeSettings.INSTANCE
+                .getEnabledSubtypes(true);
+        if (subtypes.size() > 1) {
+            final InputMethodSubtype current = mRichImm.getCurrentSubtype().getRawSubtype();
+            int index = -1;
+            for (int i = 0; i < subtypes.size(); i++) {
+                if (subtypes.get(i).equals(current) || subtypes.get(i).hashCode() == current.hashCode()) {
+                    index = i;
+                    break;
+                }
+            }
+            int nextIndex = (index + 1) % subtypes.size();
+            switchToSubtype(subtypes.get(nextIndex));
+            return;
+        }
+
         final boolean switchSubtype = mSettings.getCurrent().mLanguageSwitchKeyToOtherSubtypes;
         final boolean switchIme = mSettings.getCurrent().mLanguageSwitchKeyToOtherImes;
 
@@ -1596,43 +1613,13 @@ public class LatinIME extends InputMethodService implements
         final String target = prefs.getString(Settings.PREF_DIRECT_IME_SWITCH_TARGET, Defaults.PREF_DIRECT_IME_SWITCH_TARGET);
         final boolean hasDirectTarget = target != null && !target.isEmpty();
 
-        // switch IME if wanted and possible
         if (switchIme && !switchSubtype) {
             if (hasDirectTarget) {
                 switchToUserIme();
-                return;
-            } else if (ImeCompat.INSTANCE.switchInputMethod(this)) {
-                return;
+            } else {
+                ImeCompat.INSTANCE.switchInputMethod(this);
             }
         }
-        final boolean hasMoreThanOneSubtype = mRichImm.hasMultipleEnabledSubtypesInThisIme(true);
-        // switch subtype if wanted, do nothing if no other subtype is available
-        if (switchSubtype && !switchIme) {
-            if (hasMoreThanOneSubtype)
-                // switch to previous subtype if current one was used, otherwise cycle through
-                // list
-                mSubtypeState.switchSubtype(mRichImm);
-            return;
-        }
-        // language key set to switch both, or language key is not shown on keyboard ->
-        // switch both
-        if (hasMoreThanOneSubtype && mSubtypeState.getCurrentSubtypeHasBeenUsed()) {
-            mSubtypeState.switchSubtype(mRichImm);
-            return;
-        }
-        if (ImeCompat.INSTANCE.shouldSwitchToOtherInputMethods(this)) {
-            final InputMethodSubtype nextSubtype = mRichImm.getNextSubtypeInThisIme(false);
-            if (nextSubtype != null) {
-                switchToSubtype(nextSubtype);
-                return;
-            } else if (hasDirectTarget) {
-                switchToUserIme();
-                return;
-            } else if (ImeCompat.INSTANCE.switchInputMethod(this)) {
-                return;
-            }
-        }
-        mSubtypeState.switchSubtype(mRichImm);
     }
 
     public void switchToUserIme() {
