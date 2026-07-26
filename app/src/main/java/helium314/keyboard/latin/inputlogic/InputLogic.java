@@ -253,6 +253,10 @@ public final class InputLogic {
         resetComposingState(true);
         mInputLogicHandler.reset();
         mSpaceState = SpaceState.NONE;
+        // Ensure any pending batch edit is properly closed to prevent InputConnection issues
+        // when switching subtypes (languages). Unbalanced batch edits can cause some apps
+        // to stop accepting input.
+        mConnection.ensureBatchEditClosed();
     }
 
     /**

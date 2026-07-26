@@ -237,6 +237,13 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkConsistencyForDebug();
     }
 
+    public void ensureBatchEditClosed() {
+        if (mNestLevel > 0 && isConnected()) {
+            mIC.endBatchEdit();
+        }
+        mNestLevel = 0;
+    }
+
     /**
      * Reset the cached text and retrieve it again from the editor.
      * <p>
