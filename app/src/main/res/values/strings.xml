@@ -1120,6 +1120,11 @@ New dictionary:
     <string name="libraries_status_not_installed">Not Installed</string>
     <!-- preference title for saving the log to a file -->
     <string name="save_log">Save log</string>
+    <string name="log_options_title">Log options</string>
+    <string name="save_log_to_file">Save to file</string>
+    <string name="clear_log">Clear log</string>
+    <string name="share_log">Share log</string>
+    <string name="log_cleared">Log cleared</string>
     <!-- license for about screen-->
     <string name="license">Open-source license</string>
     <!-- license link for about screen-->

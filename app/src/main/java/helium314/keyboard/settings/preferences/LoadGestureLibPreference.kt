@@ -151,122 +151,90 @@ fun LoadGestureLibPreference(
 
     if (showDialog) {
         val isInstalled = libFile.exists() || JniUtils.sHaveNativeGestureLib
-        Dialog(
-            onDismissRequest = { if (!isDownloading) showDialog = false }
-        ) {
-            Surface(
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+        helium314.keyboard.settings.dialogs.PreferenceDialog(
+            onDismissRequest = { if (!isDownloading) showDialog = false },
+            title = stringResource(R.string.load_gesture_library),
+            showCloseButton = !isDownloading,
+            buttons = {
+                if (isDownloading) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = stringResource(R.string.load_gesture_library),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
+                            text = stringResource(R.string.load_gesture_library_downloading),
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                        IconButton(
-                            onClick = { if (!isDownloading) showDialog = false },
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant, shape = CircleShape)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_close_rounded),
-                                contentDescription = "Close",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = stringResource(R.string.load_gesture_library_message, abi),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (isDownloading) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(28.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = stringResource(R.string.load_gesture_library_downloading),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (!isInstalled && BuildConfig.FLAVOR != "offline") {
+                            Button(
+                                onClick = { startDownload() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.load_gesture_library_button_download))
+                            }
                         }
-                    } else {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (!isInstalled && BuildConfig.FLAVOR != "offline") {
-                                Button(
-                                    onClick = { startDownload() },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(R.string.load_gesture_library_button_download))
-                                }
-                            }
 
-                            if (!isInstalled) {
-                                OutlinedButton(
-                                    onClick = {
-                                        showDialog = false
-                                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-                                            .addCategory(Intent.CATEGORY_OPENABLE)
-                                            .setType("application/octet-stream")
-                                        launcher.launch(intent)
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(R.string.load_gesture_library_button_load))
-                                }
+                        if (!isInstalled) {
+                            OutlinedButton(
+                                onClick = {
+                                    showDialog = false
+                                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                                        .addCategory(Intent.CATEGORY_OPENABLE)
+                                        .setType("application/octet-stream")
+                                    launcher.launch(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.load_gesture_library_button_load))
                             }
+                        }
 
-                            if (isInstalled) {
-                                Button(
-                                    onClick = {
-                                        libFile.delete()
-                                        prefs.edit(commit = true) { remove(Settings.PREF_LIBRARY_CHECKSUM) }
-                                        onSuccess?.invoke()
-                                        showDialog = false
-                                        if (restartOnSuccess) {
-                                            scope.launch {
-                                                FeedbackManager.message(ctx, "Gesture library removed. Restarting...")
-                                                delay(3000)
-                                                Runtime.getRuntime().exit(0)
-                                            }
+                        if (isInstalled) {
+                            Button(
+                                onClick = {
+                                    libFile.delete()
+                                    prefs.edit(commit = true) { remove(Settings.PREF_LIBRARY_CHECKSUM) }
+                                    onSuccess?.invoke()
+                                    showDialog = false
+                                    if (restartOnSuccess) {
+                                        scope.launch {
+                                            FeedbackManager.message(ctx, "Gesture library removed. Restarting...")
+                                            delay(3000)
+                                            Runtime.getRuntime().exit(0)
                                         }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.error,
-                                        contentColor = MaterialTheme.colorScheme.onError
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(R.string.load_gesture_library_button_delete))
-                                }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.load_gesture_library_button_delete))
                             }
                         }
                     }
                 }
             }
+        ) {
+            Text(
+                text = stringResource(R.string.load_gesture_library_message, abi),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 

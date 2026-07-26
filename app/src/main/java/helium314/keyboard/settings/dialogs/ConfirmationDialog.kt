@@ -21,7 +21,7 @@ fun ConfirmationDialogContent(
     title: @Composable (() -> Unit)? = null,
     content: @Composable (() -> Unit)? = null,
     confirmButtonText: String = stringResource(android.R.string.ok),
-    cancelButtonText: String = stringResource(android.R.string.cancel),
+    cancelButtonText: String? = null,
     neutralButtonText: String? = null,
     onNeutral: () -> Unit = { },
 ) {
@@ -46,7 +46,7 @@ fun ConfirmationDialog(
     title: @Composable (() -> Unit)? = null,
     content: @Composable (() -> Unit)? = null,
     confirmButtonText: String = stringResource(android.R.string.ok),
-    cancelButtonText: String = stringResource(android.R.string.cancel),
+    cancelButtonText: String? = null,
     neutralButtonText: String? = null,
     onNeutral: () -> Unit = { },
 ) {
