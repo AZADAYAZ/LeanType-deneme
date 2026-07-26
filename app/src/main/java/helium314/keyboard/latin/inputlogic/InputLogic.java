@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 import helium314.keyboard.event.Event;
 import helium314.keyboard.event.InputTransaction;
 import helium314.keyboard.keyboard.Keyboard;
+import helium314.keyboard.keyboard.KeyboardId;
 import helium314.keyboard.keyboard.KeyboardLayoutSet;
 import helium314.keyboard.keyboard.KeyboardSwitcher;
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode;
@@ -999,7 +1000,8 @@ public final class InputLogic {
                 break;
             case KeyCode.SHIFT:
                 if (KeyboardSwitcher.getInstance().getKeyboard() != null
-                        && !KeyboardSwitcher.getInstance().getKeyboard().mId.isAlphabetKeyboard())
+                        && !KeyboardSwitcher.getInstance().getKeyboard().mId.isAlphabetKeyboard()
+                        && KeyboardSwitcher.getInstance().getKeyboard().mId.mElementId != KeyboardId.ELEMENT_TEXT_EDIT)
                     break; // recapitalization and follow-up code should only trigger for alphabet shift,
                            // see #1256
                 performRecapitalization(inputTransaction.getSettingsValues());
@@ -2269,7 +2271,8 @@ public final class InputLogic {
      * @param settingsValues The current settings values.
      */
     private void performRecapitalization(final SettingsValues settingsValues) {
-        if (!mConnection.hasSelection() || !mRecapitalizeStatus.isEnabled()) {
+        mRecapitalizeStatus.enable();
+        if (!mConnection.hasSelection()) {
             return; // No selection or recapitalize is disabled for now
         }
         final int selectionStart = mConnection.getExpectedSelectionStart();
