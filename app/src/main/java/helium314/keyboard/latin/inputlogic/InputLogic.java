@@ -394,7 +394,6 @@ public final class InputLogic {
                 mSpaceState = SpaceState.PHANTOM;
             }
         }
-        mLastComposedWord.deactivate();
         mConnection.endBatchEdit();
         inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
         setInlineEmojiSearchAction(false);

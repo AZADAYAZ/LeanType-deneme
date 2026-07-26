@@ -110,7 +110,7 @@ object DictionaryInfoUtils {
 
     @JvmStatic
     fun getCachedDictForLocaleAndType(locale: Locale, type: String, context: Context): File? =
-        getCachedDictsForLocale(locale, context).firstOrNull { it.name.substringBefore("_").substringBefore(".") == type }
+        getCachedDictsForLocale(locale, context).firstOrNull { it.name.substringBefore("_") == type }
 
     fun getFallbackVariantDirectory(locale: Locale, context: Context): File? {
         val cacheDir = File(getWordListCacheDirectory(context))

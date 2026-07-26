@@ -791,8 +791,6 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     private fun saveLanguageHistory(prefs: SharedPreferences, name: String, code: String) = helium314.keyboard.latin.utils.TranslationUtils.saveLanguageHistory(prefs, name, code)
 
-    private fun removeLanguageHistory(prefs: SharedPreferences, code: String) = helium314.keyboard.latin.utils.TranslationUtils.removeLanguageHistory(prefs, code)
-
     private fun isSameLanguage(p1: Pair<String, String>, p2: Pair<String, String>) = helium314.keyboard.latin.utils.TranslationUtils.isSameLanguage(p1, p2)
 
     private fun showDialogForIme(builder: android.app.AlertDialog.Builder) {
@@ -880,20 +878,6 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 helium314.keyboard.latin.utils.ProofreadService(context).setTargetLanguage(languageCode)
                 hideTranslateLanguageSelector()
                 listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
-            }
-
-            button.setOnLongClickListener {
-                val builder = android.app.AlertDialog.Builder(context)
-                builder.setTitle(languageName)
-                builder.setMessage("Remove this language from translation list?")
-                builder.setPositiveButton("Remove") { dialog, _ ->
-                    removeLanguageHistory(prefs, languageCode)
-                    showTranslateLanguageSelector()
-                    dialog.dismiss()
-                }
-                builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-                showDialogForIme(builder)
-                true
             }
 
             button.setBackgroundResource(R.drawable.toolbar_key_background)
