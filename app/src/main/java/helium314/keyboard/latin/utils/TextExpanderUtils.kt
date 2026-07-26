@@ -6,7 +6,6 @@ package helium314.keyboard.latin.utils
 
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.res.ColorStateList
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -84,19 +83,14 @@ object TextExpanderUtils {
     fun expand(template: String, context: Context): String {
         var result = template
 
-        // Resolve %date%
         if (result.contains("%date%")) {
             val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             result = result.replace("%date%", dateStr)
         }
-
-        // Resolve %time%
         if (result.contains("%time%")) {
             val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
             result = result.replace("%time%", timeStr)
         }
-
-        // Resolve %clipboard%
         if (result.contains("%clipboard%")) {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
             val clipText = try {
@@ -108,46 +102,32 @@ object TextExpanderUtils {
             }
             result = result.replace("%clipboard%", clipText)
         }
-
-        // Resolve %day%
         if (result.contains("%day%")) {
             val dayStr = SimpleDateFormat("EEEE", Locale.getDefault()).format(Date())
             result = result.replace("%day%", dayStr)
         }
-
-        // Resolve %time12%
         if (result.contains("%time12%")) {
             val time12Str = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
             result = result.replace("%time12%", time12Str)
         }
-
-        // Resolve %month%
         if (result.contains("%month%")) {
             val monthStr = SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
             result = result.replace("%month%", monthStr)
         }
-
-        // Resolve %year%
         if (result.contains("%year%")) {
             val yearStr = SimpleDateFormat("yyyy", Locale.getDefault()).format(Date())
             result = result.replace("%year%", yearStr)
         }
-
-        // Resolve %week%
         if (result.contains("%week%")) {
             val weekStr = SimpleDateFormat("w", Locale.getDefault()).format(Date())
             result = result.replace("%week%", weekStr)
         }
-
-        // Resolve %battery%
         if (result.contains("%battery%")) {
             val bm = context.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
             val level = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
             val batteryStr = if (level != -1) "$level%" else ""
             result = result.replace("%battery%", batteryStr)
         }
-
-        // Resolve %language%
         if (result.contains("%language%")) {
             val imeManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
             val activeSubtype = imeManager?.currentInputMethodSubtype
@@ -155,8 +135,6 @@ object TextExpanderUtils {
                 ?: Locale.getDefault().getDisplayName(Locale.getDefault())
             result = result.replace("%language%", languageStr)
         }
-
-        // Resolve %greeting%
         if (result.contains("%greeting%")) {
             val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             val greeting = when (hour) {
@@ -167,15 +145,11 @@ object TextExpanderUtils {
             }
             result = result.replace("%greeting%", greeting)
         }
-
-        // Resolve %tomorrow%
         if (result.contains("%tomorrow%")) {
             val cal = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, 1) }
             val tomorrowStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.time)
             result = result.replace("%tomorrow%", tomorrowStr)
         }
-
-        // Resolve %bullets% with optional count
         if (result.contains("%bullets")) {
             val bulletsRegex = Regex("%bullets(?:_(\\d+))?%")
             result = bulletsRegex.replace(result) { match ->
@@ -191,8 +165,6 @@ object TextExpanderUtils {
                 }
             }
         }
-
-        // Resolve %list% with optional count
         if (result.contains("%list")) {
             val listRegex = Regex("%list(?:_(\\d+))?%")
             result = listRegex.replace(result) { match ->
@@ -218,43 +190,44 @@ object TextExpanderUtils {
         context: Context,
     ): Boolean =
         getShortcuts(context).any { (key, entry) ->
-            val cleanKey = if (key.startsWith(REGEX_PREFIX)) key.substring(REGEX_PREFIX.length) else key
-            if (key.startsWith(REGEX_PREFIX) || cleanKey.length < entry.prefix.length) {
+            if (key.startsWith(REGEX_PREFIX) || key.length < entry.prefix.length) {
                 false
             } else {
-                val shortcut = cleanKey.substring(entry.prefix.length)
-                val target = entry.prefix + word
+                val shortcut = key.substring(entry.prefix.length)
                 !shortcut.equals(word, ignoreCase = true) &&
                     shortcut.startsWith(word, ignoreCase = true) &&
-                    textBeforeCursor.endsWith(target, ignoreCase = true)
+                    textBeforeCursor.endsWith(entry.prefix + word, ignoreCase = true)
             }
         }
 
     fun getExpandedWordForTyped(word: String?, textBeforeCursor: String?, context: Context): ExpandedResult? {
-        if (textBeforeCursor == null || !isEnabled(context)) return null
+        if (word == null || textBeforeCursor == null || !isEnabled(context)) return null
         val shortcuts = getShortcuts(context)
         
         for ((key, entry) in shortcuts) {
             val isRegex = key.startsWith(REGEX_PREFIX)
             val cleanKey = if (isRegex) key.substring(REGEX_PREFIX.length) else key
-            val prefix = entry.prefix
-            val expectedSuffix = prefix + cleanKey
-
-            val matchesWord = word != null && expectedSuffix.equals(prefix + word, ignoreCase = true)
-            val matchesDirectSuffix = textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)
-
-            if (matchesWord || matchesDirectSuffix) {
-                if (isRegex) {
-                    try {
-                        val regex = Regex(cleanKey, RegexOption.IGNORE_CASE)
-                        if (regex.matches(expectedSuffix)) {
-                            val replaced = regex.replace(expectedSuffix, entry.template)
+            
+            if (isRegex) {
+                val prefix = entry.prefix
+                val patternStr = cleanKey
+                try {
+                    val regex = Regex(patternStr, RegexOption.IGNORE_CASE)
+                    val expectedSuffix = prefix + word
+                    if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
+                        val matchInput = if (expectedSuffix.startsWith(prefix)) expectedSuffix.substring(prefix.length) else expectedSuffix
+                        if (regex.matches(matchInput)) {
+                            val replaced = regex.replace(matchInput, entry.template)
                             return ExpandedResult(expand(replaced, context), prefix.length, expectedSuffix)
                         }
-                    } catch (e: java.lang.Exception) {
-                        // ignore
                     }
-                } else {
+                } catch (e: java.lang.Exception) {
+                    // ignore
+                }
+            } else {
+                val prefix = entry.prefix
+                val expectedSuffix = cleanKey
+                if (expectedSuffix.equals(prefix + word, ignoreCase = true)) {
                     if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
                         return ExpandedResult(expand(entry.template, context), prefix.length, expectedSuffix)
                     }
@@ -274,3 +247,4 @@ object TextExpanderUtils {
         return null
     }
 }
+
