@@ -6,7 +6,6 @@ package helium314.keyboard.latin.utils
 
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.res.ColorStateList
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -218,43 +217,44 @@ object TextExpanderUtils {
         context: Context,
     ): Boolean =
         getShortcuts(context).any { (key, entry) ->
-            val cleanKey = if (key.startsWith(REGEX_PREFIX)) key.substring(REGEX_PREFIX.length) else key
-            if (key.startsWith(REGEX_PREFIX) || cleanKey.length < entry.prefix.length) {
+            if (key.startsWith(REGEX_PREFIX) || key.length < entry.prefix.length) {
                 false
             } else {
-                val shortcut = cleanKey.substring(entry.prefix.length)
-                val target = entry.prefix + word
+                val shortcut = key.substring(entry.prefix.length)
                 !shortcut.equals(word, ignoreCase = true) &&
                     shortcut.startsWith(word, ignoreCase = true) &&
-                    textBeforeCursor.endsWith(target, ignoreCase = true)
+                    textBeforeCursor.endsWith(entry.prefix + word, ignoreCase = true)
             }
         }
 
     fun getExpandedWordForTyped(word: String?, textBeforeCursor: String?, context: Context): ExpandedResult? {
-        if (textBeforeCursor == null || !isEnabled(context)) return null
+        if (word == null || textBeforeCursor == null || !isEnabled(context)) return null
         val shortcuts = getShortcuts(context)
         
         for ((key, entry) in shortcuts) {
             val isRegex = key.startsWith(REGEX_PREFIX)
             val cleanKey = if (isRegex) key.substring(REGEX_PREFIX.length) else key
-            val prefix = entry.prefix
-            val expectedSuffix = prefix + cleanKey
-
-            val matchesWord = word != null && expectedSuffix.equals(prefix + word, ignoreCase = true)
-            val matchesDirectSuffix = textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)
-
-            if (matchesWord || matchesDirectSuffix) {
-                if (isRegex) {
-                    try {
-                        val regex = Regex(cleanKey, RegexOption.IGNORE_CASE)
-                        if (regex.matches(expectedSuffix)) {
-                            val replaced = regex.replace(expectedSuffix, entry.template)
+            
+            if (isRegex) {
+                val prefix = entry.prefix
+                val patternStr = cleanKey
+                try {
+                    val regex = Regex(patternStr, RegexOption.IGNORE_CASE)
+                    val expectedSuffix = prefix + word
+                    if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
+                        val matchInput = if (expectedSuffix.startsWith(prefix)) expectedSuffix.substring(prefix.length) else expectedSuffix
+                        if (regex.matches(matchInput)) {
+                            val replaced = regex.replace(matchInput, entry.template)
                             return ExpandedResult(expand(replaced, context), prefix.length, expectedSuffix)
                         }
-                    } catch (e: java.lang.Exception) {
-                        // ignore
                     }
-                } else {
+                } catch (e: java.lang.Exception) {
+                    // ignore
+                }
+            } else {
+                val prefix = entry.prefix
+                val expectedSuffix = cleanKey
+                if (expectedSuffix.equals(prefix + word, ignoreCase = true)) {
                     if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
                         return ExpandedResult(expand(entry.template, context), prefix.length, expectedSuffix)
                     }
@@ -274,3 +274,4 @@ object TextExpanderUtils {
         return null
     }
 }
+
