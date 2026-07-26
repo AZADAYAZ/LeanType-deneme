@@ -246,22 +246,9 @@ public class KeyboardParams {
                 float verticalGapNarrow = keyboardAttr.getFraction(
                         R.styleable.Keyboard_verticalGapNarrow, 1, 1, 0);
                 int level = Settings.getValues().mNarrowKeyGapsLevel;
-                if (level == 2) {
-                    mRelativeHorizontalGap = horizontalGapNarrow * 0.75f;
-                    mRelativeVerticalGap = verticalGapNarrow * 0.75f;
-                } else if (level == 3) {
-                    mRelativeHorizontalGap = horizontalGapNarrow * 0.5f;
-                    mRelativeVerticalGap = verticalGapNarrow * 0.5f;
-                } else if (level == 4) {
-                    mRelativeHorizontalGap = horizontalGapNarrow * 0.25f;
-                    mRelativeVerticalGap = verticalGapNarrow * 0.25f;
-                } else if (level == 5) {
-                    mRelativeHorizontalGap = 0f;
-                    mRelativeVerticalGap = 0f;
-                } else {
-                    mRelativeHorizontalGap = horizontalGapNarrow;
-                    mRelativeVerticalGap = verticalGapNarrow;
-                }
+                float factor = Math.max(0f, Math.min(1f, (10 - level) / 9.0f));
+                mRelativeHorizontalGap = horizontalGapNarrow * factor;
+                mRelativeVerticalGap = verticalGapNarrow * factor;
             } else {
                 mRelativeHorizontalGap = keyboardAttr.getFraction(
                         R.styleable.Keyboard_horizontalGap, 1, 1, 0);

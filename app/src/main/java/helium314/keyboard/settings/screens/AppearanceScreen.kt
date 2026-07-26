@@ -233,18 +233,9 @@ fun createAppearanceSettings(context: Context) = listOf(
             name = setting.title,
             key = setting.key,
             default = Defaults.PREF_NARROW_KEY_GAPS_LEVEL,
-            range = 1f..5f,
+            range = 1f..10f,
             stepSize = 1,
-            description = { level ->
-                when (level) {
-                    1 -> stringResource(R.string.narrowness_level_low)
-                    2 -> stringResource(R.string.narrowness_level_medium_low)
-                    3 -> stringResource(R.string.narrowness_level_medium)
-                    4 -> stringResource(R.string.narrowness_level_medium_high)
-                    5 -> stringResource(R.string.narrowness_level_high)
-                    else -> level.toString()
-                }
-            }
+            description = { level -> level.toInt().toString() }
         ) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
     },
     Setting(context, Settings.PREF_KEYBOARD_HEIGHT_SCALE_PREFIX, R.string.prefs_keyboard_height_scale) { setting ->
