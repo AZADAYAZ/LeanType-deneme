@@ -32,8 +32,6 @@ object TextExpanderUtils {
         return context.prefs().getBoolean(PREF_BACKSPACE_REVERTS, false)
     }
 
-
-
     data class ShortcutEntry(
         val template: String,
         val prefix: String = ""
@@ -220,43 +218,43 @@ object TextExpanderUtils {
         context: Context,
     ): Boolean =
         getShortcuts(context).any { (key, entry) ->
-            if (key.startsWith(REGEX_PREFIX) || key.length < entry.prefix.length) {
+            val cleanKey = if (key.startsWith(REGEX_PREFIX)) key.substring(REGEX_PREFIX.length) else key
+            if (key.startsWith(REGEX_PREFIX) || cleanKey.length < entry.prefix.length) {
                 false
             } else {
-                val shortcut = key.substring(entry.prefix.length)
+                val shortcut = cleanKey.substring(entry.prefix.length)
+                val target = entry.prefix + word
                 !shortcut.equals(word, ignoreCase = true) &&
                     shortcut.startsWith(word, ignoreCase = true) &&
-                    textBeforeCursor.endsWith(entry.prefix + word, ignoreCase = true)
+                    textBeforeCursor.endsWith(target, ignoreCase = true)
             }
         }
 
     fun getExpandedWordForTyped(word: String?, textBeforeCursor: String?, context: Context): ExpandedResult? {
-        if (word == null || textBeforeCursor == null || !isEnabled(context)) return null
+        if (textBeforeCursor == null || !isEnabled(context)) return null
         val shortcuts = getShortcuts(context)
         
         for ((key, entry) in shortcuts) {
             val isRegex = key.startsWith(REGEX_PREFIX)
             val cleanKey = if (isRegex) key.substring(REGEX_PREFIX.length) else key
-            
-            if (isRegex) {
-                val prefix = entry.prefix
-                val patternStr = cleanKey
-                try {
-                    val regex = Regex(patternStr, RegexOption.IGNORE_CASE)
-                    val expectedSuffix = prefix + word
-                    if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
+            val prefix = entry.prefix
+            val expectedSuffix = prefix + cleanKey
+
+            val matchesWord = word != null && expectedSuffix.equals(prefix + word, ignoreCase = true)
+            val matchesDirectSuffix = textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)
+
+            if (matchesWord || matchesDirectSuffix) {
+                if (isRegex) {
+                    try {
+                        val regex = Regex(cleanKey, RegexOption.IGNORE_CASE)
                         if (regex.matches(expectedSuffix)) {
                             val replaced = regex.replace(expectedSuffix, entry.template)
                             return ExpandedResult(expand(replaced, context), prefix.length, expectedSuffix)
                         }
+                    } catch (e: java.lang.Exception) {
+                        // ignore
                     }
-                } catch (e: java.lang.Exception) {
-                    // ignore
-                }
-            } else {
-                val prefix = entry.prefix
-                val expectedSuffix = cleanKey
-                if (expectedSuffix.equals(prefix + word, ignoreCase = true)) {
+                } else {
                     if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
                         return ExpandedResult(expand(entry.template, context), prefix.length, expectedSuffix)
                     }
