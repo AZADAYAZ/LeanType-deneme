@@ -47,11 +47,73 @@ import helium314.keyboard.settings.SettingsActivity
 import helium314.keyboard.settings.SettingsDestination
 import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.initPreview
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Scaffold
+import helium314.keyboard.settings.NextScreenIcon
+import helium314.keyboard.settings.SearchSettingsScreen
+import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.previewDark
 import java.util.Locale
 
 @Composable
 fun LanguageScreen(
+    onClickBack: () -> Unit,
+) {
+    val enabledSubtypesDescription = remember {
+        SubtypeSettings.getEnabledSubtypes()
+            .joinToString(", ") { it.displayName() }
+    }
+
+    SearchSettingsScreen(
+        onClickBack = onClickBack,
+        title = stringResource(R.string.language_and_layouts_title),
+        settings = emptyList()
+    ) {
+        Scaffold(
+            contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+        ) { innerPadding ->
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(innerPadding)
+                    .padding(vertical = 8.dp)
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Column {
+                        Preference(
+                            name = stringResource(R.string.languages_title),
+                            description = enabledSubtypesDescription,
+                            onClick = { SettingsDestination.navigateTo(SettingsDestination.LanguagesList) },
+                            icon = R.drawable.ic_settings_languages
+                        ) { NextScreenIcon() }
+                        Preference(
+                            name = stringResource(R.string.settings_screen_secondary_layouts),
+                            onClick = { SettingsDestination.navigateTo(SettingsDestination.Layouts) },
+                            icon = R.drawable.ic_ime_switcher
+                        ) { NextScreenIcon() }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguagesListScreen(
     onClickBack: () -> Unit,
 ) {
     val ctx = LocalContext.current
@@ -64,9 +126,9 @@ fun LanguageScreen(
         onClickBack = onClickBack,
         title = {
             Column {
-                Text(stringResource(R.string.language_and_layouts_title))
-                Text(stringResource(
-                    R.string.text_tap_languages),
+                Text(stringResource(R.string.languages_title))
+                Text(
+                    stringResource(R.string.text_tap_languages),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
