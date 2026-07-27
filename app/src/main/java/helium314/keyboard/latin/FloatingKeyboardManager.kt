@@ -443,29 +443,39 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = (event.rawX - initialResizeTouchX).toInt()
+                    val dy = (event.rawY - initialResizeTouchY)
                     val newWidth = (initialResizeWidth + dx).coerceIn(minWidth, maxWidth)
+                    val newScale = (initialResizeScale * (1.0f + dy / (300f * density))).coerceIn(0.5f, 1.8f)
+                    val scaleRatio = newScale / initialResizeScale
+
                     windowParams?.let { lp ->
-                        if (lp.width != newWidth) {
-                            lp.width = newWidth
-                            try {
-                                windowManager?.updateViewLayout(overlayRoot, lp)
-                                val content = overlayRoot?.getChildAt(0) as? LinearLayout
-                                if (content != null && content.childCount > 1) {
-                                    val keyboardFrame = content.getChildAt(1)
-                                    keyboardFrame.layoutParams = LinearLayout.LayoutParams(
-                                        newWidth,
-                                        LinearLayout.LayoutParams.WRAP_CONTENT
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Failed to update overlay layout on resize", e)
+                        lp.width = newWidth
+                        try {
+                            windowManager?.updateViewLayout(overlayRoot, lp)
+                            val content = overlayRoot?.getChildAt(0) as? LinearLayout
+                            if (content != null && content.childCount > 1) {
+                                val keyboardFrame = content.getChildAt(1)
+                                keyboardFrame.layoutParams = LinearLayout.LayoutParams(
+                                    newWidth,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                )
+                                keyboardFrame.pivotX = 0f
+                                keyboardFrame.pivotY = 0f
+                                keyboardFrame.scaleY = scaleRatio
                             }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to update overlay layout on resize", e)
                         }
                     }
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     windowParams?.let { lp ->
+                        val content = overlayRoot?.getChildAt(0) as? LinearLayout
+                        if (content != null && content.childCount > 1) {
+                            val keyboardFrame = content.getChildAt(1)
+                            keyboardFrame.scaleY = 1.0f
+                        }
                         val finalWidth = lp.width
                         val dy = (event.rawY - initialResizeTouchY)
                         val finalScale = (initialResizeScale * (1.0f + dy / (300f * density))).coerceIn(0.5f, 1.8f)
