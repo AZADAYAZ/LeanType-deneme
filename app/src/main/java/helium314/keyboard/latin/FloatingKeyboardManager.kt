@@ -327,18 +327,21 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
             }
         }
 
-        // Drag handle pill in center
-        val pillWidth = (40 * density).toInt()
-        val pillHeight = (4 * density).toInt()
+        // Sleek drag handle pill in center
+        val pillWidth = (44 * density).toInt()
+        val pillHeight = (5 * density).toInt()
+        val defaultPillColor = (textColor and 0x00FFFFFF) or 0x66000000.toInt()
+        val activePillColor = (textColor and 0x00FFFFFF) or 0xCC000000.toInt()
+        val dragHandleBg = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            this.cornerRadius = 2.5f * density
+            setColor(defaultPillColor)
+        }
         val dragHandle = View(context).apply {
             layoutParams = FrameLayout.LayoutParams(pillWidth, pillHeight).apply {
                 gravity = Gravity.CENTER
             }
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                this.cornerRadius = 3 * density
-                setColor(textColor and 0x00FFFFFF or 0x55000000) // 33% alpha
-            }
+            background = dragHandleBg
             contentDescription = context.getString(R.string.floating_keyboard_drag_handle)
         }
         headerBar.addView(dragHandle)
@@ -354,11 +357,10 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
             setPadding(closePadding, closePadding, closePadding, closePadding)
             setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
             setColorFilter(textColor)
-            // Toolbar-style background: subtle rounded rectangle
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 this.cornerRadius = 6 * density
-                setColor(textColor and 0x00FFFFFF or 0x1A000000) // 10% alpha — subtle
+                setColor((textColor and 0x00FFFFFF) or 0x1A000000.toInt())
             }
             contentDescription = "Close floating keyboard"
             scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
@@ -366,12 +368,13 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
         }
         headerBar.addView(closeBtn)
 
-        // Setup drag on the entire header bar — allows free movement in both axes
+        // Setup drag on the entire header bar with touch state feedback
         headerBar.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    dragHandleBg.setColor(activePillColor)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -391,6 +394,7 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    dragHandleBg.setColor(defaultPillColor)
                     savePosition()
                     true
                 }
@@ -412,11 +416,27 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
 
     @SuppressLint("ClickableViewAccessibility")
     private fun createResizeHandle(textColor: Int, density: Float, minWidth: Int, maxWidth: Int, minHeight: Int, maxHeight: Int): View {
-        val handleSize = (28 * density).toInt()
+        val handleSize = (32 * density).toInt()
+        val defaultAlpha = 0x66000000.toInt()
+        val activeAlpha = 0xE6000000.toInt()
+        val defaultBgColor = (textColor and 0x00FFFFFF) or 0x1A000000.toInt()
+        val activeBgColor = (textColor and 0x00FFFFFF) or 0x4D000000.toInt()
+
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = textColor and 0x00FFFFFF or 0x66000000
+            color = (textColor and 0x00FFFFFF) or defaultAlpha
             strokeWidth = 2.5f * density
             strokeCap = android.graphics.Paint.Cap.ROUND
+        }
+
+        val handleBg = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadii = floatArrayOf(
+                12f * density, 12f * density, // top-left
+                4f * density, 4f * density,   // top-right
+                12f * density, 12f * density, // bottom-right
+                4f * density, 4f * density    // bottom-left
+            )
+            setColor(defaultBgColor)
         }
 
         val handleView = object : View(context) {
@@ -424,14 +444,19 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                 super.onDraw(canvas)
                 val w = width.toFloat()
                 val h = height.toFloat()
-                val pad = 6f * density
-                canvas.drawLine(w - pad, h - pad - 12f * density, w - pad - 12f * density, h - pad, paint)
-                canvas.drawLine(w - pad, h - pad - 6f * density, w - pad - 6f * density, h - pad, paint)
+                val pad = 7f * density
+                // Draw 3 modern angled grip ridges in bottom-right corner
+                canvas.drawLine(w - pad, h - pad - 14f * density, w - pad - 14f * density, h - pad, paint)
+                canvas.drawLine(w - pad, h - pad - 8f * density, w - pad - 8f * density, h - pad, paint)
+                canvas.drawLine(w - pad, h - pad - 2f * density, w - pad - 2f * density, h - pad, paint)
             }
         }.apply {
             layoutParams = FrameLayout.LayoutParams(handleSize, handleSize).apply {
                 gravity = Gravity.BOTTOM or Gravity.END
+                marginEnd = (3 * density).toInt()
+                bottomMargin = (3 * density).toInt()
             }
+            background = handleBg
             contentDescription = "Resize floating keyboard"
         }
 
@@ -443,6 +468,9 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                     initialResizeWidth = windowParams?.width ?: ResourceUtils.getFloatingKeyboardWidth()
                     initialResizeHeight = overlayRoot?.height ?: 0
                     initialResizeScale = ResourceUtils.getFloatingKeyboardScale().let { if (it > 0f) it else 1.0f }
+                    paint.color = (textColor and 0x00FFFFFF) or activeAlpha
+                    handleBg.setColor(activeBgColor)
+                    handleView.invalidate()
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -479,6 +507,10 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    paint.color = textColor and 0x00FFFFFF or defaultAlpha
+                    handleBg.setColor(defaultBgColor)
+                    handleView.invalidate()
+
                     windowParams?.let { lp ->
                         val finalWidth = lp.width
                         val finalHeight = lp.height
