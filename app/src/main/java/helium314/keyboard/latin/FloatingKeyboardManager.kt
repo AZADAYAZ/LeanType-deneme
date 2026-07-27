@@ -65,6 +65,7 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
     private var initialResizeTouchX = 0f
     private var initialResizeTouchY = 0f
     private var initialResizeWidth = 0
+    private var initialResizeHeight = 0
     private var initialResizeScale = 1.0f
 
     var isFloating = false
@@ -91,6 +92,8 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
         val dm = context.resources.displayMetrics
         val minWidth = (dm.widthPixels * 0.40f).toInt()
         val maxWidth = (dm.widthPixels * 0.95f).toInt()
+        val minHeight = (120 * dm.density).toInt()
+        val maxHeight = (dm.heightPixels * 0.75f).toInt()
         val defaultWidth = (dm.widthPixels * FLOATING_WIDTH_FRACTION).toInt()
         val savedWidth = prefs.getInt(PREF_WIDTH, -1)
         val floatingWidth = (if (savedWidth != -1) savedWidth else defaultWidth).coerceIn(minWidth, maxWidth)
@@ -143,7 +146,7 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
         overlayRoot?.addView(contentContainer) ?: return
 
         // Create bottom-right resize handle
-        val resizeHandle = createResizeHandle(textColor, density, minWidth, maxWidth)
+        val resizeHandle = createResizeHandle(textColor, density, minWidth, maxWidth, minHeight, maxHeight)
         overlayRoot?.addView(resizeHandle)
 
         // Calculate window position
@@ -408,7 +411,7 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun createResizeHandle(textColor: Int, density: Float, minWidth: Int, maxWidth: Int): View {
+    private fun createResizeHandle(textColor: Int, density: Float, minWidth: Int, maxWidth: Int, minHeight: Int, maxHeight: Int): View {
         val handleSize = (28 * density).toInt()
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             color = textColor and 0x00FFFFFF or 0x66000000
@@ -438,30 +441,36 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                     initialResizeTouchX = event.rawX
                     initialResizeTouchY = event.rawY
                     initialResizeWidth = windowParams?.width ?: ResourceUtils.getFloatingKeyboardWidth()
+                    initialResizeHeight = overlayRoot?.height ?: 0
                     initialResizeScale = ResourceUtils.getFloatingKeyboardScale().let { if (it > 0f) it else 1.0f }
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = (event.rawX - initialResizeTouchX).toInt()
-                    val dy = (event.rawY - initialResizeTouchY)
+                    val dy = (event.rawY - initialResizeTouchY).toInt()
                     val newWidth = (initialResizeWidth + dx).coerceIn(minWidth, maxWidth)
-                    val newScale = (initialResizeScale * (1.0f + dy / (300f * density))).coerceIn(0.5f, 1.8f)
-                    val scaleRatio = newScale / initialResizeScale
+                    val baseHeight = if (initialResizeHeight > 0) initialResizeHeight else (250 * density).toInt()
+                    val newHeight = (baseHeight + dy).coerceIn(minHeight, maxHeight)
 
                     windowParams?.let { lp ->
                         lp.width = newWidth
+                        lp.height = newHeight
                         try {
                             windowManager?.updateViewLayout(overlayRoot, lp)
                             val content = overlayRoot?.getChildAt(0) as? LinearLayout
-                            if (content != null && content.childCount > 1) {
-                                val keyboardFrame = content.getChildAt(1)
-                                keyboardFrame.layoutParams = LinearLayout.LayoutParams(
-                                    newWidth,
-                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                            if (content != null) {
+                                content.layoutParams = FrameLayout.LayoutParams(
+                                    FrameLayout.LayoutParams.MATCH_PARENT,
+                                    FrameLayout.LayoutParams.MATCH_PARENT
                                 )
-                                keyboardFrame.pivotX = 0f
-                                keyboardFrame.pivotY = 0f
-                                keyboardFrame.scaleY = scaleRatio
+                                if (content.childCount > 1) {
+                                    val keyboardFrame = content.getChildAt(1)
+                                    keyboardFrame.layoutParams = LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        0,
+                                        1.0f
+                                    )
+                                }
                             }
                         } catch (e: Exception) {
                             Log.w(TAG, "Failed to update overlay layout on resize", e)
@@ -471,18 +480,23 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     windowParams?.let { lp ->
-                        val content = overlayRoot?.getChildAt(0) as? LinearLayout
-                        if (content != null && content.childCount > 1) {
-                            val keyboardFrame = content.getChildAt(1)
-                            keyboardFrame.scaleY = 1.0f
-                        }
                         val finalWidth = lp.width
-                        val dy = (event.rawY - initialResizeTouchY)
-                        val finalScale = (initialResizeScale * (1.0f + dy / (300f * density))).coerceIn(0.5f, 1.8f)
+                        val finalHeight = lp.height
+                        val baseHeight = if (initialResizeHeight > 0) initialResizeHeight else (250 * density).toInt()
+                        val heightRatio = if (baseHeight > 0) finalHeight.toFloat() / baseHeight else 1.0f
+                        val finalScale = (initialResizeScale * heightRatio).coerceIn(0.5f, 1.8f)
+
+                        // Reset window height back to WRAP_CONTENT so it wraps newly-measured keys tightly
+                        lp.height = WindowManager.LayoutParams.WRAP_CONTENT
+                        try {
+                            windowManager?.updateViewLayout(overlayRoot, lp)
+                        } catch (_: Exception) {}
+
                         prefs.edit()
                             .putInt(PREF_WIDTH, finalWidth)
                             .putFloat(PREF_SCALE, finalScale)
                             .apply()
+
                         ResourceUtils.setFloatingKeyboardWidth(finalWidth)
                         ResourceUtils.setFloatingKeyboardScale(finalScale)
                         KeyboardSwitcher.getInstance().reloadKeyboard()
