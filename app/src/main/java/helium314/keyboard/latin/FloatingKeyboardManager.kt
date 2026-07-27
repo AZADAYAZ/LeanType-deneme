@@ -41,6 +41,7 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
         private const val PREF_X = "floating_x"
         private const val PREF_Y = "floating_y"
         private const val PREF_WIDTH = "floating_width"
+        private const val PREF_SCALE = "floating_scale"
         private const val FLOATING_WIDTH_FRACTION = 0.75f
         private const val HEADER_HEIGHT_DP = 28
         private const val CORNER_RADIUS_DP = 16f
@@ -62,7 +63,9 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private var initialResizeTouchX = 0f
+    private var initialResizeTouchY = 0f
     private var initialResizeWidth = 0
+    private var initialResizeScale = 1.0f
 
     var isFloating = false
         private set
@@ -84,13 +87,14 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
 
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-        // Calculate floating keyboard width bounds
+        // Calculate floating keyboard width & scale bounds
         val dm = context.resources.displayMetrics
         val minWidth = (dm.widthPixels * 0.40f).toInt()
         val maxWidth = (dm.widthPixels * 0.95f).toInt()
         val defaultWidth = (dm.widthPixels * FLOATING_WIDTH_FRACTION).toInt()
         val savedWidth = prefs.getInt(PREF_WIDTH, -1)
         val floatingWidth = (if (savedWidth != -1) savedWidth else defaultWidth).coerceIn(minWidth, maxWidth)
+        val savedScale = prefs.getFloat(PREF_SCALE, 1.0f).coerceIn(0.5f, 1.8f)
 
         // Get theme colors
         val colors = Settings.getValues().mColors
@@ -183,24 +187,26 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
         // reloadKeyboard() alone won't trigger setInputView() if the theme hasn't changed.
         latinIME.mInputView?.let { onInputViewRecreated(it) }
 
-        // Set the floating width override so keyboard keys re-measure at this width
+        // Set the floating width & scale overrides so keyboard keys re-measure
         ResourceUtils.setFloatingKeyboardWidth(floatingWidth)
+        ResourceUtils.setFloatingKeyboardScale(savedScale)
 
-        // Force keyboard reload so keys re-measure at the new width
+        // Force keyboard reload so keys re-measure at the new width & scale
         // This will trigger onInputViewRecreated which reparents the NEW keyboard into our overlay
         KeyboardSwitcher.getInstance().reloadKeyboard()
 
         // Hide the IME window so the bottom nav bar goes away
         latinIME.onFloatingKeyboardShown()
 
-        Log.i(TAG, "Floating keyboard shown at ${floatingWidth}px width")
+        Log.i(TAG, "Floating keyboard shown at ${floatingWidth}px width, scale ${savedScale}")
     }
 
     fun hide(showDockedKeyboard: Boolean = true) {
         if (!isFloating) return
 
-        // Clear the floating width override FIRST
+        // Clear the floating overrides FIRST
         ResourceUtils.setFloatingKeyboardWidth(0)
+        ResourceUtils.setFloatingKeyboardScale(0.0f)
 
         val mainKeyboardFrame = overlayRoot?.findViewById<View>(R.id.main_keyboard_frame)
         if (mainKeyboardFrame != null) {
@@ -286,6 +292,7 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
     fun destroy() {
         if (isFloating) {
             ResourceUtils.setFloatingKeyboardWidth(0)
+            ResourceUtils.setFloatingKeyboardScale(0.0f)
             overlayRoot?.let { root ->
                 try {
                     windowManager?.removeView(root)
@@ -429,7 +436,9 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     initialResizeTouchX = event.rawX
+                    initialResizeTouchY = event.rawY
                     initialResizeWidth = windowParams?.width ?: ResourceUtils.getFloatingKeyboardWidth()
+                    initialResizeScale = ResourceUtils.getFloatingKeyboardScale().let { if (it > 0f) it else 1.0f }
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -458,8 +467,14 @@ class FloatingKeyboardManager(private val context: Context, private val latinIME
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     windowParams?.let { lp ->
                         val finalWidth = lp.width
-                        prefs.edit().putInt(PREF_WIDTH, finalWidth).apply()
+                        val dy = (event.rawY - initialResizeTouchY)
+                        val finalScale = (initialResizeScale * (1.0f + dy / (300f * density))).coerceIn(0.5f, 1.8f)
+                        prefs.edit()
+                            .putInt(PREF_WIDTH, finalWidth)
+                            .putFloat(PREF_SCALE, finalScale)
+                            .apply()
                         ResourceUtils.setFloatingKeyboardWidth(finalWidth)
+                        ResourceUtils.setFloatingKeyboardScale(finalScale)
                         KeyboardSwitcher.getInstance().reloadKeyboard()
                     }
                     true
