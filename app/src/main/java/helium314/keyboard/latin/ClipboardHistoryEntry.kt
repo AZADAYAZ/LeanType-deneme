@@ -12,7 +12,7 @@ class ClipboardHistoryEntry(
     val imageUri: String? = null
 ) : Comparable<ClipboardHistoryEntry> {
     override fun compareTo(other: ClipboardHistoryEntry): Int {
-        if (Settings.getValues()?.mClipboardHistoryPinnedFirst != false) {
+        if (Settings.getValues()?.mClipboardHistoryPinnedFirst == true) {
             val result = other.isPinned.compareTo(isPinned)
             if (result != 0) return result
         }
