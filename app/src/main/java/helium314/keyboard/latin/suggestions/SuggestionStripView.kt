@@ -1100,7 +1100,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         }
     }
 
-    private fun updateSplitToolbarState() {
+    fun updateSplitToolbarState() {
         if (!Settings.getValues().mSplitToolbar) return
         val isEmojiView = isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes
         if (isEmojiView) {
@@ -1184,6 +1184,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         scrollView.addView(emojiContainer)
         suggestionsStrip.addView(scrollView)
         suggestionsStrip.isVisible = true
+        updateSplitToolbarState()
     }
 
     /**
@@ -1223,6 +1224,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
         suggestionsStrip.addView(container)
         suggestionsStrip.isVisible = true
+        updateSplitToolbarState()
     }
 
     /**

@@ -439,6 +439,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mEmojiPalettesView.startEmojiPalettes(mKeyboardView.getKeyVisualAttribute(),
                 mLatinIME.getCurrentInputEditorInfo(), mLatinIME.mKeyboardActionListener);
         mEmojiPalettesView.setVisibility(View.VISIBLE);
+        if (splitToolbar && mSuggestionStripView != null) {
+            mSuggestionStripView.updateSplitToolbarState();
+        }
     }
 
     // Implements {@link KeyboardState.SwitchActions}.
