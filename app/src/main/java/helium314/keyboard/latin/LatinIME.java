@@ -550,10 +550,8 @@ public class LatinIME extends InputMethodService implements
         final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
         final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
         if (lang == null) return;
-        if (!lang.equals(mAppliedLanguage) || mWrappedContext == null) {
-            mAppliedLanguage = lang;
-            mWrappedContext = LocaleUtils.INSTANCE.wrapContextWithLocale(getBaseContext(), lang);
-        }
+        mAppliedLanguage = lang;
+        mWrappedContext = LocaleUtils.INSTANCE.wrapContextWithLocale(getBaseContext(), lang);
     }
 
     @Override
