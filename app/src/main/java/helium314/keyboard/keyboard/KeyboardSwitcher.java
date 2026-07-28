@@ -43,6 +43,7 @@ import helium314.keyboard.latin.RichInputMethodManager;
 import helium314.keyboard.latin.RichInputMethodSubtype;
 import helium314.keyboard.latin.WordComposer;
 import helium314.keyboard.latin.handwriting.HandwritingView;
+import helium314.keyboard.latin.common.ColorType;
 import helium314.keyboard.latin.settings.Settings;
 import helium314.keyboard.latin.settings.SettingsValues;
 import helium314.keyboard.latin.suggestions.SuggestionStripView;
@@ -462,6 +463,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mSuggestionStripView.setVisibility(View.GONE);
         mStripContainer.setVisibility(getSecondaryStripVisibility());
         mClipboardStripScrollView.post(() -> mClipboardStripScrollView.fullScroll(HorizontalScrollView.FOCUS_RIGHT));
+        Settings.getValues().mColors.setBackground(mClipboardStripScrollView, ColorType.STRIP_BACKGROUND);
         mClipboardStripScrollView.setVisibility(View.VISIBLE);
         mEmojiPalettesView.setVisibility(View.GONE);
         mClipboardHistoryView.startClipboardHistory(mLatinIME.getClipboardHistoryManager(),
@@ -879,6 +881,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     public LinearLayout getClipboardStrip() {
         return mClipboardStripView;
+    }
+
+    public HorizontalScrollView getClipboardStripScrollView() {
+        return mClipboardStripScrollView;
     }
 
     public MainKeyboardView getMainKeyboardView() {

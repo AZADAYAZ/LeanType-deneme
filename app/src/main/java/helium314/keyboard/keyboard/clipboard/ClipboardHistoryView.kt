@@ -198,6 +198,10 @@ class ClipboardHistoryView @JvmOverloads constructor(
         }
 
         val clipboardStrip = KeyboardSwitcher.getInstance().clipboardStrip
+        val clipboardStripScrollView = KeyboardSwitcher.getInstance().clipboardStripScrollView
+        if (clipboardStripScrollView != null) {
+            colors.setBackground(clipboardStripScrollView, ColorType.STRIP_BACKGROUND)
+        }
         toolbarKeys.forEach {
             clipboardStrip.addView(it)
             val tag = it.tag
