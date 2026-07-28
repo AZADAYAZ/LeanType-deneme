@@ -798,7 +798,11 @@ public final class EmojiPalettesView extends LinearLayout
 
         // Focus
         mSearchBar.requestFocus();
-        requestLayout();
+        if (isInLayout()) {
+            post(this::requestLayout);
+        } else {
+            requestLayout();
+        }
     }
 
     private void stopSearchMode() {
@@ -833,7 +837,11 @@ public final class EmojiPalettesView extends LinearLayout
             KeyboardSwitcher.getInstance().setAlphabetKeyboard();
         }
 
-        requestLayout();
+        if (isInLayout()) {
+            post(this::requestLayout);
+        } else {
+            requestLayout();
+        }
     }
 
     private void performSearch(String query) {

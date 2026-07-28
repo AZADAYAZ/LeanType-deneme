@@ -38,14 +38,14 @@ class KeyboardWrapperView @JvmOverloads constructor(
         set(enabled) {
             field = enabled
             updateViewsVisibility()
-            requestLayout()
+            if (isInLayout) post { requestLayout() } else requestLayout()
         }
 
     var oneHandedGravity = Gravity.NO_GRAVITY
         set(value) {
             field = value
             updateSwitchButtonSide()
-            requestLayout()
+            if (isInLayout) post { requestLayout() } else requestLayout()
         }
 
 

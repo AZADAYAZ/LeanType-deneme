@@ -215,11 +215,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             if (isConnected()) {
                 mIC.beginBatchEdit();
             }
-        } else {
-            if (DBG) {
-                throw new RuntimeException("Nest level too deep");
-            }
-            Log.e(TAG, "Nest level too deep : " + mNestLevel);
+        } else if (mNestLevel > 10) {
+            Log.w(TAG, "Nest level unusually high : " + mNestLevel);
         }
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
@@ -322,7 +319,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             // framework bug... Fall back to ground state and return false.
             mExpectedSelStart = INVALID_CURSOR_POSITION;
             mExpectedSelEnd = INVALID_CURSOR_POSITION;
-            Log.e(TAG, "Unable to connect to the editor to retrieve text.");
+            Log.w(TAG, "Unable to connect to the editor to retrieve text.");
             return false;
         }
         mCommittedTextBeforeComposingText.append(textBeforeCursor);
