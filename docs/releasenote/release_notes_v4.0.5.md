@@ -4,11 +4,13 @@
 ## 🚀 What's New in v4.0.5
 
 ### 🛠️ Bug Fixes & Features
-- **Floating Keyboard 2D Resizing**: Drag-to-resize handle with width and height persistence, real-time live preview scaling, and top-left header bar corner anchor math.
-- **Key Gap Narrowness Scale**: Decoupled narrow key gap preferences from key borders with a unified 0-10 numeric scale, borderless guard, and theme fallbacks.
-- **Settings & Navigation**: Moved secondary layout configuration directly into Languages & Layouts screen, with standardized Compose preference dialogs.
+- **Floating Keyboard 2D Resizing**: Drag-to-resize handle with width/height persistence, real-time scaling preview, and top-left header bar anchor math.
+- **Key Gap Narrowness Scale**: Decoupled narrow key gap settings from borders with a 0-10 numeric scale, borderless guard, and theme fallbacks.
+- **Split Toolbar & Emoji View**: Automatically hide toolbar keys on emoji panel in split mode, and align top panel height to match emoji category bar.
+- **Clipboard Sync & Dark Mode**: Instant live preference sync for pinned/folded items, and fixed white toolbar background on MIUI/HyperOS dark mode.
+- **Settings & Landscape Fixes**: Recreated wrapped context for landscape settings configuration updates, and moved secondary layouts into Languages & Layouts screen.
 - **Text Editing Mode**: Added functional key support (backspace, cursor movement, selection) for Text Editing Mode.
-- **Performance & Input Stability**: Deferred `requestLayout` during active layout passes to avoid redundant rendering loops, and forcibly closed batch edit state on `finishInput`.
+- **Performance & Input Stability**: Deferred `requestLayout` during active layout passes, optimized InputConnection logging, and closed batch edits on `finishInput`.
 
 ## 📦 Downloads (Choose Your Flavor)
 
