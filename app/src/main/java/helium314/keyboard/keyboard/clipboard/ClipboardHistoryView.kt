@@ -459,6 +459,7 @@ class ClipboardHistoryView @JvmOverloads constructor(
         initialize()
         setupToolbarKeys()
         historyManager.prepareClipboardHistory()
+        historyManager.sortHistoryEntries()
         historyManager.setHistoryChangeListener(this)
         clipboardAdapter.clipboardHistoryManager = historyManager
         

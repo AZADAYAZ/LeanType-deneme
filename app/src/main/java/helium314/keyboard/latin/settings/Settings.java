@@ -556,6 +556,16 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             && mPrefs.getBoolean(PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD, Defaults.PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD);
     }
 
+    public boolean readClipboardHistoryPinnedFirst() {
+        final SharedPreferences prefs = mPrefs != null ? mPrefs : KtxKt.prefs(mContext);
+        return prefs.getBoolean(PREF_CLIPBOARD_HISTORY_PINNED_FIRST, Defaults.PREF_CLIPBOARD_HISTORY_PINNED_FIRST);
+    }
+
+    public boolean readClipboardFoldPinned() {
+        final SharedPreferences prefs = mPrefs != null ? mPrefs : KtxKt.prefs(mContext);
+        return prefs.getBoolean(PREF_CLIPBOARD_FOLD_PINNED, Defaults.PREF_CLIPBOARD_FOLD_PINNED);
+    }
+
     @Nullable
     public static Drawable readUserBackgroundImage(final Context context, final boolean night) {
         final boolean landscape = context.getResources()
