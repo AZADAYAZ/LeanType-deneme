@@ -269,8 +269,9 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val stripHeight = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_height)
         val split = Settings.getValues().mSplitToolbar
-        
-        val newHeightSpec = if (split) {
+        val isEmojiView = split && (isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes)
+
+        val newHeightSpec = if (split && !isEmojiView) {
             MeasureSpec.makeMeasureSpec(stripHeight * 2, MeasureSpec.EXACTLY)
         } else {
             MeasureSpec.makeMeasureSpec(stripHeight, MeasureSpec.EXACTLY)
