@@ -544,47 +544,14 @@ public class LatinIME extends InputMethodService implements
     }
 
     private String mAppliedLanguage = "";
-    private Context mWrappedContext = null;
-
-    private void updateWrappedContext() {
-        final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
-        final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
-        if (lang == null) return;
-        mAppliedLanguage = lang;
-        mWrappedContext = LocaleUtils.INSTANCE.wrapContextWithLocale(getBaseContext(), lang);
-    }
 
     @Override
     protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(newBase);
         final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(newBase);
         final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
-        mAppliedLanguage = lang;
-        mWrappedContext = LocaleUtils.INSTANCE.wrapContextWithLocale(newBase, lang);
-        super.attachBaseContext(mWrappedContext);
-    }
-
-    @Override
-    public Resources getResources() {
-        if (mWrappedContext != null) {
-            return mWrappedContext.getResources();
-        }
-        return super.getResources();
-    }
-
-    @Override
-    public AssetManager getAssets() {
-        if (mWrappedContext != null) {
-            return mWrappedContext.getAssets();
-        }
-        return super.getAssets();
-    }
-
-    @Override
-    public Resources.Theme getTheme() {
-        if (mWrappedContext != null) {
-            return mWrappedContext.getTheme();
-        }
-        return super.getTheme();
+        mAppliedLanguage = lang != null ? lang : Defaults.PREF_APP_LANGUAGE;
+        LocaleUtils.INSTANCE.applyAppLanguageToResources(this, mAppliedLanguage);
     }
 
     public LatinIME() {
@@ -599,7 +566,6 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onCreate() {
-        updateWrappedContext();
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
@@ -814,7 +780,16 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onConfigurationChanged(final Configuration conf) {
-        updateWrappedContext();
+        final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
+        final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
+        if (lang != null && !lang.isEmpty() && !"system".equals(lang)) {
+            final java.util.Locale locale = LocaleUtils.INSTANCE.parseLocale(lang);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                conf.setLocales(new android.os.LocaleList(locale));
+            } else {
+                conf.locale = locale;
+            }
+        }
         SettingsValues settingsValues = mSettings.getCurrent();
         Log.i(TAG, "onConfigurationChanged");
         SubtypeSettings.INSTANCE.reloadSystemLocales(this);
@@ -918,7 +893,6 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onStartInputView(final EditorInfo editorInfo, final boolean restarting) {
-        updateWrappedContext();
         mHandler.onStartInputView(editorInfo, restarting);
         mStatsUtilsManager.onStartInputView();
     }

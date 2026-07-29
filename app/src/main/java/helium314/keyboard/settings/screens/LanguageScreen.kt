@@ -60,6 +60,10 @@ import helium314.keyboard.settings.NextScreenIcon
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.previewDark
+import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.utils.LocaleUtils
+import helium314.keyboard.settings.Setting
+import helium314.keyboard.settings.preferences.ListPreference
 import java.util.Locale
 
 @Composable
@@ -74,7 +78,7 @@ fun LanguageScreen(
     SearchSettingsScreen(
         onClickBack = onClickBack,
         title = stringResource(R.string.language_and_layouts_title),
-        settings = emptyList()
+        settings = listOf(Settings.PREF_APP_LANGUAGE)
     ) {
         Scaffold(
             contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
@@ -105,12 +109,24 @@ fun LanguageScreen(
                             onClick = { SettingsDestination.navigateTo(SettingsDestination.Layouts) },
                             icon = R.drawable.ic_ime_switcher
                         ) { NextScreenIcon() }
+                        SettingsActivity.settingsContainer[Settings.PREF_APP_LANGUAGE]?.Preference()
                     }
                 }
             }
         }
     }
 }
+
+fun createLanguageSettings(context: Context) = listOf(
+    Setting(context, Settings.PREF_APP_LANGUAGE, R.string.app_language_title, R.string.app_language_summary) {
+        ListPreference(
+            it,
+            LocaleUtils.getAppLanguageItems(context),
+            Defaults.PREF_APP_LANGUAGE,
+            icon = R.drawable.ic_settings_languages
+        )
+    }
+)
 
 @Composable
 fun LanguagesListScreen(

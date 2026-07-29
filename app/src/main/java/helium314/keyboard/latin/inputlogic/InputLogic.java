@@ -1531,6 +1531,23 @@ public final class InputLogic {
             } else {
                 mConnection.commitCodePoint(codePoint);
             }
+            if (helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isEnabled(mLatinIME)
+                    && helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isImmediateEnabled(mLatinIME)) {
+                final CharSequence textBefore = mConnection.getTextBeforeCursor(50, 0);
+                if (textBefore != null) {
+                    final helium314.keyboard.latin.utils.TextExpanderUtils.ExpandedResult result =
+                            helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.getExpandedWordForTyped(null, textBefore.toString(), mLatinIME);
+                    if (result != null) {
+                        if (mJustRevertedExpandedShortcut != null
+                                && result.getMatchedString().equalsIgnoreCase(mJustRevertedExpandedShortcut)) {
+                            // Skip re-expanding a shortcut that was just reverted by backspace
+                        } else {
+                            mConnection.deleteTextBeforeCursor(result.getMatchedString().length());
+                            commitExpandedText(result.getMatchedString(), result.getExpandedText());
+                        }
+                    }
+                }
+            }
         }
         inputTransaction.setRequiresUpdateSuggestions();
     }
@@ -1791,7 +1808,7 @@ public final class InputLogic {
                 if (textBefore != null && textBefore.toString().equals(expectedBefore)
                         && textAfter != null && textAfter.toString().equals(expectedAfter)) {
                     mJustRevertedExpandedShortcut = mLastShortcutText;
-                    mConnection.setSelection(expectedCursor - beforeLen, expectedCursor + afterLen);
+                    mConnection.deleteSurroundingText(beforeLen, afterLen);
                     mConnection.commitText(mLastShortcutText, 1);
                     mLastExpandedText = null;
                     mLastShortcutText = null;
@@ -1855,6 +1872,10 @@ public final class InputLogic {
             updateInlineEmojiSearch();
             inputTransaction.setRequiresUpdateSuggestions();
         } else {
+            if (mJustRevertedExpandedShortcut != null) {
+                mLastComposedWord = LastComposedWord.NOT_A_COMPOSED_WORD;
+                mJustRevertedExpandedShortcut = null;
+            }
             if (mLastComposedWord.canRevertCommit()
                     && inputTransaction.getSettingsValues().mBackspaceRevertsAutocorrect) {
                 final String lastComposedWord = mLastComposedWord.mTypedWord;
