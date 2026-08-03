@@ -154,10 +154,16 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
     private var isLoadingAnimationActive = false
 
-    private val toolbarKeyLayoutParams = LinearLayout.LayoutParams(
-        resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
-        resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
-    ).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
+    private val keyDimension: Int
+        get() = kotlin.math.min(
+            resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
+            resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_height)
+        )
+
+    private val toolbarKeyLayoutParams: LinearLayout.LayoutParams
+        get() = LinearLayout.LayoutParams(keyDimension, keyDimension).apply {
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
 
     init {
         val settingsValues = Settings.getValues()
@@ -1076,7 +1082,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private fun applyToolbarKeyLayoutParams(isExpanded: Boolean) {
         val count = toolbar.childCount
         if (count == 0) return
-        val singleKeyWidth = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
+        val singleKeyWidth = keyDimension
         val containerWidth = toolbarContainer.width.takeIf { it > 0 }
             ?: toolbarContainer.measuredWidth.takeIf { it > 0 }
             ?: (width - toolbarExpandKey.width - pinnedKeys.width).takeIf { it > 0 }

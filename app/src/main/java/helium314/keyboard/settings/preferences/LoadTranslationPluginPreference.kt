@@ -5,10 +5,20 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.translation.TranslationLoader
 import helium314.keyboard.settings.FeedbackManager
-import helium314.keyboard.settings.dialogs.ConfirmationDialog
+import helium314.keyboard.settings.dialogs.PreferenceDialog
 import helium314.keyboard.settings.filePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -88,10 +98,10 @@ fun LoadTranslationPluginPreference(
         val success = TranslationLoader.importPlugin(ctx, uri)
         showDialog = false
         if (success) {
-            FeedbackManager.message(ctx, R.string.load_handwriting_plugin_success)
+            FeedbackManager.message(ctx, R.string.load_translation_plugin_success)
             onSuccess?.invoke()
         } else {
-            FeedbackManager.message(ctx, R.string.load_handwriting_plugin_failed)
+            FeedbackManager.message(ctx, R.string.load_translation_plugin_failed)
         }
     }
 
@@ -143,11 +153,11 @@ fun LoadTranslationPluginPreference(
                 withContext(Dispatchers.Main) {
                     isDownloading = false
                     if (success) {
-                        FeedbackManager.message(ctx, R.string.load_handwriting_plugin_success)
+                        FeedbackManager.message(ctx, R.string.load_translation_plugin_success)
                         onSuccess?.invoke()
                         showDialog = false
                     } else {
-                        FeedbackManager.message(ctx, R.string.load_handwriting_plugin_failed)
+                        FeedbackManager.message(ctx, R.string.load_translation_plugin_failed)
                     }
                 }
             } catch (e: Exception) {
@@ -167,67 +177,86 @@ fun LoadTranslationPluginPreference(
     )
 
     if (showDialog) {
-        ConfirmationDialog(
+        PreferenceDialog(
             onDismissRequest = { if (!isDownloading) showDialog = false },
-            onConfirmed = {
-                if (!isDownloading) {
-                    if (hasPlugin && !updateAvailable) {
-                        TranslationLoader.removePlugin(ctx)
-                        FeedbackManager.message(ctx, "Translation plugin removed")
-                        onSuccess?.invoke()
-                        showDialog = false
-                    } else {
-                        startDownload()
+            title = title,
+            showCloseButton = !isDownloading,
+            buttons = {
+                if (isDownloading) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Downloading...",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
-                }
-            },
-            confirmButtonText = when {
-                isDownloading -> "Downloading..."
-                hasPlugin && !updateAvailable -> stringResource(R.string.load_handwriting_plugin_button_delete)
-                hasPlugin && updateAvailable -> "Update"
-                else -> "Download"
-            },
-            title = { Text(title) },
-            content = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val message = when {
-                        hasPlugin && updateAvailable -> "An update is available for the translation plugin!\nLocal version: $localVersion\nLatest version: $remoteVersion\n\nDo you want to download and update?"
-                        hasPlugin -> "Translation plugin is active (version $localVersion).\n\nWarning: loading external code can be a security risk. Only use a plugin from a source you trust."
-                        remoteVersion != null -> "Download the latest translation plugin (version $remoteVersion) from GitHub, or load an APK from local storage.\n\nWarning: loading external code can be a security risk. Only use a plugin from a source you trust."
-                        else -> "Download the translation plugin from GitHub, or load an APK from local storage.\n\nWarning: loading external code can be a security risk. Only use a plugin from a source you trust."
-                    }
-                    Text(message)
-                    if (isDownloading) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        CircularProgressIndicator()
-                    }
-                }
-            },
-            neutralButtonText = when {
-                isDownloading -> null
-                hasPlugin && updateAvailable -> "Delete"
-                hasPlugin -> null
-                else -> "Load from file"
-            },
-            onNeutral = {
-                if (hasPlugin) {
-                    TranslationLoader.removePlugin(ctx)
-                    FeedbackManager.message(ctx, "Translation plugin removed")
-                    onSuccess?.invoke()
-                    showDialog = false
                 } else {
-                    showDialog = false
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-                        .addCategory(Intent.CATEGORY_OPENABLE)
-                        .setType("*/*")
-                    try {
-                        launcher.launch(intent)
-                    } catch (_: Exception) {
-                        // ignore
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (!hasPlugin || updateAvailable) {
+                            Button(
+                                onClick = { startDownload() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(if (updateAvailable) "Update" else "Download")
+                            }
+                        }
+                        if (!hasPlugin) {
+                            OutlinedButton(
+                                onClick = {
+                                    showDialog = false
+                                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                                        .addCategory(Intent.CATEGORY_OPENABLE)
+                                        .setType("*/*")
+                                    try {
+                                        launcher.launch(intent)
+                                    } catch (_: Exception) { }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Load from file")
+                            }
+                        }
+                        if (hasPlugin) {
+                            Button(
+                                onClick = {
+                                    TranslationLoader.removePlugin(ctx)
+                                    FeedbackManager.message(ctx, "Translation plugin removed")
+                                    onSuccess?.invoke()
+                                    showDialog = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.load_translation_plugin_button_delete))
+                            }
+                        }
                     }
                 }
             }
-        )
+        ) {
+            val message = when {
+                hasPlugin && updateAvailable -> "An update is available for the translation plugin!\nLocal version: $localVersion\nLatest version: $remoteVersion\n\nDo you want to download and update?"
+                hasPlugin -> "Translation plugin is active (version $localVersion).\n\nWarning: loading external code can be a security risk. Only use a plugin from a source you trust."
+                remoteVersion != null -> "Download the latest translation plugin (version $remoteVersion) from GitHub, or load an APK from local storage.\n\nWarning: loading external code can be a security risk. Only use a plugin from a source you trust."
+                else -> "Download the translation plugin from GitHub, or load an APK from local storage.\n\nWarning: loading external code can be a security risk. Only use a plugin from a source you trust."
+            }
+            Text(message)
+        }
     }
 }
 

@@ -331,6 +331,12 @@
     <string name="load_handwriting_plugin_button_delete">Delete plugin</string>
     <string name="load_handwriting_plugin_success">Handwriting plugin imported successfully</string>
     <string name="load_handwriting_plugin_failed">Failed to load handwriting plugin APK</string>
+    <!-- Preferences item for loading an external translation plugin -->
+    <string name="load_translation_plugin">Load translation plugin</string>
+    <string name="load_translation_plugin_summary">Provide an APK plugin to enable translation engine</string>
+    <string name="load_translation_plugin_button_delete">Delete plugin</string>
+    <string name="load_translation_plugin_success">Translation plugin imported successfully</string>
+    <string name="load_translation_plugin_failed">Failed to load translation plugin APK</string>
     <string name="handwriting">Handwriting</string>
     <string name="delete_handwriting_model">Delete downloaded model</string>
     <string name="handwriting_model_deleted">Handwriting model deleted</string>

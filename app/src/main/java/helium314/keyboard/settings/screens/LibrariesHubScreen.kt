@@ -77,7 +77,7 @@ fun LibrariesHubScreen(
                             icon = R.drawable.ic_dictionary
                         ) { NextScreenIcon() }
 
-                        // Handwriting Input Plugin
+                        // Handwriting Input Plugin (ML Kit based, standardfull only)
                         if (BuildConfig.FLAVOR == "standardfull") {
                             var handwritingInstalled by remember { mutableStateOf(HandwritingLoader.hasPlugin(context)) }
                             LoadHandwritingPluginPreference(
@@ -86,7 +86,10 @@ fun LibrariesHubScreen(
                                 icon = R.drawable.ic_edit,
                                 onSuccess = { handwritingInstalled = HandwritingLoader.hasPlugin(context) }
                             )
+                        }
 
+                        // Translation Plugin (available on standard and standardfull)
+                        if (BuildConfig.FLAVOR == "standard" || BuildConfig.FLAVOR == "standardfull") {
                             var translationInstalled by remember { mutableStateOf(helium314.keyboard.latin.translation.TranslationLoader.hasPlugin(context)) }
                             LoadTranslationPluginPreference(
                                 title = "Translation Plugin",

@@ -522,8 +522,8 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
             ConfirmationDialog(
                 onDismissRequest = { showPickerDialog = false },
                 onConfirmed = { showPickerDialog = false },
-                confirmButtonText = stringResource(android.R.string.cancel),
-                cancelButtonText = "",
+                confirmButtonText = null,
+                cancelButtonText = null,
                 neutralButtonText = "+ Custom Language",
                 onNeutral = {
                     showPickerDialog = false
