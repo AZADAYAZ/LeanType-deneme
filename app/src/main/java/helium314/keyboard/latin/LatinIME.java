@@ -31,6 +31,9 @@ import android.util.Printer;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InlineSuggestion;
@@ -130,6 +133,7 @@ public class LatinIME extends InputMethodService implements
     public final KeyboardActionListener mKeyboardActionListener;
     private int mOriginalNavBarColor = 0;
     private int mOriginalNavBarFlags = 0;
+    private boolean mOriginalNavBarSaved = false;
 
     // UIHandler is needed when creating InputLogic
     public final UIHandler mHandler = new UIHandler(this);
@@ -1170,6 +1174,10 @@ public class LatinIME extends InputMethodService implements
             requestHideSelf(0);
         }
 
+        if (isInputViewShown()) {
+            setNavigationBarColor();
+        }
+
         if (TRACE)
             Debug.startMethodTracing("/data/trace/latinime");
 
@@ -1197,6 +1205,7 @@ public class LatinIME extends InputMethodService implements
             mainKeyboardView.closing();
         }
         clearNavigationBarColor();
+        mOriginalNavBarSaved = false;
     }
 
     void onFinishInputInternal() {
@@ -2182,21 +2191,34 @@ public class LatinIME extends InputMethodService implements
         final SettingsValues settingsValues = mSettings.getCurrent();
         if (!settingsValues.mCustomNavBarColor)
             return;
-        final int color = settingsValues.mColors.get(ColorType.NAVIGATION_BAR);
         final Window window = getWindow().getWindow();
         if (window == null)
             return;
-        mOriginalNavBarColor = window.getNavigationBarColor();
+
+        if (!mOriginalNavBarSaved) {
+            mOriginalNavBarColor = window.getNavigationBarColor();
+            mOriginalNavBarFlags = window.getDecorView().getSystemUiVisibility();
+            mOriginalNavBarSaved = true;
+        }
+
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        final int color = settingsValues.mColors.get(ColorType.NAVIGATION_BAR);
         window.setNavigationBarColor(color);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return;
         final View view = window.getDecorView();
-        mOriginalNavBarFlags = view.getSystemUiVisibility();
-        if (ColorUtilKt.isBrightColor(color)) {
-            view.setSystemUiVisibility(mOriginalNavBarFlags | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        } else {
-            view.setSystemUiVisibility(mOriginalNavBarFlags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        final WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, view);
+        if (controller != null) {
+            controller.setAppearanceLightNavigationBars(ColorUtilKt.isBrightColor(color));
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int flags = view.getSystemUiVisibility();
+            if (ColorUtilKt.isBrightColor(color)) {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            } else {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            }
+            view.setSystemUiVisibility(flags);
         }
     }
 
@@ -2211,10 +2233,14 @@ public class LatinIME extends InputMethodService implements
         }
         window.setNavigationBarColor(mOriginalNavBarColor);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return;
         final View view = window.getDecorView();
-        view.setSystemUiVisibility(mOriginalNavBarFlags);
+        final WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, view);
+        if (controller != null) {
+            controller.setAppearanceLightNavigationBars((mOriginalNavBarFlags & View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR) != 0);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            view.setSystemUiVisibility(mOriginalNavBarFlags);
+        }
+        mOriginalNavBarSaved = false;
     }
 
     // On HUAWEI devices with Android 12: a white bar may appear in landscape mode
