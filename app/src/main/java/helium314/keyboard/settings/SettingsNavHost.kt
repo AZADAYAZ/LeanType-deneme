@@ -80,7 +80,6 @@ fun SettingsNavHost(
                 onClickAdvanced = { navController.navigate(SettingsDestination.Advanced) },
                 onClickAppearance = { navController.navigate(SettingsDestination.Appearance) },
                 onClickLanguage = { navController.navigate(SettingsDestination.Languages) },
-                onClickLayouts = { navController.navigate(SettingsDestination.Layouts) },
                 onClickDictionaries = { navController.navigate(SettingsDestination.Dictionaries) },
                 onClickAIIntegration = { navController.navigate(SettingsDestination.AIIntegration) },
                 onClickGesture = { navController.navigate(SettingsDestination.GestureTyping) },
@@ -151,6 +150,9 @@ fun SettingsNavHost(
         composable(SettingsDestination.Languages) {
             LanguageScreen(onClickBack = ::goBack)
         }
+        composable(SettingsDestination.LanguagesList) {
+            helium314.keyboard.settings.screens.LanguagesListScreen(onClickBack = ::goBack)
+        }
         composable(SettingsDestination.Dictionaries) {
             DictionaryScreen(onClickBack = ::goBack)
         }
@@ -168,6 +170,9 @@ fun SettingsNavHost(
         }
         composable(SettingsDestination.TextExpander) {
             TextExpanderScreen(onClickBack = ::goBack)
+        }
+        composable(SettingsDestination.BackgroundServices) {
+            helium314.keyboard.settings.screens.BackgroundServicesScreen(onClickBack = ::goBack)
         }
     }
     if (target.value != SettingsDestination.Settings/* && target.value != navController.currentBackStackEntry?.destination?.route*/)
@@ -192,12 +197,14 @@ object SettingsDestination {
     const val PersonalDictionary = "personal_dictionary/"
     const val BlockedWords = "blocked_words"
     const val Languages = "languages"
+    const val LanguagesList = "languages_list"
     const val Subtype = "subtype/"
     const val Layouts = "layouts"
     const val Dictionaries = "dictionaries"
     const val CustomAIKeys = "custom_ai_keys"
     const val CustomAIKeyConfig = "custom_ai_key_config/"
     const val TextExpander = "text_expander"
+    const val BackgroundServices = "background_services"
     val navTarget = MutableStateFlow(Settings)
 
     // Use SupervisorJob so a cancellation in one navigation hop

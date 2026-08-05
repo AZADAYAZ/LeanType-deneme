@@ -103,6 +103,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
 
     public void onStartInput() {
         mLastSlowInputConnectionTime = -SLOW_INPUTCONNECTION_PERSIST_MS;
+        mNestLevel = 0;
     }
 
     private void checkConsistencyForDebug() {
@@ -144,11 +145,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             if (isConnected()) {
                 mIC.beginBatchEdit();
             }
-        } else {
-            if (DBG) {
-                throw new RuntimeException("Nest level too deep");
-            }
-            Log.e(TAG, "Nest level too deep : " + mNestLevel);
+        } else if (mNestLevel > 10) {
+            Log.w(TAG, "Nest level unusually high : " + mNestLevel);
         }
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
@@ -166,6 +164,39 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkConsistencyForDebug();
     }
 
+    public void ensureBatchEditClosed() {
+        if (mNestLevel > 0 && isConnected()) {
+            mIC.endBatchEdit();
+        }
+        mNestLevel = 0;
+    }
+
+    /**
+     * Reset the cached text and retrieve it again from the editor.
+     * <p>
+     * This should be called when the cursor moved. It's possible that we can't
+     * connect to
+     * the application when doing this; notably, this happens sometimes during
+     * rotation, probably
+     * because of a race condition in the framework. In this case, we just can't
+     * retrieve the
+     * data, so we empty the cache and note that we don't know the new cursor
+     * position, and we
+     * return false so that the caller knows about this and can retry later.
+     *
+     * @param newSelStart             the new position of the selection start, as
+     *                                received from the system.
+     * @param newSelEnd               the new position of the selection end, as
+     *                                received from the system.
+     * @param shouldFinishComposition whether we should finish the composition in
+     *                                progress.
+     * @return true if we were able to connect to the editor successfully, false
+     *         otherwise. When
+     *         this method returns false, the caches could not be correctly
+     *         refreshed so they were only
+     *         reset: the caller should try again later to return to normal
+     *         operation.
+     */
     public boolean resetCachesUponCursorMoveAndReturnSuccess(final int newSelStart,
             final int newSelEnd, final boolean shouldFinishComposition) {
         mComposingText.setLength(0);
@@ -192,6 +223,12 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         mCommittedTextBeforeComposingText.setLength(0);
         mComposingText.setLength(0);
         mIC = mParent.getCurrentInputConnection();
+        if (!isConnected()) {
+            return false;
+        }
+        // Call upon the inputconnection directly since our own method is using the
+        // cache, and
+        // we want to refresh it.
         final CharSequence textBeforeCursor = getTextBeforeCursorAndDetectLaggyConnection(
                 OPERATION_RELOAD_TEXT_CACHE,
                 SLOW_INPUT_CONNECTION_ON_FULL_RELOAD_MS,
@@ -200,7 +237,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         if (null == textBeforeCursor) {
             mExpectedSelStart = INVALID_CURSOR_POSITION;
             mExpectedSelEnd = INVALID_CURSOR_POSITION;
-            Log.e(TAG, "Unable to connect to the editor to retrieve text.");
+            Log.w(TAG, "Unable to connect to the editor to retrieve text.");
             return false;
         }
         mCommittedTextBeforeComposingText.append(textBeforeCursor);

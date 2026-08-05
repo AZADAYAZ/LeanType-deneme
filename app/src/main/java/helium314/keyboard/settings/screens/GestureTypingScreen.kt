@@ -37,23 +37,18 @@ fun GestureTypingScreen(
     val b = (LocalContext.current.getActivity() as? SettingsActivity)?.prefChanged?.collectAsState()
     if ((b?.value ?: 0) < 0)
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
-    val hasGestureLib = JniUtils.sHaveGestureLib
+    val hasGestureLib = JniUtils.sHaveNativeGestureLib
     val gestureFloatingPreviewEnabled = prefs.getBoolean(Settings.PREF_GESTURE_FLOATING_PREVIEW_TEXT, Defaults.PREF_GESTURE_FLOATING_PREVIEW_TEXT)
-    val gestureEnabled = hasGestureLib && prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
-    val selectedMethod = prefs.getString(Settings.PREF_GESTURE_METHOD, "fallback")
+    val gestureEnabled = prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
     
-    // Always show library loader first when no library
     val items = buildList {
         add(R.string.settings_category_configuration)
         add(Settings.PREF_GESTURE_INPUT)
+        if (helium314.keyboard.latin.BuildConfig.BUILD_TYPE != "nouserlib") {
+            add(SettingsWithoutKey.LOAD_GESTURE_LIB)
+        }
 
         if (hasGestureLib && gestureEnabled) {
-            add(Settings.PREF_GESTURE_METHOD)
-            // Library loader is always first if allowed, and only if native library method is selected!
-            if (helium314.keyboard.latin.BuildConfig.BUILD_TYPE != "nouserlib" && selectedMethod == "native") {
-                add(SettingsWithoutKey.LOAD_GESTURE_LIB)
-            }
-
             add(R.string.settings_category_visuals)
             add(Settings.PREF_GESTURE_PREVIEW_TRAIL)
             add(Settings.PREF_GESTURE_FLOATING_PREVIEW_TEXT)
@@ -65,6 +60,8 @@ fun GestureTypingScreen(
             add(R.string.settings_category_behavior)
             add(Settings.PREF_GESTURE_SPACE_AWARE)
             add(Settings.PREF_GESTURE_FAST_TYPING_COOLDOWN)
+            add(Settings.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING)
+            add(Settings.PREF_AUTOSPACE_AFTER_GESTURE_TYPING)
         }
 
         add(R.string.settings_category_gestures_advanced)
@@ -86,13 +83,6 @@ fun GestureTypingScreen(
 fun createGestureTypingSettings(context: Context) = listOf(
     Setting(context, Settings.PREF_GESTURE_INPUT, R.string.gesture_input, R.string.gesture_input_summary) {
         SwitchPreference(it, Defaults.PREF_GESTURE_INPUT)
-    },
-    Setting(context, Settings.PREF_GESTURE_METHOD, R.string.gesture_method, R.string.gesture_method_summary) {
-        val items = listOf(
-            stringResource(R.string.gesture_method_native) to "native",
-            stringResource(R.string.gesture_method_fallback) to "fallback"
-        )
-        ListPreference(it, items, "fallback")
     },
     Setting(context, Settings.PREF_GESTURE_PREVIEW_TRAIL, R.string.gesture_preview_trail) {
         SwitchPreference(it, Defaults.PREF_GESTURE_PREVIEW_TRAIL)
@@ -118,6 +108,12 @@ fun createGestureTypingSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_GESTURE_SPACE_AWARE, R.string.gesture_space_aware, R.string.gesture_space_aware_summary) {
         SwitchPreference(it, Defaults.PREF_GESTURE_SPACE_AWARE)
+    },
+    Setting(context, Settings.PREF_AUTOSPACE_AFTER_GESTURE_TYPING, R.string.autospace_after_gesture_typing) {
+        SwitchPreference(it, Defaults.PREF_AUTOSPACE_AFTER_GESTURE_TYPING)
+    },
+    Setting(context, Settings.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING, R.string.autospace_before_gesture_typing) {
+        SwitchPreference(it, Defaults.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING)
     },
     Setting(context, Settings.PREF_GESTURE_FAST_TYPING_COOLDOWN, R.string.gesture_fast_typing_cooldown) { def ->
         SliderPreference(

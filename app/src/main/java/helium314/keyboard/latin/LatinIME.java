@@ -31,6 +31,9 @@ import android.util.Printer;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InlineSuggestion;
@@ -130,6 +133,7 @@ public class LatinIME extends InputMethodService implements
     public final KeyboardActionListener mKeyboardActionListener;
     private int mOriginalNavBarColor = 0;
     private int mOriginalNavBarFlags = 0;
+    private boolean mOriginalNavBarSaved = false;
 
     // UIHandler is needed when creating InputLogic
     public final UIHandler mHandler = new UIHandler(this);
@@ -544,49 +548,14 @@ public class LatinIME extends InputMethodService implements
     }
 
     private String mAppliedLanguage = "";
-    private Context mWrappedContext = null;
-
-    private void updateWrappedContext() {
-        final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
-        final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
-        if (lang == null) return;
-        if (!lang.equals(mAppliedLanguage) || mWrappedContext == null) {
-            mAppliedLanguage = lang;
-            mWrappedContext = LocaleUtils.INSTANCE.wrapContextWithLocale(getBaseContext(), lang);
-        }
-    }
 
     @Override
     protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(newBase);
         final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(newBase);
         final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
-        mAppliedLanguage = lang;
-        mWrappedContext = LocaleUtils.INSTANCE.wrapContextWithLocale(newBase, lang);
-        super.attachBaseContext(mWrappedContext);
-    }
-
-    @Override
-    public Resources getResources() {
-        if (mWrappedContext != null) {
-            return mWrappedContext.getResources();
-        }
-        return super.getResources();
-    }
-
-    @Override
-    public AssetManager getAssets() {
-        if (mWrappedContext != null) {
-            return mWrappedContext.getAssets();
-        }
-        return super.getAssets();
-    }
-
-    @Override
-    public Resources.Theme getTheme() {
-        if (mWrappedContext != null) {
-            return mWrappedContext.getTheme();
-        }
-        return super.getTheme();
+        mAppliedLanguage = lang != null ? lang : Defaults.PREF_APP_LANGUAGE;
+        LocaleUtils.INSTANCE.applyAppLanguageToResources(this, mAppliedLanguage);
     }
 
     public LatinIME() {
@@ -601,8 +570,6 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onCreate() {
-        updateWrappedContext();
-        helium314.keyboard.latin.gesture.SwipeGestureEngine.initialize(this);
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
@@ -625,7 +592,7 @@ public class LatinIME extends InputMethodService implements
         // avoids the SecurityException thrown by the plain registerReceiver()
         // overload on API 33+ when no exported flag is set.
         ContextCompat.registerReceiver(this, mRingerModeChangeReceiver, filter,
-                ContextCompat.RECEIVER_NOT_EXPORTED);
+                ContextCompat.RECEIVER_EXPORTED);
 
         // Register to receive installation and removal of a dictionary pack.
         final IntentFilter packageFilter = new IntentFilter();
@@ -686,7 +653,11 @@ public class LatinIME extends InputMethodService implements
         // been displayed. Opening dictionaries never affects responsivity as
         // dictionaries are
         // asynchronously loaded.
-        if (!mHandler.hasPendingReopenDictionaries()) {
+        final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
+        if (prefs.getBoolean("pref_gesture_lib_just_installed", false)) {
+            prefs.edit().remove("pref_gesture_lib_just_installed").apply();
+            resetSuggestMainDict();
+        } else if (!mHandler.hasPendingReopenDictionaries()) {
             resetDictionaryFacilitatorIfNecessary();
         }
         refreshPersonalizationDictionarySession(currentSettingsValues);
@@ -710,12 +681,6 @@ public class LatinIME extends InputMethodService implements
         final MainKeyboardView mainKeyboardView = mKeyboardSwitcher.getMainKeyboardView();
         if (mainKeyboardView != null) {
             mainKeyboardView.setMainDictionaryAvailability(isMainDictionaryAvailable);
-        }
-        if (isMainDictionaryAvailable) {
-            final Keyboard keyboard = mKeyboardSwitcher.getKeyboard();
-            if (keyboard != null) {
-                mInputLogic.getSuggest().buildGestureIndexAsync(keyboard);
-            }
         }
         if (mHandler.hasPendingWaitForDictionaryLoad()) {
             mHandler.cancelWaitForDictionaryLoad();
@@ -792,20 +757,22 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onDestroy() {
+        mHandler.removeCallbacksAndMessages(null);
         if (mFloatingKeyboardManager != null) {
             mFloatingKeyboardManager.destroy();
         }
         mClipboardHistoryManager.onDestroy();
         mOtpSuggestionManager.stop();
-        mDictionaryFacilitator.closeDictionaries();
+        helium314.keyboard.latin.utils.ExecutorUtils.getBackgroundExecutor(helium314.keyboard.latin.utils.ExecutorUtils.KEYBOARD).execute(() -> {
+            mDictionaryFacilitator.closeDictionaries();
+        });
         mSettings.onDestroy();
-        unregisterReceiver(mRingerModeChangeReceiver);
-        unregisterReceiver(mDictionaryPackInstallReceiver);
-        unregisterReceiver(mDictionaryDumpBroadcastReceiver);
-        unregisterReceiver(mRestartAfterDeviceUnlockReceiver);
+        try { unregisterReceiver(mRingerModeChangeReceiver); } catch (Exception e) {}
+        try { unregisterReceiver(mDictionaryPackInstallReceiver); } catch (Exception e) {}
+        try { unregisterReceiver(mDictionaryDumpBroadcastReceiver); } catch (Exception e) {}
+        try { unregisterReceiver(mRestartAfterDeviceUnlockReceiver); } catch (Exception e) {}
         mStatsUtilsManager.onDestroy(this /* context */);
         super.onDestroy();
-        mHandler.removeCallbacksAndMessages(null);
         deallocateMemory();
     }
 
@@ -817,7 +784,16 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onConfigurationChanged(final Configuration conf) {
-        updateWrappedContext();
+        final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
+        final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
+        if (lang != null && !lang.isEmpty() && !"system".equals(lang)) {
+            final java.util.Locale locale = LocaleUtils.INSTANCE.parseLocale(lang);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                conf.setLocales(new android.os.LocaleList(locale));
+            } else {
+                conf.locale = locale;
+            }
+        }
         SettingsValues settingsValues = mSettings.getCurrent();
         Log.i(TAG, "onConfigurationChanged");
         SubtypeSettings.INSTANCE.reloadSystemLocales(this);
@@ -921,7 +897,6 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onStartInputView(final EditorInfo editorInfo, final boolean restarting) {
-        updateWrappedContext();
         mHandler.onStartInputView(editorInfo, restarting);
         mStatsUtilsManager.onStartInputView();
     }
@@ -1023,6 +998,7 @@ public class LatinIME extends InputMethodService implements
         super.onStartInputView(editorInfo, restarting);
         helium314.keyboard.latin.utils.ProofreadHelper.preloadModel(this);
 
+        mClipboardHistoryManager.onStartInputView();
         mDictionaryFacilitator.onStartInput();
         // Switch to the null consumer to handle cases leading to early exit below, for
         // which we
@@ -1149,10 +1125,6 @@ public class LatinIME extends InputMethodService implements
             mainKeyboardView.closing();
             suggest.setAutoCorrectionThreshold(currentSettingsValues.mAutoCorrectionThreshold);
             switcher.reloadMainKeyboard();
-            final Keyboard keyboard = switcher.getKeyboard();
-            if (keyboard != null) {
-                suggest.buildGestureIndexAsync(keyboard);
-            }
             if (needToCallLoadKeyboardLater) {
                 // If we need to call loadKeyboard again later, we need to save its state now.
                 // The
@@ -1202,6 +1174,10 @@ public class LatinIME extends InputMethodService implements
             requestHideSelf(0);
         }
 
+        if (isInputViewShown()) {
+            setNavigationBarColor();
+        }
+
         if (TRACE)
             Debug.startMethodTracing("/data/trace/latinime");
 
@@ -1229,6 +1205,7 @@ public class LatinIME extends InputMethodService implements
             mainKeyboardView.closing();
         }
         clearNavigationBarColor();
+        mOriginalNavBarSaved = false;
     }
 
     void onFinishInputInternal() {
@@ -1246,6 +1223,7 @@ public class LatinIME extends InputMethodService implements
         super.onFinishInputView(finishingInput);
         Log.i(TAG, "onFinishInputView");
         mOtpSuggestionManager.stop();
+        mClipboardHistoryManager.onFinishInputView();
         cleanupInternalStateForFinishInput();
     }
 
@@ -1766,15 +1744,22 @@ public class LatinIME extends InputMethodService implements
     }
 
     public void onStartBatchInput() {
+        if (!JniUtils.sHaveNativeGestureLib) {
+            mKeyboardSwitcher.showToast(getString(R.string.load_gesture_library), true);
+            mInputLogic.onCancelBatchInput(mHandler);
+            return;
+        }
         mInputLogic.onStartBatchInput(mSettings.getCurrent(), mKeyboardSwitcher, mHandler);
         mGestureConsumer.onGestureStarted(mRichImm.getCurrentSubtypeLocale(), mKeyboardSwitcher.getKeyboard());
     }
 
     public void onUpdateBatchInput(final InputPointers batchPointers) {
+        if (!JniUtils.sHaveNativeGestureLib) return;
         mInputLogic.onUpdateBatchInput(batchPointers);
     }
 
     public void onEndBatchInput(final InputPointers batchPointers) {
+        if (!JniUtils.sHaveNativeGestureLib) return;
         mInputLogic.onEndBatchInput(batchPointers);
         mGestureConsumer.onGestureCompleted(batchPointers);
     }
@@ -1896,15 +1881,6 @@ public class LatinIME extends InputMethodService implements
             }
         }
 
-        if (suggestionInfo.isKindOf(helium314.keyboard.latin.SuggestedWords.SuggestedWordInfo.KIND_CORRECTION)
-                && helium314.keyboard.latin.dictionary.Dictionary.DICTIONARY_USER_TYPED.equals(
-                        suggestionInfo.mSourceDict != null ? suggestionInfo.mSourceDict.mDictType : "")) {
-            mInputLogic.getSuggest().recordAccepted(
-                    suggestionInfo.mWord,
-                    mInputLogic.getWordComposer().getComposedDataSnapshot().mInputPointers,
-                    mKeyboardSwitcher.getKeyboard()
-            );
-        }
     }
 
     /**
@@ -1961,7 +1937,11 @@ public class LatinIME extends InputMethodService implements
                 mSuggestionStripView.setToolbarVisibility(false);
             return;
         }
-        if (currentSettings.mBigramPredictionEnabled) {
+        final NgramContext ngramContext = mInputLogic.getNgramContextFromNthPreviousWordForSuggestion(
+                currentSettings.mSpacingAndPunctuations, 1);
+        final boolean isFirstWord = ngramContext.isBeginningOfSentenceContext();
+        final boolean predictionEnabled = isFirstWord ? currentSettings.mFirstWordPredictionEnabled : currentSettings.mBigramPredictionEnabled;
+        if (predictionEnabled) {
             mInputLogic.getSuggestedWords(SuggestedWords.INPUT_STYLE_PREDICTION, 0, new Suggest.OnGetSuggestedWordsCallback() {
                 @Override
                 public void onGetSuggestedWords(SuggestedWords suggestedWords) {
@@ -2211,21 +2191,34 @@ public class LatinIME extends InputMethodService implements
         final SettingsValues settingsValues = mSettings.getCurrent();
         if (!settingsValues.mCustomNavBarColor)
             return;
-        final int color = settingsValues.mColors.get(ColorType.NAVIGATION_BAR);
         final Window window = getWindow().getWindow();
         if (window == null)
             return;
-        mOriginalNavBarColor = window.getNavigationBarColor();
+
+        if (!mOriginalNavBarSaved) {
+            mOriginalNavBarColor = window.getNavigationBarColor();
+            mOriginalNavBarFlags = window.getDecorView().getSystemUiVisibility();
+            mOriginalNavBarSaved = true;
+        }
+
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        final int color = settingsValues.mColors.get(ColorType.NAVIGATION_BAR);
         window.setNavigationBarColor(color);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return;
         final View view = window.getDecorView();
-        mOriginalNavBarFlags = view.getSystemUiVisibility();
-        if (ColorUtilKt.isBrightColor(color)) {
-            view.setSystemUiVisibility(mOriginalNavBarFlags | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        } else {
-            view.setSystemUiVisibility(mOriginalNavBarFlags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        final WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, view);
+        if (controller != null) {
+            controller.setAppearanceLightNavigationBars(ColorUtilKt.isBrightColor(color));
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int flags = view.getSystemUiVisibility();
+            if (ColorUtilKt.isBrightColor(color)) {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            } else {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            }
+            view.setSystemUiVisibility(flags);
         }
     }
 
@@ -2240,10 +2233,14 @@ public class LatinIME extends InputMethodService implements
         }
         window.setNavigationBarColor(mOriginalNavBarColor);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return;
         final View view = window.getDecorView();
-        view.setSystemUiVisibility(mOriginalNavBarFlags);
+        final WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, view);
+        if (controller != null) {
+            controller.setAppearanceLightNavigationBars((mOriginalNavBarFlags & View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR) != 0);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            view.setSystemUiVisibility(mOriginalNavBarFlags);
+        }
+        mOriginalNavBarSaved = false;
     }
 
     // On HUAWEI devices with Android 12: a white bar may appear in landscape mode
@@ -2263,13 +2260,12 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
-        switch (level) {
-            case TRIM_MEMORY_RUNNING_LOW, TRIM_MEMORY_RUNNING_CRITICAL, TRIM_MEMORY_COMPLETE -> {
-                KeyboardLayoutSet.onSystemLocaleChanged(); // clears caches, nothing else
-                mKeyboardSwitcher.trimMemory();
-            }
-            // deallocateMemory always called on hiding, and should not be called when
-            // showing
+        if (level >= TRIM_MEMORY_BACKGROUND || level == TRIM_MEMORY_UI_HIDDEN) {
+            mKeyboardSwitcher.trimMemory();
+            deallocateMemory();
+        } else if (level >= TRIM_MEMORY_RUNNING_LOW) {
+            KeyboardLayoutSet.onSystemLocaleChanged();
+            mKeyboardSwitcher.trimMemory();
         }
     }
 }

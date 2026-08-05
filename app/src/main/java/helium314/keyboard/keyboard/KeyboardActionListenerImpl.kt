@@ -186,6 +186,47 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
                 connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_FORWARD_DEL, 0, 0))
                 return
             }
+            KeyCode.SHIFT -> {
+                if (keyboardSwitcher.keyboard?.mId?.mElementId == KeyboardId.ELEMENT_TEXT_EDIT || sPersistentTextEditModeActive) {
+                    if (inputLogic.connection.hasSelection()) {
+                        inputLogic.onCodeInput(settings.current, Event.createSoftwareKeypressEvent(KeyCode.SHIFT, 0, 0, 0, false), keyboardSwitcher.getKeyboardShiftMode(), latinIME.mHandler)
+                    } else {
+                        sPersistentSelectionModeActive = !sPersistentSelectionModeActive
+                        keyboardSwitcher.mainKeyboardView?.invalidateAllKeys()
+                    }
+                    return
+                }
+            }
+            KeyCode.CAPS_LOCK -> {
+                if (keyboardSwitcher.keyboard?.mId?.mElementId == KeyboardId.ELEMENT_TEXT_EDIT || sPersistentTextEditModeActive) {
+                    if (inputLogic.connection.hasSelection()) {
+                        inputLogic.onCodeInput(settings.current, Event.createSoftwareKeypressEvent(KeyCode.SHIFT, 0, 0, 0, false), keyboardSwitcher.getKeyboardShiftMode(), latinIME.mHandler)
+                    } else {
+                        sPersistentSelectionModeActive = true
+                        keyboardSwitcher.mainKeyboardView?.invalidateAllKeys()
+                    }
+                    return
+                }
+            }
+            KeyCode.DELETE_WORD -> {
+                val connection = inputLogic.connection
+                val eventTime = android.os.SystemClock.uptimeMillis()
+                connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL, 0, KeyEvent.META_CTRL_ON))
+                connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL, 0, KeyEvent.META_CTRL_ON))
+                return
+            }
+            KeyCode.FORWARD_DELETE_WORD -> {
+                val connection = inputLogic.connection
+                val eventTime = android.os.SystemClock.uptimeMillis()
+                connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_FORWARD_DEL, 0, KeyEvent.META_CTRL_ON))
+                connection.sendKeyEvent(KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_FORWARD_DEL, 0, KeyEvent.META_CTRL_ON))
+                return
+            }
+            KeyCode.CLIPBOARD_COPY_ALL -> {
+                inputLogic.onCodeInput(settings.current, Event.createSoftwareKeypressEvent(KeyCode.CLIPBOARD_SELECT_ALL, 0, 0, 0, false), keyboardSwitcher.getKeyboardShiftMode(), latinIME.mHandler)
+                inputLogic.onCodeInput(settings.current, Event.createSoftwareKeypressEvent(KeyCode.CLIPBOARD_COPY, 0, 0, 0, false), keyboardSwitcher.getKeyboardShiftMode(), latinIME.mHandler)
+                return
+            }
         }
         val mkv = keyboardSwitcher.mainKeyboardView
 
@@ -312,6 +353,10 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         if (!connection.hasSelection()) return
         inputLogic.finishInput()
         onCodeInput(KeyCode.DELETE, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
+        keyboardSwitcher.requestUpdatingShiftState(
+            inputLogic.getCurrentAutoCapsState(settings.current),
+            inputLogic.getCurrentRecapitalizeState()
+        )
     }
 
     override fun resetMetaState() {

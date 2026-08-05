@@ -96,7 +96,14 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_APP_LANGUAGE = "pref_app_language";
     public static final String PREF_SHOW_EMOJI_KEY = "show_emoji_key";
     public static final String PREF_VARIABLE_TOOLBAR_DIRECTION = "var_toolbar_direction";
+    public static final String PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = "only_toolbar_with_hw_keyboard";
     public static final String PREF_ADDITIONAL_SUBTYPES = "additional_subtypes";
+
+    public static final String PREF_ENABLE_SPELL_CHECKER_SERVICE = "enable_spell_checker_service";
+    public static final String PREF_ENABLE_CONTACTS_OBSERVER = "enable_contacts_observer";
+    public static final String PREF_ENABLE_CLIPBOARD_LISTENER = "enable_clipboard_listener";
+    public static final String PREF_ENABLE_SMS_OTP_RECEIVER = "enable_sms_otp_receiver";
+    public static final String PREF_ENABLE_APP_SYNC_LISTENER = "enable_app_sync_listener";
     public static final String PREF_ENABLE_SPLIT_KEYBOARD = "split_keyboard";
     public static final String PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE = "split_keyboard_landscape";
     public static final String PREF_SPLIT_SPACER_SCALE_PREFIX = "split_spacer_scale";
@@ -120,6 +127,11 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = "preserve_space_before_punctuation";
     public static final String PREF_ALWAYS_INCOGNITO_MODE = "always_incognito_mode";
     public static final String PREF_BIGRAM_PREDICTIONS = "next_word_prediction";
+    public static final String PREF_PRIORITIZE_PERSONAL_SUGGESTIONS = "prioritize_personal_suggestions";
+    public static final String PREF_NEXT_WORD_BOOST_LEVEL = "next_word_boost_level";
+    public static final String PREF_NEXT_WORD_STRICT_NGRAM = "next_word_strict_ngram";
+    public static final String PREF_IMMEDIATE_AUTO_SPACE = "immediate_auto_space";
+    public static final String PREF_FIRST_WORD_PREDICTIONS = "first_word_prediction";
     public static final String PREF_SUGGEST_PUNCTUATION = "suggest_punctuation";
     public static final String PREF_SUGGEST_CLIPBOARD_CONTENT = "suggest_clipboard_content";
     public static final String PREF_GESTURE_INPUT = "gesture_input";
@@ -222,6 +234,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_TOOLBAR_MODE = "toolbar_mode";
     public static final String PREF_TOOLBAR_HIDING_GLOBAL = "toolbar_hiding_global";
     public static final String PREF_SPLIT_TOOLBAR = "split_toolbar";
+    public static final String PREF_AUTO_SPAN_TOOLBAR_KEYS = "auto_span_toolbar_keys";
     public static final String PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR = "show_download_button_in_toolbar";
 
     // Emoji
@@ -270,6 +283,11 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public static SettingsValues getValues() {
+        if (sInstance == null || sInstance.mSettingsValues == null) {
+            if (sInstance != null && sInstance.mContext != null) {
+                sInstance.loadSettings(sInstance.mContext);
+            }
+        }
         return sInstance.mSettingsValues;
     }
 
@@ -533,6 +551,21 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
                 && conf.hardKeyboardHidden != Configuration.HARDKEYBOARDHIDDEN_YES;
     }
 
+    public boolean readShowToolbarOnly() {
+        return mSettingsValues.mHasHardwareKeyboard
+            && mPrefs.getBoolean(PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD, Defaults.PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD);
+    }
+
+    public boolean readClipboardHistoryPinnedFirst() {
+        final SharedPreferences prefs = mPrefs != null ? mPrefs : KtxKt.prefs(mContext);
+        return prefs.getBoolean(PREF_CLIPBOARD_HISTORY_PINNED_FIRST, Defaults.PREF_CLIPBOARD_HISTORY_PINNED_FIRST);
+    }
+
+    public boolean readClipboardFoldPinned() {
+        final SharedPreferences prefs = mPrefs != null ? mPrefs : KtxKt.prefs(mContext);
+        return prefs.getBoolean(PREF_CLIPBOARD_FOLD_PINNED, Defaults.PREF_CLIPBOARD_FOLD_PINNED);
+    }
+
     @Nullable
     public static Drawable readUserBackgroundImage(final Context context, final boolean night) {
         final boolean landscape = context.getResources()
@@ -668,6 +701,9 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
 
     @Nullable
     public Typeface getCustomEmojiTypeface() {
+        if (useSystemEmoji()) {
+            return null;
+        }
         if (!sCustomEmojiTypefaceLoaded) {
             try {
                 sCachedEmojiTypeface = Typeface.createFromFile(getCustomEmojiFontFile(mContext));

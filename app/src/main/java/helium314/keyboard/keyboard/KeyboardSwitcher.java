@@ -43,6 +43,7 @@ import helium314.keyboard.latin.RichInputMethodManager;
 import helium314.keyboard.latin.RichInputMethodSubtype;
 import helium314.keyboard.latin.WordComposer;
 import helium314.keyboard.latin.handwriting.HandwritingView;
+import helium314.keyboard.latin.common.ColorType;
 import helium314.keyboard.latin.settings.Settings;
 import helium314.keyboard.latin.settings.SettingsValues;
 import helium314.keyboard.latin.suggestions.SuggestionStripView;
@@ -379,6 +380,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         // @see
         // LatinIME#onComputeInset(android.inputmethodservice.InputMethodService.Insets)
         mMainKeyboardFrame.setVisibility(visibility);
+        mKeyboardViewWrapper.setVisibility(Settings.getInstance().readShowToolbarOnly() ? View.GONE : View.VISIBLE);
         mEmojiPalettesView.setVisibility(View.GONE);
         mEmojiPalettesView.stopEmojiPalettes();
         mEmojiTabStripView.setVisibility(View.GONE);
@@ -437,6 +439,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mEmojiPalettesView.startEmojiPalettes(mKeyboardView.getKeyVisualAttribute(),
                 mLatinIME.getCurrentInputEditorInfo(), mLatinIME.mKeyboardActionListener);
         mEmojiPalettesView.setVisibility(View.VISIBLE);
+        if (splitToolbar && mSuggestionStripView != null) {
+            mSuggestionStripView.updateSplitToolbarState();
+        }
     }
 
     // Implements {@link KeyboardState.SwitchActions}.
@@ -461,6 +466,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mSuggestionStripView.setVisibility(View.GONE);
         mStripContainer.setVisibility(getSecondaryStripVisibility());
         mClipboardStripScrollView.post(() -> mClipboardStripScrollView.fullScroll(HorizontalScrollView.FOCUS_RIGHT));
+        Settings.getValues().mColors.setBackground(mClipboardStripScrollView, ColorType.STRIP_BACKGROUND);
         mClipboardStripScrollView.setVisibility(View.VISIBLE);
         mEmojiPalettesView.setVisibility(View.GONE);
         mClipboardHistoryView.startClipboardHistory(mLatinIME.getClipboardHistoryManager(),
@@ -835,7 +841,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     }
 
     public boolean isShowingEmojiPalettes() {
-        return mEmojiPalettesView != null && mEmojiPalettesView.isShown();
+        return mEmojiPalettesView != null && (mEmojiPalettesView.isShown() || mEmojiPalettesView.getVisibility() == View.VISIBLE);
     }
 
     public boolean isShowingClipboardHistory() {
@@ -880,6 +886,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         return mClipboardStripView;
     }
 
+    public HorizontalScrollView getClipboardStripScrollView() {
+        return mClipboardStripScrollView;
+    }
+
     public MainKeyboardView getMainKeyboardView() {
         return mKeyboardView;
     }
@@ -909,10 +919,18 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         if (mEmojiPalettesView != null) {
             mEmojiPalettesView.clearKeyboardCache();
         }
+        if (mClipboardHistoryView != null) {
+            mClipboardHistoryView.stopClipboardHistory();
+        }
+        PointerTracker.clearOldViewData();
+        KeyboardLayoutSet.onSystemLocaleChanged();
     }
 
     @SuppressLint("InflateParams")
     public View onCreateInputView(@NonNull Context displayContext, final boolean isHardwareAcceleratedDrawingEnabled) {
+        if (mCurrentInputView != null) {
+            mCurrentInputView.removeAllViews();
+        }
         if (mKeyboardView != null) {
             mKeyboardView.closing();
         }

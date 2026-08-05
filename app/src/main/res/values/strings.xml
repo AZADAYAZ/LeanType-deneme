@@ -179,6 +179,26 @@
     <string name="bigram_prediction">Next-word suggestions</string>
     <!-- Description for "next word suggestion" option. This displays suggestions even when there is no input, based on the previous word. -->
     <string name="bigram_prediction_summary">Use the previous word in making suggestions</string>
+    <!-- Option to prioritize personal dictionary and learned words for next-word suggestions. -->
+    <string name="prioritize_personal_suggestions">Prioritize personal &amp; learned words</string>
+    <!-- Description for prioritize personal suggestions option. -->
+    <string name="prioritize_personal_suggestions_summary">Give higher score priority to personal dictionary and learned words during next-word prediction</string>
+    <!-- Option to adjust boost level for personal dictionary and learned words. -->
+    <string name="next_word_boost_level">Learned word boost level</string>
+    <!-- Description for boost level option. -->
+    <string name="next_word_boost_level_summary">Set score priority boost strength for learned and personal dictionary entries</string>
+    <!-- Option to require strict preceding context for learned word suggestions. -->
+    <string name="next_word_strict_ngram">Require context match for learned words</string>
+    <!-- Description for strict ngram option. -->
+    <string name="next_word_strict_ngram_summary">Only suggest learned words when the preceding word context matches</string>
+
+    <string name="immediate_auto_space">Immediate auto-space</string>
+    <string name="immediate_auto_space_summary">Commit space instantly when picking a suggestion to prevent delay on next typed letter</string>
+
+    <!-- Option to show first-word suggestions when there is no input at the start of a sentence. -->
+    <string name="first_word_prediction">First-word suggestions</string>
+    <!-- Description for first-word suggestions option -->
+    <string name="first_word_prediction_summary">Show suggestions when there is no input at the start of a sentence</string>
     <!-- Option to enable using punctuation suggestions. -->
     <string name="suggest_punctuation">Punctuation suggestions</string>
     <!-- Description for "suggest_punctuation" option. -->
@@ -311,6 +331,12 @@
     <string name="load_handwriting_plugin_button_delete">Delete plugin</string>
     <string name="load_handwriting_plugin_success">Handwriting plugin imported successfully</string>
     <string name="load_handwriting_plugin_failed">Failed to load handwriting plugin APK</string>
+    <!-- Preferences item for loading an external translation plugin -->
+    <string name="load_translation_plugin">Load translation plugin</string>
+    <string name="load_translation_plugin_summary">Provide an APK plugin to enable translation engine</string>
+    <string name="load_translation_plugin_button_delete">Delete plugin</string>
+    <string name="load_translation_plugin_success">Translation plugin imported successfully</string>
+    <string name="load_translation_plugin_failed">Failed to load translation plugin APK</string>
     <string name="handwriting">Handwriting</string>
     <string name="delete_handwriting_model">Delete downloaded model</string>
     <string name="handwriting_model_deleted">Handwriting model deleted</string>
@@ -366,6 +392,7 @@
     <string name="more_keys_strip_description">More keys</string>
     <!-- Title for input language & layout selection screen -->
     <string name="language_and_layouts_title">Languages &amp; Layouts</string>
+    <string name="languages_title">Languages</string>
     <!-- Title of the setting to enable number row -->
     <string name="number_row">Number row</string>
     <!-- Description of the settings to enable number row -->
@@ -482,6 +509,8 @@
     <string name="ai_provider_gemini">Google Gemini</string>
     <string name="split_toolbar">Split toolbar</string>
     <string name="split_toolbar_summary">Separate suggestions from toolbar</string>
+    <string name="auto_span_toolbar_keys">Auto-span toolbar keys</string>
+    <string name="auto_span_toolbar_keys_summary">Expand toolbar keys to fill available free space</string>
     <string name="show_download_button_in_toolbar">Show download button in toolbar</string>
     <string name="show_download_button_in_toolbar_summary">Show dictionary download icon in suggestion strip when main dictionary is missing</string>
     <string name="ai_provider_huggingface">Groq</string>
@@ -528,6 +557,9 @@
     <string name="translate_target_language_summary">Select the language to translate to</string>
     <string name="translate_model_title">Translation Model</string>
     <string name="translate_model_summary">Select the AI model for translation. Leave empty to use proofreading model.</string>
+    
+    <string name="translation_engine_title">Translation Engine</string>
+    <string name="translation_engine_summary">Select backend for translation (Plugin or AI)</string>
     
     <!-- Translation target language options -->
     <string-array name="translate_language_names">
@@ -1098,6 +1130,11 @@ New dictionary:
     <string name="libraries_status_not_installed">Not Installed</string>
     <!-- preference title for saving the log to a file -->
     <string name="save_log">Save log</string>
+    <string name="log_options_title">Log options</string>
+    <string name="save_log_to_file">Save to file</string>
+    <string name="clear_log">Clear log</string>
+    <string name="share_log">Share log</string>
+    <string name="log_cleared">Log cleared</string>
     <!-- license for about screen-->
     <string name="license">Open-source license</string>
     <!-- license link for about screen-->
@@ -1234,6 +1271,10 @@ New dictionary:
     <string name="var_toolbar_direction">Variable toolbar direction</string>
     <!-- Description of the variable toolbar direction setting -->
     <string name="var_toolbar_direction_summary">Reverse direction when a right-to-left keyboard subtype is selected</string>
+    <!-- Title of the setting for showing toolbar only when a hardware keyboard is connected -->
+    <string name="toolbar_only_with_hw_keyboard">Show only toolbar with physical keyboard</string>
+    <!-- Description of the setting for showing toolbar only when a hardware keyboard is connected -->
+    <string name="toolbar_only_with_hw_keyboard_summary">You still need to enable showing virtual keyboard in system settings</string>
     <!-- Title of the settings for adjusting the language swipe gesture distance -->
     <string name="prefs_language_swipe_distance">Switch language swipe distance</string>
     <!-- Title of the setting to customize toolbar key codes -->

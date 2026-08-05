@@ -18,7 +18,6 @@ import helium314.keyboard.latin.define.DebugFlags
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORRECT_USING_NON_WHITE_LISTED_SUGGESTION
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION
 import helium314.keyboard.latin.dictionary.Dictionary
-import helium314.keyboard.latin.gesture.SwipeGestureEngine
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.suggestions.SuggestionStripView
@@ -26,6 +25,8 @@ import helium314.keyboard.latin.utils.AutoCorrectionUtils
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.SuggestionResults
+import helium314.keyboard.latin.utils.ExecutorUtils
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.Locale
 import kotlin.math.min
 
@@ -43,35 +44,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             // Optionally log evicted entries for debugging
         }
     }
-    // Precomputed gesture word index, keyed by a fingerprint of the key positions.
-    // Rebuilt only when key centres actually change (language/layout switch), not on shift-state
-    // or action-button changes, and not on text-field focus changes.
-    @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
-    @Volatile private var gestureIndexFingerprint: Int = 0
-
-    fun buildGestureIndexAsync(keyboard: Keyboard) {
-        val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
-        if (gestureIndex != null && gestureIndexFingerprint == fingerprint) {
-            return
-        }
-        Thread {
-            try {
-                val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
-                gestureIndex = index
-                gestureIndexFingerprint = fingerprint
-            } catch (t: Throwable) {
-                Log.e(TAG, "Failed to build Java/JNI gesture index", t)
-                gestureIndex = null
-            }
-        }.start()
-    }
-
-    fun getGestureIndex(): SwipeGestureEngine.GestureIndex? = gestureIndex
-
-    fun recordAccepted(word: String, pointers: InputPointers, keyboard: Keyboard) {
-        SwipeGestureEngine.recordAccepted(word, pointers, keyboard, gestureIndex)
-    }
-
     // Cached scoreLimit to avoid repeated Settings lookups in hot path
     // The read-then-write of (mLastScoreLimitUpdateTime, mCachedScoreLimitForAutocorrect)
     // is guarded by `synchronized(this)` in shouldBeAutoCorrected() to make the update atomic
@@ -82,7 +54,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // cache cleared whenever LatinIME.loadSettings is called, notably on changing layout and switching input fields
     fun clearNextWordSuggestionsCache() {
         nextWordSuggestionsCache.evictAll()
-        gestureIndex = null
         // Also reset scoreLimit cache to force refresh on next use
         synchronized(this) {
             mLastScoreLimitUpdateTime = 0
@@ -128,6 +99,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         // ponytail: filter out multi-word suggestions if enabled
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
+        }
+        if (!Settings.getValues().mSuggestEmojis) {
+            suggestionResults.removeAll { it.isEmoji || it.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI }
         }
         val trailingSingleQuotesCount = StringUtils.getTrailingSingleQuotesCount(typedWordString)
         val suggestionsContainer = getTransformedSuggestedWordInfoList(wordComposer, suggestionResults,
@@ -367,34 +341,19 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         inputStyle: Int, sequenceNumber: Int
     ): SuggestedWords {
         val pointers = wordComposer.composedDataSnapshot.mInputPointers
-        val method = settingsValuesForSuggestion.mGestureMethod
-        val useFallback = "fallback" == method || !JniUtils.sHaveNativeGestureLib
-        val suggestionResults = if (useFallback) {
-            val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
-            val index = gestureIndex
-            if (index == null || gestureIndexFingerprint != fingerprint) {
-                buildGestureIndexAsync(keyboard)
-                SuggestionResults(1, false, false)
-            } else {
-                val predictionSet = if (ngramContext.isValid) {
-                    mDictionaryFacilitator.getSuggestionResults(
-                        ComposedData(InputPointers(32), false, ""), ngramContext, keyboard,
-                        settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
-                    ).map { it.mWord.lowercase(Locale.ROOT) }.toSet()
-                } else {
-                    emptySet()
-                }
-                SwipeGestureEngine.rankByIndex(index, pointers, keyboard, SuggestedWords.MAX_SUGGESTIONS, predictionSet)
-            }
-        } else {
-            mDictionaryFacilitator.getSuggestionResults(
-                wordComposer.composedDataSnapshot, ngramContext, keyboard,
-                settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
-            )
+        if (!JniUtils.sHaveNativeGestureLib) {
+            return SuggestedWords.getEmptyInstance()
         }
+        val suggestionResults = mDictionaryFacilitator.getSuggestionResults(
+            wordComposer.composedDataSnapshot, ngramContext, keyboard,
+            settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle
+        )
         // ponytail: filter out multi-word suggestions if enabled
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
+        }
+        if (!Settings.getValues().mSuggestEmojis) {
+            suggestionResults.removeAll { it.isEmoji || it.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI }
         }
         replaceSingleLetterFirstSuggestion(suggestionResults)
         adjustToTooSuggestions(suggestionResults, pointers, keyboard)
@@ -485,7 +444,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
 
     private fun adjustToTooSuggestions(suggestionResults: SuggestionResults, pointers: InputPointers, keyboard: Keyboard) {
         if (suggestionResults.size < 2) return
-        val hasLoop = SwipeGestureEngine.hasLoopAtEnd(pointers, keyboard)
+        val hasLoop = false
         if (!hasLoop) {
             var toInfo: SuggestedWordInfo? = null
             var tooInfo: SuggestedWordInfo? = null
@@ -574,9 +533,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
 
         @JvmStatic
         fun addDebugInfo(wordInfo: SuggestedWordInfo?, typedWord: String) {
-            if (!SuggestionStripView.DEBUG_SUGGESTIONS)
+            if (!SuggestionStripView.DEBUG_SUGGESTIONS || wordInfo == null)
                 return
-            val normalizedScore = BinaryDictionaryUtils.calcNormalizedScore(typedWord, wordInfo.toString(), wordInfo!!.mScore)
+            val normalizedScore = BinaryDictionaryUtils.calcNormalizedScore(typedWord, wordInfo.toString(), wordInfo.mScore)
             val scoreInfoString: String
             val dict = wordInfo.mSourceDict.mDictType + ":" + wordInfo.mSourceDict.mLocale
             scoreInfoString = if (normalizedScore > 0) {

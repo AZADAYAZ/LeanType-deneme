@@ -63,7 +63,8 @@ object SubtypeSettings {
         if (newSubtype !in enabledSubtypes) {
             enabledSubtypes.add(newSubtype)
             enabledSubtypes.sortBy { it.locale().toLanguageTag() } // for consistent order
-            RichInputMethodManager.getInstance().refreshSubtypeCaches()
+            if (RichInputMethodManager.isInitialized())
+                RichInputMethodManager.getInstance().refreshSubtypeCaches()
         }
     }
 
@@ -90,7 +91,7 @@ object SubtypeSettings {
             }
         }
         if (!enabledSubtypes.remove(subtype)) reloadEnabledSubtypes(context)
-        else RichInputMethodManager.getInstance().refreshSubtypeCaches()
+        else if (RichInputMethodManager.isInitialized()) RichInputMethodManager.getInstance().refreshSubtypeCaches()
         return true
     }
 
@@ -106,12 +107,17 @@ object SubtypeSettings {
         } else if (enabledSubtypes.isNotEmpty()) {
             Log.w(TAG, "selected subtype $selectedSubtype / ${prefs.getString(Settings.PREF_SELECTED_SUBTYPE, Defaults.PREF_SELECTED_SUBTYPE)} not found")
         }
-        if (enabledSubtypes.isNotEmpty())
-            return enabledSubtypes.first()
+        if (enabledSubtypes.isNotEmpty()) {
+            val fallback = enabledSubtypes.first()
+            setSelectedSubtype(prefs, fallback)
+            return fallback
+        }
         val defaultSubtypes = getDefaultEnabledSubtypes()
-        return defaultSubtypes.firstOrNull { it.locale() == selectedSubtype.locale && it.mainLayoutName() == it.mainLayoutName() }
+        val fallback = defaultSubtypes.firstOrNull { it.locale() == selectedSubtype.locale && it.mainLayoutName() == it.mainLayoutName() }
             ?: defaultSubtypes.firstOrNull { it.locale().language == selectedSubtype.locale.language }
             ?: defaultSubtypes.first()
+        setSelectedSubtype(prefs, fallback)
+        return fallback
     }
 
     fun setSelectedSubtype(prefs: SharedPreferences, subtype: InputMethodSubtype) {
@@ -213,6 +219,11 @@ object SubtypeSettings {
         loadResourceSubtypes(context.resources)
         loadAdditionalSubtypes(context.prefs())
         loadEnabledSubtypes(context)
+
+        if (enabledSubtypes.isEmpty()) {
+            val defaults = getDefaultEnabledSubtypes()
+            defaults.forEach { addEnabledSubtype(context.prefs(), it) }
+        }
     }
 
     @Suppress("SameReturnValue")
@@ -226,7 +237,8 @@ object SubtypeSettings {
         }
         if (subtypes.isEmpty()) {
             // hardcoded fallback to en-US for weird cases
-            systemSubtypes.add(resourceSubtypesByLocale[Locale.US]!!.first())
+            resourceSubtypesByLocale[Locale.US]?.firstOrNull()?.let { systemSubtypes.add(it) }
+                ?: resourceSubtypesByLocale.values.firstOrNull()?.firstOrNull()?.let { systemSubtypes.add(it) }
         } else {
             systemSubtypes.addAll(subtypes)
         }

@@ -316,9 +316,10 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 }
 
                 listener?.onUpdateMainDictionaryAvailability(hasAtLeastOneInitializedMainDictionary())
-                latchForWaitingLoadingMainDictionary.countDown()
             } catch (e: Throwable) {
                 Log.e(TAG, "could not initialize main dictionaries for $locales", e)
+            } finally {
+                latchForWaitingLoadingMainDictionary.countDown()
             }
         }
     }
@@ -579,21 +580,34 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         val proximityInfoHandle = keyboard.proximityInfo.nativeProximityInfo
         val weightOfLangModelVsSpatialModel = floatArrayOf(Dictionary.NOT_A_WEIGHT_OF_LANG_MODEL_VS_SPATIAL_MODEL)
 
-        val waitForOtherDicts = if (dictionaryGroups.size == 1) null else CountDownLatch(dictionaryGroups.size - 1)
-        val suggestionsArray = Array<List<SuggestedWordInfo>?>(dictionaryGroups.size) { null }
-        for (i in 1..dictionaryGroups.lastIndex) {
+        val dictGroups = dictionaryGroups
+        if (dictGroups.isEmpty()) {
+            return SuggestionResults(SuggestedWords.MAX_SUGGESTIONS, ngramContext.isBeginningOfSentenceContext, false)
+        }
+        val waitForOtherDicts = if (dictGroups.size <= 1) null else CountDownLatch(dictGroups.size - 1)
+        val suggestionsArray = Array<List<SuggestedWordInfo>?>(dictGroups.size) { null }
+        for (i in 1..dictGroups.lastIndex) {
             scope.launch {
-                suggestionsArray[i] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
-                    proximityInfoHandle, weightOfLangModelVsSpatialModel, dictionaryGroups[i])
-                waitForOtherDicts?.countDown()
+                try {
+                    suggestionsArray[i] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
+                        proximityInfoHandle, weightOfLangModelVsSpatialModel, dictGroups[i])
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error querying secondary dictionary for locale ${dictGroups[i].locale}", e)
+                } finally {
+                    waitForOtherDicts?.countDown()
+                }
             }
         }
-        suggestionsArray[0] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
-            proximityInfoHandle, weightOfLangModelVsSpatialModel, dictionaryGroups[0])
+        try {
+            suggestionsArray[0] = getSuggestions(composedData, ngramContext, settingsValuesForSuggestion, sessionId,
+                proximityInfoHandle, weightOfLangModelVsSpatialModel, dictGroups[0])
+        } catch (e: Exception) {
+            Log.e(TAG, "Error querying primary dictionary for locale ${dictGroups[0].locale}", e)
+        }
         val suggestionResults = SuggestionResults(
             SuggestedWords.MAX_SUGGESTIONS, ngramContext.isBeginningOfSentenceContext, false
         )
-        waitForOtherDicts?.await()
+        waitForOtherDicts?.await(500, TimeUnit.MILLISECONDS)
 
         suggestionsArray.forEach {
             if (it == null) return@forEach
@@ -625,32 +639,34 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 settingsValuesForSuggestion, sessionId, weightForLocale, weightOfLangModelVsSpatialModel
             )
             if (composedData.mTypedWord.isEmpty() && (dictionarySuggestions == null || dictionarySuggestions.isEmpty())
-                && (dictType == Dictionary.TYPE_USER || dictType == Dictionary.TYPE_USER_HISTORY)
+                && dictType == Dictionary.TYPE_USER
             ) {
-                val allWords = try {
-                    dictionary.allWordsWithFrequency
-                } catch (e: Exception) {
-                    null
-                }
-                if (allWords != null && allWords.isNotEmpty()) {
-                    val topWords = allWords.entries
-                        .sortedByDescending { it.value }
-                        .take(15)
-                    val unigramSuggestions = ArrayList<SuggestedWordInfo>()
-                    for (entry in topWords) {
-                        unigramSuggestions.add(
-                            SuggestedWordInfo(
-                                entry.key,
-                                "",
-                                entry.value,
-                                SuggestedWordInfo.KIND_PREDICTION,
-                                dictionary,
-                                SuggestedWordInfo.NOT_AN_INDEX,
-                                SuggestedWordInfo.NOT_A_CONFIDENCE
-                            )
-                        )
+                if (!Settings.getValues().mNextWordStrictNgram && Settings.getValues().mPrioritizePersonalSuggestions) {
+                    val allWords = try {
+                        dictionary.allWordsWithFrequency
+                    } catch (e: Exception) {
+                        null
                     }
-                    dictionarySuggestions = unigramSuggestions
+                    if (allWords != null && allWords.isNotEmpty()) {
+                        val topWords = allWords.entries
+                            .sortedByDescending { it.value }
+                            .take(15)
+                        val unigramSuggestions = ArrayList<SuggestedWordInfo>()
+                        for (entry in topWords) {
+                            unigramSuggestions.add(
+                                SuggestedWordInfo(
+                                    entry.key,
+                                    "",
+                                    entry.value,
+                                    SuggestedWordInfo.KIND_PREDICTION,
+                                    dictionary,
+                                    SuggestedWordInfo.NOT_AN_INDEX,
+                                    SuggestedWordInfo.NOT_A_CONFIDENCE
+                                )
+                            )
+                        }
+                        dictionarySuggestions = unigramSuggestions
+                    }
                 }
             }
             if (dictionarySuggestions == null) continue
@@ -664,6 +680,8 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
 
             for (info in dictionarySuggestions) {
                 val word = info.word
+                if (!Settings.getValues().mSuggestEmojis && (info.isEmoji || info.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI))
+                    continue
                 if (isBlacklisted(word) || SupportedEmojis.isUnsupported(word)) // don't add blacklisted words and unsupported emojis
                     continue
                 if (checkForGarbage
@@ -680,7 +698,12 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                     continue
 
                 if (composedData.mTypedWord.isEmpty() && (dictType == Dictionary.TYPE_USER_HISTORY || dictType == Dictionary.TYPE_USER)) {
-                    val boostedScore = info.mScore + 1000
+                    val settingsValues = Settings.getValues()
+                    val boostedScore = if (settingsValues.mPrioritizePersonalSuggestions) {
+                        info.mScore + settingsValues.mNextWordBoostLevel
+                    } else {
+                        info.mScore
+                    }
                     val boostedInfo = SuggestedWordInfo(
                         info.mWord, info.mPrevWordsContext, boostedScore, info.mKindAndFlags,
                         info.mSourceDict, info.mIndexOfTouchPointOfSecondWord, info.mAutoCommitFirstWordConfidence
