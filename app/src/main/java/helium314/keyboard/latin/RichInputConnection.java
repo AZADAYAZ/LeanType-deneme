@@ -278,7 +278,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public void commitText(final CharSequence text, final int newCursorPosition) {
-        // --- EKLENEN KARA LİSTE KONTROLÜ ---
+        // --- ADDED BLACKLIST CONTROL ---
         if (text != null && isWordBlocked(text.toString())) {
             mComposingText.setLength(0);
             if (isConnected()) {
@@ -651,7 +651,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
-        // --- EKLENEN KARA LİSTE KONTROLÜ ---
+        // --- ADDED BLACKLIST CONTROL ---
         if (text != null && isWordBlocked(text.toString())) {
             mComposingText.setLength(0);
             if (isConnected()) {
@@ -1059,17 +1059,17 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return mIC.requestCursorUpdates(cursorUpdateMode);
     }
 
-    // --- EKLENEN KARA LİSTE KONTROLÜ İÇİN YARDIMCI METOD ---
+    // --- HELPER METHOD FOR ADDED BLACKLIST CONTROL ---
     /**
-     * DİKKAT: Bu metodu LeanType'ın asıl kara liste mantığına bağlaman gerekiyor.
-     * Şimdilik örnek olarak false döndürüyor.
+     * NOTE: You need to connect this method to LeanType's actual blacklist logic.
+     * For now, it returns false as an example.
      */
     private boolean isWordBlocked(String text) {
         if (TextUtils.isEmpty(text)) return false;
         
         String normalizedWord = text.trim().toLowerCase();
         
-        // Örnek kullanım:
+        // Example usage:
         // return BlacklistManager.getInstance().isBlocked(normalizedWord);
         
         return false; 
