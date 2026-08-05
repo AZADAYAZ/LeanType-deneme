@@ -673,8 +673,6 @@
     <string name="toolbar_long_press_hint_summary">Uzun basma eylemi olan araç çubuğu tuşlarında noktaları gösterin</string>
     <!-- Uzun basmada daha fazla işlev için "..." ipuçlarını gösterme ayarının başlığı -->
     <string name="show_popup_hints">İşlevsel ipuçlarını göster</string>
-<string name="pinned_toolbar_keys">Sabitlenmiş araç çubuğu tuşlarını seç</string>
-<string name="quick_pin_toolbar_keys">Uzun basıldığında araç çubuğu tuşunu sabitle</string>
 <string name="subtype_generic_sebeolsik_390">%s (Sebeolsik 390)</string>
 <string name="subtype_generic_sebeolsik_final">%s (Sebeolsik Final)</string>
 <string name="theme_style">Stil</string>
@@ -684,7 +682,6 @@
 <string name="after_emoji">Emoji görünümünde emojiyi seçme</string>
 <string name="after_clip">Pano geçmişi girişini seçme</string>
 <string name="theme_name_darker" tools:keep="@string/theme_name_darker">Daha koyu</string>
-<string name="show_popup_keys_main">Yaygın varyantları ekle (varsayılan)</string>
 <string name="remove_redundant_popups_summary">Temel düzende zaten bulunan açılır tuşları gizle</string>
 <string name="settings_screen_toolbar">Araç çubuğu</string>
 <string name="remove_redundant_popups">Gereksiz açılır pencereleri kaldır</string>
@@ -700,10 +697,7 @@
 <string name="select_color_key">Tuş metni</string>
 <string name="select_color_key_hint">Tuş ipucu metni</string>
 <string name="subtype_mns">Mansi</string>
-<string name="url_detection_title">Bağlantı tespiti</string>
-<string name="prefs_always_show_suggestions_summary">Diğer uygulamaların önerileri devre dışı bırakma isteklerini göz ardı et (sorunlara neden olabilir)</string>
 <string name="settings_screen_appearance">Görünüm</string>
-<string name="backup_restore_message">Kaydet yada dosyadan yükle. Uyarı: geri yükleme mevcut verilerin üzerine yazacaktır</string>
 <string name="no_dictionary_message">"Sözlük olmadan yalnızca daha önce girdiğin metin için öneriler alırsın.&lt;br&gt;
 \n        %1$s sözlüklerini indirebilir veya \"%2$s\" için bir sözlüğün doğrudan %3$s indirilip indirilemeyeceğini kontrol edebilirsin."</string>
 <string name="layout_number_row" tools:keep="@string/layout_number_row">Sayı satırı</string>
@@ -718,44 +712,18 @@
 <string name="layout_number_row_basic" tools:keep="@string/layout_number_row_basic">Sayı satırı (temel)</string>
 <string name="prefs_emoji_font_scale">Emoji görüntüleme boyutu</string>
 <string name="label_toolbar_key" tools:keep="@string/label_toolbar_key">Araç çubuğunu göster/gizle</string>
-<string name="vibrate_in_dnd_mode">Rahatsız etme kipinde titret</string>
 <string name="prefs_emoji_key_fit">Emoji boyutunu yazı tipi boyutuna göre ölçeklendir</string>
 <string name="settings_screen_secondary_layouts">İkincil düzenler</string>
 <string name="label_shift_key_locked" tools:keep="@string/label_shift_key_locked">Caps lock</string>
-<string name="autospace_before_gesture_typing">Hareketle sözcük yazmadan önce otomatik boşluk ekle</string>
 <string name="label_shift_key" tools:keep="@string/label_shift_key">Shift</string>
-<string name="use_apps_dict">Uygulama adlarında ara</string>
-<string name="use_apps_dict_summary">Öneriler ve düzeltmeler için yüklü uygulamaların adlarını kullan</string>
-<string name="toolbar_mode">Araç çubuğu kipi</string>
 <string name="prefs_emoji_skin_tone">Varsayılan emoji cilt tonu</string>
 <string name="prefs_emoji_skin_tone_neutral">Doğal</string>
 <string name="label_space_key_for_number_layout" tools:keep="@string/label_space_key_for_number_layout">Boşluk (sayı düzeni)</string>
-<string name="auto_correct_shortcuts_summary">Etkin kısayolları otomatik düzeltme ile genişlet</string>
-<string name="shift_removes_autospace">Shift basarken otomatik boşluk ekleme</string>
-<string name="toolbar_mode_toolbar_keys">Yalnızca araç çubuğu tuşları</string>
-<string name="toolbar_mode_suggestion_strip">Yalnızca öneriler</string>
-<string name="toolbar_mode_hidden">Gizli</string>
 <string name="prefs_font_scale">Klavye yazı tipi boyutu</string>
 <string name="custom_font">Dosyadan özel yazı tipi seç</string>
 <string name="prefs_key_emoji_max_sdk">Emoji sürümünü geçersiz kıl</string>
-<string name="timestamp_format_title">Zaman damgası anahtarı için biçim</string>
-<string name="autospace_after_gesture_typing">Hareketle sözcük yazdıktan sonra otomatik boşluk ekle</string>
-<string name="autospace_after_suggestion">Bir öneri seçildikten sonra otomatik boşluk ekle</string>
 <string name="subtype_with_layout_generic">%1$s (%2$s)</string>
-<string name="suggest_emojis">Emoji öner</string>
-<string name="suggest_emojis_summary">Normal önerilerde emoji sözlüğünü kullanın</string>
 <string name="landscape">Yatay</string>
-<string name="prefs_always_show_suggestions_except_web_text">Web düzenleme alanları için her zaman öneriler gösterme</string>
-<string name="prefs_always_show_suggestions_except_web_text_summary">Web düzenleme alanları (çoğunlukla tarayıcılarda bulunur), her zaman önerileri göster ayarıyla ilgili sorunların çok yaygın bir nedenidir</string>
-<string name="auto_correct_shortcuts">Kısayolları otomatik düzelt</string>
-<string name="backspace_reverts_autocorrect">Sil tuşu otomatik düzeltmeyi geri alır</string>
-<string name="suggest_punctuation_summary">Başka öneri bulunamadığında noktalama işaretlerini göster</string>
-<string name="backup_restored">Yedekleme geri yüklendi</string>
-<string name="locales_with_dict">Sözlükleri olan diller</string>
-<string name="shift_removes_autospace_summary">Büyük harf tuşu, bekleyen otomatik boşluğu kaldırır</string>
-<string name="popup_order_and_hint_source">Açılır pencere tuş sırası ve ipuçları kaynağı</string>
-<string name="show_tld_popup_keys_summary">URL\'leri ve e-posta adreslerini yazarken nokta tuşunun açılır pencerelerini üst düzey alan adlarıyla değiştirin</string>
-<string name="toolbar_mode_expandable">Araç çubuğu tuşları ve öneriler</string>
 <!-- show_popup_hints ayarının açıklaması -->
 <!-- Temel klavyede zaten bulunan açılır tuşları kaldırma seçeneği -->
 <!-- remove_redundant_popups ayarının açıklaması -->
