@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import helium314.keyboard.accessibility.AccessibilityUtils;
+import helium314.keyboard.keyboard.KeyboardSwitcher;
 import helium314.keyboard.latin.PunctuationSuggestions;
 import helium314.keyboard.latin.R;
 import helium314.keyboard.latin.SuggestedWords;
@@ -526,7 +527,11 @@ final class SuggestionStripLayoutHelper {
             // {@link SuggestionStripView#onClick(View)}.
             wordView.setTag(indexInSuggestedWords);
             CharSequence label = getStyledSuggestedWord(suggestedWords, indexInSuggestedWords);
-            final boolean showShortcuts = !Settings.getValues().mPhysicalKeyboardSuggestionShortcuts.equals("disabled");
+            final KeyboardSwitcher switcher = KeyboardSwitcher.getInstance();
+            final boolean isPhysicalKeyboardInUse = switcher.isImeSuppressedByHardwareKeyboard(
+                    Settings.getValues(), switcher.getKeyboardSwitchState());
+            final boolean showShortcuts = isPhysicalKeyboardInUse
+                    && !Settings.getValues().mPhysicalKeyboardSuggestionShortcuts.equals("disabled");
             if (showShortcuts && positionInStrip >= 0 && positionInStrip < SUPERSCRIPT_DIGITS.length && !TextUtils.isEmpty(label)) {
                 label = label.toString() + " " + SUPERSCRIPT_DIGITS[positionInStrip];
             }

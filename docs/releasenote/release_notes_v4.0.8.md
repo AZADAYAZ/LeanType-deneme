@@ -9,9 +9,11 @@
   - Profile-aware preference keys (`_compact` / `_large`) with fallback to legacy settings.
   - Split keyboard default enabled for `LARGE` profile while preserving compact phone defaults.
   - Instant on-the-fly keyboard reload on fold, unfold, or window resize without closing the keyboard.
+- **Physical Keyboard Suggestion Shortcuts**: Number hints (`¹`, `²`, `³`) on suggestion strip entries now correctly display only when a physical keyboard is actively in use (soft keyboard hidden), fixing false positives on devices (e.g. POCO/MIUI) where Android framework misreports hardware keyboard presence.
 
 ### 🐛 Bug Fixes & Stability Improvements
 - **Translation Plugin Loading**: Fixed `AbstractMethodError` when importing dynamic translation plugin APKs on minified release builds by explicitly preserving `ITranslationProvider` interface methods in Proguard/R8 rules.
+- **Suggestion Shortcut Hints**: Fixed `¹²³` digit hints appearing on suggestion strip even without a physical keyboard connected, caused by unreliable `Configuration.keyboard` / `hardKeyboardHidden` flags on certain OEM devices.
 
 ## 📦 Downloads (Choose Your Flavor)
 

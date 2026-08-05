@@ -1,2 +1,3 @@
 - Added automatic Foldable & Large Screen profile support with profile-aware settings and instant fold/unfold layout reload.
 - Fixed Translation Plugin loading failure caused by Proguard/R8 interface method optimization.
+- Fixed physical keyboard suggestion shortcut hints (¹²³) incorrectly showing on soft keyboard on devices where hardware keyboard presence was misreported.
