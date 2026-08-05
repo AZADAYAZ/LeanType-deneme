@@ -211,9 +211,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     public void onConfigurationChanged(final Configuration newConfig) {
         helium314.keyboard.latin.utils.ScreenProfileProvider.invalidateCache();
-        if (mKeyboardView != null) {
-            reloadMainKeyboard();
-        }
+        setThemeNeedsReload();
     }
 
     private void setKeyboard(final int keyboardId, @NonNull final KeyboardSwitchState toggleState) {
