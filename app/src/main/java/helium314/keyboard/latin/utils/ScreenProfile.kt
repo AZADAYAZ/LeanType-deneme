@@ -3,6 +3,7 @@ package helium314.keyboard.latin.utils
 
 import android.content.Context
 import android.content.res.Configuration
+import android.util.Log
 import kotlin.math.roundToInt
 
 enum class ScreenProfile {
@@ -27,13 +28,16 @@ object ScreenProfileProvider {
 
         val widthPx = ResourceUtils.getDefaultKeyboardWidth(context)
         val density = context.resources.displayMetrics.density
-        val availableWidthDp = if (density > 0f) (widthPx / density).roundToInt() else 0
+        val calculatedDp = if (density > 0f) (widthPx / density).roundToInt() else 0
+        val availableWidthDp = if (config.screenWidthDp > 0) config.screenWidthDp else calculatedDp
 
         val profile = when {
             availableWidthDp >= 600 -> ScreenProfile.LARGE
             config.smallestScreenWidthDp >= 600 -> ScreenProfile.LARGE
             else -> ScreenProfile.COMPACT
         }
+
+        Log.i("ScreenProfile", "getScreenProfile -> $profile (screenWidthDp=${config.screenWidthDp}, smallestWidthDp=${config.smallestScreenWidthDp}, calculatedDp=$calculatedDp)")
 
         cachedProfile = profile
         cachedConfigHash = currentHash
