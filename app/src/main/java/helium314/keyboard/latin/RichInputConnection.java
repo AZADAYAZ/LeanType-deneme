@@ -50,6 +50,18 @@ import helium314.keyboard.latin.utils.TextRange;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Enrichment class for InputConnection to simplify interaction and add
+ * functionality.
+ * <p>
+ * This class serves as a wrapper to be able to simply add hooks to any calls to
+ * the underlying
+ * InputConnection. It also keeps track of a number of things to avoid having to
+ * call upon IPC
+ * all the time to find out what text is in the buffer, when we need it to
+ * determine caps mode
+ * for example.
+ */
 public final class RichInputConnection implements PrivateCommandPerformer {
     private static final String TAG = "RichInputConnection";
     private static final boolean DBG = false;
@@ -59,7 +71,18 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     private static final int NUM_CHARS_TO_GET_AFTER_CURSOR = 40;
     private static final int INVALID_CURSOR_POSITION = -1;
 
+    /**
+     * The amount of time a {@link #reloadTextCache} call needs to take for the
+     * keyboard to enter
+     * the {@link #hasSlowInputConnection} state.
+     * Reduced from 1000ms to 300ms for faster detection of slow connections.
+     */
     private static final long SLOW_INPUT_CONNECTION_ON_FULL_RELOAD_MS = 300;
+    /**
+     * The amount of time a {@link #getTextBeforeCursor} or
+     * {@link #getTextAfterCursor} call needs
+     * to take for the keyboard to enter the {@link #hasSlowInputConnection} state.
+     */
     private static final long SLOW_INPUT_CONNECTION_ON_PARTIAL_RELOAD_MS = 200;
 
     private static final int OPERATION_GET_TEXT_BEFORE_CURSOR = 0;
@@ -72,19 +95,60 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             "GET_WORD_RANGE_AT_CURSOR",
             "RELOAD_TEXT_CACHE" };
 
+    /**
+     * The amount of time the keyboard will persist in the
+     * {@link #hasSlowInputConnection} state
+     * after observing a slow InputConnection event.
+     * Reduced from 10 minutes to 2 minutes for faster recovery from temporary slowness.
+     */
     private static final long SLOW_INPUTCONNECTION_PERSIST_MS = TimeUnit.MINUTES.toMillis(2);
 
-    private int mExpectedSelStart = INVALID_CURSOR_POSITION;
-    private int mExpectedSelEnd = INVALID_CURSOR_POSITION;
+    /**
+     * This variable contains an expected value for the selection start position.
+     * This is where the
+     * cursor or selection start may end up after all the keyboard-triggered updates
+     * have passed. We
+     * keep this to compare it to the actual selection start to guess whether the
+     * move was caused by
+     * a keyboard command or not.
+     * It's not really the selection start position: the selection start may not be
+     * there yet, and
+     * in some cases, it may never arrive there.
+     */
+    private int mExpectedSelStart = INVALID_CURSOR_POSITION; // in chars, not code points
+    /**
+     * The expected selection end. Only differs from mExpectedSelStart if a
+     * non-empty selection is
+     * expected. The same caveats as mExpectedSelStart apply.
+     */
+    private int mExpectedSelEnd = INVALID_CURSOR_POSITION; // in chars, not code points
+    /**
+     * This contains the committed text immediately preceding the cursor and the
+     * composing
+     * text, if any. It is refreshed when the cursor moves by calling upon the
+     * TextView.
+     */
     private final StringBuilder mCommittedTextBeforeComposingText = new StringBuilder();
+    /**
+     * This contains the currently composing text, as LatinIME thinks the TextView
+     * is seeing it.
+     */
     private final StringBuilder mComposingText = new StringBuilder();
 
+    /**
+     * This variable is a temporary object used in
+     * {@link #commitText(CharSequence,int)}
+     * to avoid object creation.
+     */
     private final SpannableStringBuilder mTempObjectForCommitText = new SpannableStringBuilder();
 
     private final InputMethodService mParent;
     private InputConnection mIC;
     private int mNestLevel;
 
+    /**
+     * The timestamp of the last slow InputConnection operation
+     */
     private long mLastSlowInputConnectionTime = -SLOW_INPUTCONNECTION_PERSIST_MS;
 
     public RichInputConnection(final InputMethodService parent) {
@@ -97,6 +161,12 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return mIC != null;
     }
 
+    /**
+     * Returns whether or not the underlying InputConnection is slow. When true, we
+     * want to avoid
+     * calling InputConnection methods that trigger an IPC round-trip (e.g.,
+     * getTextAfterCursor).
+     */
     public boolean hasSlowInputConnection() {
         return (SystemClock.uptimeMillis() - mLastSlowInputConnectionTime) <= SLOW_INPUTCONNECTION_PERSIST_MS;
     }
@@ -200,6 +270,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public boolean resetCachesUponCursorMoveAndReturnSuccess(final int newSelStart,
             final int newSelEnd, final boolean shouldFinishComposition) {
         mComposingText.setLength(0);
+        // Set expected positions before reload so the cache is built with the correct
+        // cursor context — avoids a second IPC round-trip when position has changed.
         final int oldExpectedSelStart = mExpectedSelStart;
         final int oldExpectedSelEnd = mExpectedSelEnd;
         mExpectedSelStart = newSelStart;
@@ -207,6 +279,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         final boolean didReloadTextSuccessfully = reloadTextCache();
         if (!didReloadTextSuccessfully) {
             Log.d(TAG, "Will try to retrieve text later.");
+            // selection is set to INVALID_CURSOR_POSITION if reloadTextCache return false
             return false;
         }
         if (mExpectedSelStart != newSelStart || mExpectedSelEnd != newSelEnd) {
@@ -219,8 +292,18 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return true;
     }
 
+    /**
+     * Reload the cached text from the InputConnection.
+     *
+     * @return true if successful
+     */
     private boolean reloadTextCache() {
         mCommittedTextBeforeComposingText.setLength(0);
+        // Clearing composing text was not in original AOSP and OpenBoard, but why?
+        // should actually
+        // be necessary when reloading text. Only when called by setSelection,
+        // mComposingText isn't
+        // always empty, but looks like things still work normally
         mComposingText.setLength(0);
         mIC = mParent.getCurrentInputConnection();
         if (!isConnected()) {
@@ -235,6 +318,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 Constants.EDITOR_CONTENTS_CACHE_SIZE,
                 0 /* flags */);
         if (null == textBeforeCursor) {
+            // For some reason the app thinks we are not connected to it. This looks like a
+            // framework bug... Fall back to ground state and return false.
             mExpectedSelStart = INVALID_CURSOR_POSITION;
             mExpectedSelEnd = INVALID_CURSOR_POSITION;
             Log.w(TAG, "Unable to connect to the editor to retrieve text.");
@@ -256,6 +341,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
 
     private void checkBatchEdit() {
         if (mNestLevel != 1) {
+            // TODO: exception instead
             Log.e(TAG, "Batch edit level incorrect : " + mNestLevel);
             Log.e(TAG, DebugLogUtils.getStackTrace(4));
         }
@@ -266,6 +352,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
+        // TODO: this is not correct! The cursor is not necessarily after the composing
+        // text.
+        // In the practice right now this is only called when input ends so it will be
+        // reset so
+        // it works, but it's wrong and should be fixed.
         mCommittedTextBeforeComposingText.append(mComposingText);
         mComposingText.setLength(0);
         if (isConnected()) {
@@ -277,17 +368,13 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         commitText(StringUtils.newSingleCodePointString(codePoint), 1);
     }
 
+    /**
+     * Calls {@link InputConnection#commitText(CharSequence, int)}.
+     *
+     * @param text              The text to commit. This may include styles.
+     * @param newCursorPosition The new cursor position around the text.
+     */
     public void commitText(final CharSequence text, final int newCursorPosition) {
-        // --- ADDED BLACKLIST CONTROL ---
-        if (text != null && isWordBlocked(text.toString())) {
-            mComposingText.setLength(0);
-            if (isConnected()) {
-                mIC.commitText("", 1);
-            }
-            return;
-        }
-        // ------------------------------------
-
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
@@ -295,7 +382,12 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         if (DebugFlags.DEBUG_ENABLED)
             Log.d(TAG, "committing " + text.length() + " characters");
         mCommittedTextBeforeComposingText.append(text);
-        
+        // TODO: the following is exceedingly error-prone. Right now when the cursor is
+        // in the
+        // middle of the composing word mComposingText only holds the part of the
+        // composing text
+        // that is before the cursor, so this actually works, but it's terribly
+        // confusing. Fix this.
         mExpectedSelStart += text.length() - mComposingText.length();
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
@@ -308,7 +400,10 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 final int spanStart = mTempObjectForCommitText.getSpanStart(span);
                 final int spanEnd = mTempObjectForCommitText.getSpanEnd(span);
                 final int spanFlags = mTempObjectForCommitText.getSpanFlags(span);
-                
+                // We have to adjust the end of the span to include an additional character.
+                // This is to avoid splitting a unicode surrogate pair.
+                // See helium314.keyboard.latin.common.Constants.UnicodeSurrogate
+                // See https://b.corp.google.com/issues/19255233
                 if (0 < spanEnd && spanEnd < mTempObjectForCommitText.length()) {
                     final char spanEndChar = mTempObjectForCommitText.charAt(spanEnd - 1);
                     final char nextChar = mTempObjectForCommitText.charAt(spanEnd);
@@ -336,6 +431,27 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return !TextUtils.isEmpty(after);
     }
 
+    /**
+     * Gets the caps modes we should be in after this specific string.
+     * <p>
+     * This returns a bit set of TextUtils#CAP_MODE_*, masked by the inputType
+     * argument.
+     * This method also supports faking an additional space after the string passed
+     * in argument,
+     * to support cases where a space will be added automatically, like in phantom
+     * space
+     * state for example.
+     * Note that for English, we are using American typography rules (which are not
+     * specific to
+     * American English, it's just the most common set of rules for English).
+     *
+     * @param inputType              a mask of the caps modes to test for.
+     * @param spacingAndPunctuations the values of the settings to use for locale
+     *                               and separators.
+     * @param hasSpaceBefore         if we should consider there should be a space
+     *                               after the string.
+     * @return the caps modes that should be on as a set of bits
+     */
     public int getCursorCapsMode(final int inputType,
             final SpacingAndPunctuations spacingAndPunctuations, final boolean hasSpaceBefore) {
         mIC = mParent.getCurrentInputConnection();
@@ -344,16 +460,33 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         }
         if (!TextUtils.isEmpty(mComposingText)) {
             if (hasSpaceBefore) {
+                // If we have some composing text and a space before, then we should have
+                // MODE_CHARACTERS and MODE_WORDS on.
                 return (TextUtils.CAP_MODE_CHARACTERS | TextUtils.CAP_MODE_WORDS) & inputType;
             }
+            // We have some composing text - we should be in MODE_CHARACTERS only.
             return TextUtils.CAP_MODE_CHARACTERS & inputType;
         }
+        // TODO: this will generally work, but there may be cases where the buffer
+        // contains SOME
+        // information but not enough to determine the caps mode accurately. This may
+        // happen after
+        // heavy pressing of delete, for example DEFAULT_TEXT_CACHE_SIZE - 5 times or
+        // so.
+        // getCapsMode should be updated to be able to return a "not enough info" result
+        // so that
+        // we can get more context only when needed.
         if (TextUtils.isEmpty(mCommittedTextBeforeComposingText) && 0 != mExpectedSelStart) {
             if (!reloadTextCache()) {
                 Log.w(TAG, "Unable to connect to the editor. "
                         + "Setting caps mode without knowing text.");
             }
         }
+        // This never calls InputConnection#getCapsMode - in fact, it's a static method
+        // that
+        // never blocks or initiates IPC.
+        // TODO: don't call #toString() here. Instead, all accesses to
+        // mCommittedTextBeforeComposingText should be done on the main thread.
         return CapsModeUtils.getCapsMode(mCommittedTextBeforeComposingText.toString(), inputType,
                 spacingAndPunctuations, hasSpaceBefore);
     }
@@ -383,16 +516,27 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     @Nullable
     public CharSequence getTextBeforeCursor(final int n, final int flags) {
         final int cachedLength = mCommittedTextBeforeComposingText.length() + mComposingText.length();
+        // If we have enough characters to satisfy the request, or if we have all
+        // characters in
+        // the text field, then we can return the cached version right away.
+        // However, if we don't have an expected cursor position, then we should always
+        // go fetch the cache again (as it happens, INVALID_CURSOR_POSITION < 0, so we
+        // need to
+        // test for this explicitly)
         if (INVALID_CURSOR_POSITION != mExpectedSelStart
                 && (cachedLength >= n || cachedLength >= mExpectedSelStart)) {
+            // Thread-safety: snapshot mComposingText via toString() since it may be
+            // mutated on the main thread while this runs on a worker thread.
             final String composingSnapshot = mComposingText.toString();
             final String committedSnapshot = mCommittedTextBeforeComposingText.toString();
             final int totalLen = committedSnapshot.length() + composingSnapshot.length();
             if (totalLen <= n) {
+                // Common case: return everything without trimming — avoid StringBuilder
                 if (composingSnapshot.isEmpty()) return committedSnapshot;
                 if (committedSnapshot.isEmpty()) return composingSnapshot;
                 return committedSnapshot + composingSnapshot;
             }
+            // Rare case: need to trim from the front
             final String combined = committedSnapshot + composingSnapshot;
             return combined.substring(combined.length() - n);
         }
@@ -413,8 +557,18 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         final CharSequence result = mIC.getTextBeforeCursor(n, flags);
         detectLaggyConnection(operation, timeout, startTime);
 
+        // only do the consistency check if we actually have text (i.e. we're not coming
+        // from some reload / reset)
         if ((mCommittedTextBeforeComposingText.length() > 0 || mComposingText.length() > 0)
                 && result != null && !checkTextBeforeCursorConsistency(result)) {
+            // inconsistent state can occur for (at least) two reasons
+            // 1. the app actively changes text field content, e.g. joplin when deleting
+            // list markers like "2."
+            // 2. the app has outdated contents in the text field, e.g. com.farmerbb.notepad
+            // returns the
+            // just deleted char right after deletion, instead of the correct one
+            // todo: understand where this inconsistent state comes from, is it really the
+            // other app's fault, or is it HeliBoard?
             Log.w(TAG, "cached text out of sync, reloading");
             reloadCursorPosition();
             reloadTextCache();
@@ -422,12 +576,20 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return result;
     }
 
+    // checks whether the end of cached text before cursor is the same as end of the
+    // given CharSequence
+    // this is done to find inconsistencies that arise in some text fields when
+    // characters are deleted, but also in some other cases
+    // only checks the end for performance reasons
+    // may need to check more than just the last character, because the text may end
+    // in e.g. rrrrr and even there a single car offset should be found
     private boolean checkTextBeforeCursorConsistency(final CharSequence textField) {
         final int lastIndex = textField.length() - 1;
         if (lastIndex == -1)
             return true;
         final char lastChar = textField.charAt(lastIndex);
         final int composingLength = mComposingText.length();
+        // Fast-path: check last character without loop overhead (covers >90% of consistent cases)
         final char lastCachedChar;
         if (composingLength > 0) {
             lastCachedChar = mComposingText.charAt(composingLength - 1);
@@ -435,32 +597,41 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             lastCachedChar = mCommittedTextBeforeComposingText.charAt(
                     mCommittedTextBeforeComposingText.length() - 1);
         } else {
-            return true;
+            return true; // empty cache, nothing to compare
         }
         if (lastCachedChar != lastChar)
-            return false; 
+            return false; // last char mismatch → inconsistent
+        // If last char differs from second-to-last in the text field, no need for full scan
         if (lastIndex > 0 && textField.charAt(lastIndex - 1) != lastChar)
             return true;
         for (int i = 0; i <= lastIndex; i++) {
+            // get last minus i character and compare
             final char currentTextFieldChar = textField.charAt(lastIndex - i);
             final char currentCachedChar;
             if (i < composingLength) {
+                // take char from composing text
                 currentCachedChar = mComposingText.charAt(composingLength - 1 - i);
             } else {
+                // take last char from mCommittedTextBeforeComposingText, consider composing
+                // length
                 final int index = mCommittedTextBeforeComposingText.length() - 1 - (i - composingLength);
                 if (index < mCommittedTextBeforeComposingText.length() && index >= 0)
                     currentCachedChar = mCommittedTextBeforeComposingText.charAt(index);
                 else
-                    return lastIndex > 100;
+                    return lastIndex > 100; // still let it pass if the same character is repeated many times, but
+                                            // cached text too short
             }
 
             if (currentTextFieldChar != currentCachedChar)
+                // different character -> inconsistent
                 return false;
 
             if (lastChar != currentTextFieldChar)
+                // not the same, and no inconsistency found so far -> unlikely there is one that
+                // won't be found later -> return early
                 return true;
         }
-        return true;
+        return true; // no inconsistency found after going through everything
     }
 
     @Nullable
@@ -492,6 +663,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             StatsUtils.onInputConnectionLaggy(operation, duration);
             mLastSlowInputConnectionTime = SystemClock.uptimeMillis();
         } else if (duration < timeout / 5 && hasSlowInputConnection()) {
+            // we have a fast connection now, maybe the slowness was just a hickup
             mLastSlowInputConnectionTime -= SLOW_INPUTCONNECTION_PERSIST_MS / 2;
             Log.d(TAG, "InputConnection: much faster now, reducing persist time");
         }
@@ -500,6 +672,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public void deleteTextBeforeCursor(final int beforeLength) {
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
+        // TODO: the following is incorrect if the cursor is not immediately after the
+        // composition.
+        // Right now we never come here in this case because we reset the composing
+        // state before we
+        // come here in this case, but we need to fix this.
         if (DebugFlags.DEBUG_ENABLED)
             Log.d(TAG, "deleting " + beforeLength + " characters before cursor");
         final int remainingChars = mComposingText.length() - beforeLength;
@@ -507,6 +684,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             mComposingText.setLength(remainingChars);
         } else {
             mComposingText.setLength(0);
+            // Never cut under 0
             final int len = Math.max(mCommittedTextBeforeComposingText.length()
                     + remainingChars, 0);
             mCommittedTextBeforeComposingText.setLength(len);
@@ -515,6 +693,10 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             mExpectedSelStart -= beforeLength;
             mExpectedSelEnd -= beforeLength;
         } else {
+            // There are fewer characters before the cursor in the buffer than we are being
+            // asked to
+            // delete. Only delete what is there, and update the end with the amount
+            // deleted.
             mExpectedSelEnd -= mExpectedSelStart;
             mExpectedSelStart = 0;
         }
@@ -562,12 +744,22 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public void sendKeyEvent(final KeyEvent keyEvent) {
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
-        if (DebugFlags.DEBUG_ENABLED)
+        if (DebugFlags.DEBUG_ENABLED) // no details, might be too sensitive
             Log.d(TAG, "key event with action " + keyEvent.getAction() + ", is control: "
                     + Character.isISOControl(keyEvent.getUnicodeChar()));
         if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
             if (DEBUG_PREVIOUS_TEXT)
                 checkConsistencyForDebug();
+            // This method is only called for enter or backspace when speaking to old
+            // applications
+            // (target SDK <= 15 (Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)), or for
+            // digits.
+            // When talking to new applications we never use this method because it's
+            // inherently
+            // racy and has unpredictable results, but for backward compatibility we
+            // continue
+            // sending the key events for only Enter and Backspace because some applications
+            // mistakenly catch them to do some stuff.
             switch (keyEvent.getKeyCode()) {
                 case KeyEvent.KEYCODE_ENTER:
                     mCommittedTextBeforeComposingText.append("\n");
@@ -585,6 +777,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                         mComposingText.delete(mComposingText.length() - 1, mComposingText.length());
                     }
                     if (mExpectedSelStart > 0 && mExpectedSelStart == mExpectedSelEnd) {
+                        // TODO: Handle surrogate pairs.
                         mExpectedSelStart -= 1;
                     }
                     mExpectedSelEnd = mExpectedSelStart;
@@ -599,7 +792,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 default:
                     final int codePoint = keyEvent.getUnicodeChar();
                     if (Character.isISOControl(codePoint))
-                        break; 
+                        break; // don't append text if there is no actual text
                     final String text = StringUtils.newSingleCodePointString(codePoint);
                     mCommittedTextBeforeComposingText.append(text);
                     mExpectedSelStart += text.length();
@@ -617,12 +810,23 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
-        final int moveBy = mExpectedSelStart - start;
+        final int moveBy = mExpectedSelStart - start; // determine now, as mExpectedSelStart may change in
+                                                      // getTextBeforeCursor
         final CharSequence textBeforeCursor = getTextBeforeCursor(Constants.EDITOR_CONTENTS_CACHE_SIZE + (end - start),
                 0);
         mCommittedTextBeforeComposingText.setLength(0);
+        // also clear composing text, otherwise we may append existing text
+        // this can happen when we're a little out of sync with the editor
         mComposingText.setLength(0);
         if (!TextUtils.isEmpty(textBeforeCursor)) {
+            // The cursor is not necessarily at the end of the composing text, but we have
+            // its
+            // position in mExpectedSelStart and mExpectedSelEnd. In this case we want the
+            // start
+            // of the text, so we should use mExpectedSelStart. In other words, the
+            // composing
+            // text starts (mExpectedSelStart - start) characters before the end of
+            // textBeforeCursor
             final int indexOfStartOfComposingText = Math.max(textBeforeCursor.length() - moveBy, 0);
             mComposingText.append(textBeforeCursor.subSequence(indexOfStartOfComposingText,
                     textBeforeCursor.length()));
@@ -634,6 +838,20 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         }
     }
 
+    /**
+     * Set the composing text with background color.
+     * 
+     * @param newComposingText  the composing text to be set
+     * @param newCursorPosition the new cursor position
+     * @param backgroundColor   the background color to be set to the composing
+     *                          text. Set
+     *                          {@link Color#TRANSPARENT} to disable the background
+     *                          color.
+     * @param coloredTextLength the length of text, in Java chars, which should be
+     *                          rendered with
+     *                          the given background color.
+     * @return Params match InputLogic#setComposingTextInternalWithBackgroundColor
+     */
     public boolean setComposingTextWithBackgroundColor(final CharSequence newComposingText,
             final int newCursorPosition, final int backgroundColor, final int coloredTextLength) {
         final CharSequence composingTextToBeSet;
@@ -650,17 +868,9 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return setComposingText(composingTextToBeSet, newCursorPosition);
     }
 
+    // return whether the text was (probably) set correctly
+    // unfortunately this is necessary in some cases
     public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
-        // --- ADDED BLACKLIST CONTROL ---
-        if (text != null && isWordBlocked(text.toString())) {
-            mComposingText.setLength(0);
-            if (isConnected()) {
-                mIC.setComposingText("", 1);
-            }
-            return false;
-        }
-        // ------------------------------------
-
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
@@ -669,26 +879,32 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
         mComposingText.append(text);
-        
+        // TODO: support values of newCursorPosition != 1. At this time, this is never
+        // called with
+        // newCursorPosition != 1.
         if (isConnected()) {
             if (DebugFlags.DEBUG_ENABLED)
-                Log.d(TAG, "setting composing text of length " + text.length());
+                Log.d(TAG, "setting composing text of length " + text.length()); // don't log actual text
             mIC.setComposingText(text, newCursorPosition);
-            if (!Settings.getValues().mInputAttributes.mShouldShowSuggestions && text.length() > 0) {
-                final CharSequence lastChar = mIC.getTextBeforeCursor(1, 0);
-                if (lastChar == null || lastChar.length() == 0
-                        || text.charAt(text.length() - 1) != lastChar.charAt(0)) {
-                    Log.w(TAG, "did set " + text + ", but got " + mIC.getTextBeforeCursor(text.length(), 0)
-                            + " as last character");
-                    return false;
-                }
-            }
         }
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
         return true;
     }
 
+    /**
+     * Set the selection of the text editor.
+     * <p>
+     * Calls through to {@link InputConnection#setSelection(int, int)}.
+     *
+     * @param start the character index where the selection should start.
+     * @param end   the character index where the selection should end.
+     * @return Returns true on success, false on failure: either the input
+     *         connection is no longer
+     *         valid when setting the selection or when retrieving the text cache at
+     *         that point, or
+     *         invalid arguments were passed.
+     */
     public boolean setSelection(final int start, final int end) {
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
@@ -727,7 +943,9 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public void selectAll() {
         if (!isConnected())
             return;
-        if (mExpectedSelStart != mExpectedSelEnd && mExpectedSelStart == 0 && !hasTextAfterCursor()) {
+        if (mExpectedSelStart != mExpectedSelEnd && mExpectedSelStart == 0 && !hasTextAfterCursor()) { // all text
+                                                                                                       // already
+                                                                                                       // selected
             mIC.setSelection(mExpectedSelEnd, mExpectedSelEnd);
         } else
             mIC.performContextMenuAction(android.R.id.selectAll);
@@ -736,7 +954,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public void selectWord(final SpacingAndPunctuations spacingAndPunctuations, final String script) {
         if (!isConnected())
             return;
-        if (mExpectedSelStart != mExpectedSelEnd) {
+        if (mExpectedSelStart != mExpectedSelEnd) { // already something selected
             mIC.setSelection(mExpectedSelEnd, mExpectedSelEnd);
             return;
         }
@@ -755,9 +973,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         }
         CharSequence text = null;
         if (getSelection) {
+            // copy selected text, and if nothing is selected copy the whole text
             text = getSelectedText(InputConnection.GET_TEXT_WITH_STYLES);
         }
         if (text == null || text.length() == 0) {
+            // we have no selection, get the whole text
             final ExtractedTextRequest etr = new ExtractedTextRequest();
             etr.flags = InputConnection.GET_TEXT_WITH_STYLES;
             etr.hintMaxChars = Integer.MAX_VALUE;
@@ -780,6 +1000,10 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
+        // This has no effect on the text field and does not change its content. It only
+        // makes
+        // TextView flash the text for a second based on indices contained in the
+        // argument.
         if (isConnected()) {
             mIC.commitCorrection(correctionInfo);
         }
@@ -794,7 +1018,9 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkConsistencyForDebug();
         CharSequence text = completionInfo.getText();
         if (DebugFlags.DEBUG_ENABLED)
-            Log.d(TAG, "committing completion of length " + text.length());
+            Log.d(TAG, "committing completion of length " + text.length()); // don't log actual text
+        // text should never be null, but just in case, it's better to insert nothing
+        // than to crash
         if (null == text)
             text = "";
         mCommittedTextBeforeComposingText.append(text);
@@ -820,6 +1046,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             final int checkLength = NUM_CHARS_TO_GET_BEFORE_CURSOR - 1;
             final String reference = prev.length() <= checkLength ? prev.toString()
                     : prev.subSequence(prev.length() - checkLength, prev.length()).toString();
+            // TODO: right now the following works because mComposingText holds the part of
+            // the
+            // composing text that is before the cursor, but this is very confusing. We
+            // should
+            // fix it.
             final StringBuilder internal = new StringBuilder()
                     .append(mCommittedTextBeforeComposingText).append(mComposingText);
             if (internal.length() > checkLength) {
@@ -833,6 +1064,14 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return NgramContextUtils.getNgramContextFromNthPreviousWord(prev, spacingAndPunctuations, n);
     }
 
+    /**
+     * Returns the text surrounding the cursor.
+     *
+     * @param spacingAndPunctuations the rules for spacing and punctuation
+     * @param script                 the script we consider to be writing words, as
+     *                               one of ScriptUtils.SCRIPT_*
+     * @return a range containing the text surrounding the cursor
+     */
     @Nullable
     public TextRange getWordRangeAtCursor(final SpacingAndPunctuations spacingAndPunctuations,
             final String script) {
@@ -859,9 +1098,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public boolean isCursorTouchingWord(final SpacingAndPunctuations spacingAndPunctuations,
             boolean checkTextAfter) {
         if (checkTextAfter && isCursorFollowedByWordCharacter(spacingAndPunctuations)) {
+            // If what's after the cursor is a word character, then we're touching a word.
             return true;
         }
         if (mComposingText.length() > 0) {
+            // a composing region should always count as a word
             return true;
         }
         return StringUtilsKt.endsWithWordCodepoint(mCommittedTextBeforeComposingText.toString(),
@@ -896,14 +1137,23 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public boolean revertDoubleSpacePeriod(final SpacingAndPunctuations spacingAndPunctuations) {
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
+        // Here we test whether we indeed have a period and a space before us. This
+        // should not
+        // be needed, but it's there just in case something went wrong.
         final CharSequence textBeforeCursor = getTextBeforeCursor(2, 0);
         if (!TextUtils.equals(spacingAndPunctuations.mSentenceSeparatorAndSpace,
                 textBeforeCursor)) {
+            // Theoretically we should not be coming here if there isn't ". " before the
+            // cursor, but the application may be changing the text while we are typing, so
+            // anything goes. We should not crash.
             Log.d(TAG, "Tried to revert double-space combo but we didn't find \""
                     + spacingAndPunctuations.mSentenceSeparatorAndSpace
                     + "\" just before the cursor.");
             return false;
         }
+        // Double-space results in ". ". A backspace to cancel this should result in a
+        // single
+        // space in the text field, so we replace ". " with a single space.
         deleteTextBeforeCursor(2);
         final String singleSpace = " ";
         commitText(singleSpace, 1);
@@ -913,9 +1163,20 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     public boolean revertSwapPunctuation() {
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
+        // Here we test whether we indeed have a space and something else before us.
+        // This should not
+        // be needed, but it's there just in case something went wrong.
         final CharSequence textBeforeCursor = getTextBeforeCursor(2, 0);
+        // NOTE: This does not work with surrogate pairs. Hopefully when the keyboard is
+        // able to
+        // enter surrogate pairs this code will have been removed.
         if (TextUtils.isEmpty(textBeforeCursor)
                 || (Constants.CODE_SPACE != textBeforeCursor.charAt(1))) {
+            // We may only come here if the application is changing the text while we are
+            // typing.
+            // This is quite a broken case, but not logically impossible, so we shouldn't
+            // crash,
+            // but some debugging log may be in order.
             Log.d(TAG, "Tried to revert a swap of punctuation but we didn't "
                     + "find a space just before the cursor.");
             return false;
@@ -926,22 +1187,79 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return true;
     }
 
+    /**
+     * Heuristic to determine if this is an expected update of the cursor.
+     * <p>
+     * Sometimes updates to the cursor position are late because of their
+     * asynchronous nature.
+     * This method tries to determine if this update is one, based on the values of
+     * the cursor
+     * position in the update, and the currently expected position of the cursor
+     * according to
+     * LatinIME's internal accounting. If this is not a belated expected update,
+     * then it should
+     * mean that the user moved the cursor explicitly.
+     * This is quite robust, but of course it's not perfect. In particular, it will
+     * fail in the
+     * case we get an update A, the user types in N characters so as to move the
+     * cursor to A+N but
+     * we don't get those, and then the user places the cursor between A and A+N,
+     * and we get only
+     * this update and not the ones in-between. This is almost impossible to achieve
+     * even trying
+     * very very hard.
+     *
+     * @param oldSelStart The value of the old selection in the update.
+     * @param newSelStart The value of the new selection in the update.
+     * @param oldSelEnd   The value of the old selection end in the update.
+     * @param newSelEnd   The value of the new selection end in the update.
+     * @return whether this is a belated expected update or not.
+     */
     public boolean isBelatedExpectedUpdate(final int oldSelStart, final int newSelStart,
             final int oldSelEnd, final int newSelEnd, final int composingSpanStart, final int composingSpanEnd) {
+        // This update is "belated" if we are expecting it. That is, mExpectedSelStart
+        // and
+        // mExpectedSelEnd match the new values that the TextView is updating TO.
         if (mExpectedSelStart == newSelStart && mExpectedSelEnd == newSelEnd) {
             if (composingSpanEnd - composingSpanStart < mComposingText.length()) {
+                // composing span is smaller than expected, maybe changed by the app (see #1141)
+                // larger composing span is ok, because mComposingText only contains the word up
+                // to the cursor
                 return false;
             }
             return true;
         }
+        // This update is not belated if mExpectedSelStart and mExpectedSelEnd match the
+        // old
+        // values, and one of newSelStart or newSelEnd is updated to a different value.
+        // In this
+        // case, it is likely that something other than the IME has moved the selection
+        // endpoint
+        // to the new value.
         if (mExpectedSelStart == oldSelStart && mExpectedSelEnd == oldSelEnd
                 && (oldSelStart != newSelStart || oldSelEnd != newSelEnd))
             return false;
+        // If neither of the above two cases hold, then the system may be having trouble
+        // keeping up
+        // with updates. If 1) the selection is a cursor, 2) newSelStart is between
+        // oldSelStart
+        // and mExpectedSelStart, and 3) newSelEnd is between oldSelEnd and
+        // mExpectedSelEnd, then
+        // assume a belated update.
         return (newSelStart == newSelEnd)
                 && (newSelStart - oldSelStart) * (mExpectedSelStart - newSelStart) >= 0
                 && (newSelEnd - oldSelEnd) * (mExpectedSelEnd - newSelEnd) >= 0;
     }
 
+    /**
+     * Looks at the text just before the cursor to find out if it looks like a URL.
+     * <p>
+     * The weakest point here is, if we don't have enough text bufferized, we may
+     * fail to realize
+     * we are in URL situation, but other places in this class have the same
+     * limitation and it
+     * does not matter too much in the practice.
+     */
     public boolean textBeforeCursorLooksLikeURL() {
         return StringUtils.lastPartLooksLikeURL(mCommittedTextBeforeComposingText);
     }
@@ -996,10 +1314,40 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return mCommittedTextBeforeComposingText.subSequence(startIndex, mCommittedTextBeforeComposingText.length());
     }
 
+    /**
+     * Looks at the text just before the cursor to find out if we are inside a
+     * double quote.
+     * <p>
+     * As with #textBeforeCursorLooksLikeURL, this is dependent on how much text we
+     * have cached.
+     * However this won't be a concrete problem in most situations, as the cache is
+     * almost always
+     * long enough for this use.
+     */
     public boolean isInsideDoubleQuoteOrAfterDigit() {
         return StringUtils.isInsideDoubleQuoteOrAfterDigit(mCommittedTextBeforeComposingText);
     }
 
+    /**
+     * Try to get the text from the editor to expose lies the framework may have
+     * been
+     * telling us. Concretely, when the device rotates and when the keyboard reopens
+     * in the same
+     * text field after having been closed with the back key, the frameworks tells
+     * us about where
+     * the cursor used to be initially in the editor at the time it first received
+     * the focus; this
+     * may be completely different from the place it is upon rotation. Since we
+     * don't have any
+     * means to get the real value, try at least to ask the text view for some
+     * characters and
+     * detect the most damaging cases: when the cursor position is declared to be
+     * much smaller
+     * than it really is.
+     * (renamed the method, because we clearly ask the editorInfo to provide initial
+     * selection, no reason to complain about it
+     * being initial and thus possibly outdated)
+     */
     public void tryFixIncorrectCursorPosition() {
         mIC = mParent.getCurrentInputConnection();
         final CharSequence textBeforeCursor = getTextBeforeCursor(
@@ -1007,18 +1355,46 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         final CharSequence selectedText = isConnected() ? mIC.getSelectedText(0 /* flags */) : null;
         if (null == textBeforeCursor ||
                 (!TextUtils.isEmpty(selectedText) && mExpectedSelEnd == mExpectedSelStart)) {
+            // If textBeforeCursor is null, we have no idea what kind of text field we have
+            // or if
+            // thinking about the "cursor position" actually makes any sense. In this case
+            // we
+            // remember a meaningless cursor position. Contrast this with an empty string,
+            // which is
+            // valid and should mean the cursor is at the start of the text.
+            // Also, if we expect we don't have a selection but we DO have non-empty
+            // selected text,
+            // then the framework lied to us about the cursor position. In this case, we
+            // should just
+            // revert to the most basic behavior possible for the next action (backspace in
+            // particular comes to mind), so we remember a meaningless cursor position which
+            // should
+            // result in degraded behavior from the next input.
+            // Interestingly, in either case, chances are any action the user takes next
+            // will result
+            // in a call to onUpdateSelection, which should set things right.
             mExpectedSelStart = mExpectedSelEnd = Constants.NOT_A_CURSOR_POSITION;
         } else {
             final int textLength = textBeforeCursor.length();
             if (textLength < Constants.EDITOR_CONTENTS_CACHE_SIZE
                     && (textLength > mExpectedSelStart
                             || mExpectedSelStart < Constants.EDITOR_CONTENTS_CACHE_SIZE)) {
+                // It should not be possible to have only one of those variables be
+                // NOT_A_CURSOR_POSITION, so if they are equal, either the selection is
+                // zero-sized
+                // (simple cursor, no selection) or there is no cursor/we don't know its pos
                 final boolean wasEqual = mExpectedSelStart == mExpectedSelEnd;
                 mExpectedSelStart = textLength;
+                // We can't figure out the value of mLastSelectionEnd :(
+                // But at least if it's smaller than mLastSelectionStart something is wrong,
+                // and if they used to be equal we also don't want to make it look like there is
+                // a
+                // selection.
                 if (wasEqual || mExpectedSelStart > mExpectedSelEnd) {
                     mExpectedSelEnd = mExpectedSelStart;
                 }
             } else {
+                // better re-read the correct position instead of guessing from incomplete data
                 reloadCursorPosition();
             }
         }
@@ -1041,6 +1417,9 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return mExpectedSelEnd;
     }
 
+    /**
+     * @return whether there is a selection currently active.
+     */
     public boolean hasSelection() {
         return mExpectedSelEnd != mExpectedSelStart;
     }
@@ -1049,6 +1428,25 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         return INVALID_CURSOR_POSITION != mExpectedSelStart;
     }
 
+    /**
+     * Requests the editor to call back
+     * {@link InputMethodManager#updateCursorAnchorInfo}.
+     * 
+     * @param enableMonitor            {@code true} to request the editor to call
+     *                                 back the method whenever the
+     *                                 cursor/anchor position is changed.
+     * @param requestImmediateCallback {@code true} to request the editor to call
+     *                                 back the method
+     *                                 as soon as possible to notify the current
+     *                                 cursor/anchor position to the input method.
+     * @return {@code true} if the request is accepted. Returns {@code false}
+     *         otherwise, which
+     *         includes "not implemented" or "rejected" or "temporarily unavailable"
+     *         or whatever which
+     *         prevents the application from fulfilling the request. (TODO: Improve
+     *         the API when it turns
+     *         out that we actually need more detailed error codes)
+     */
     public boolean requestCursorUpdates(final boolean enableMonitor, final boolean requestImmediateCallback) {
         mIC = mParent.getCurrentInputConnection();
         if (!isConnected()) {
@@ -1057,21 +1455,5 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         final int cursorUpdateMode = (enableMonitor ? InputConnection.CURSOR_UPDATE_MONITOR : 0)
                 | (requestImmediateCallback ? InputConnection.CURSOR_UPDATE_IMMEDIATE : 0);
         return mIC.requestCursorUpdates(cursorUpdateMode);
-    }
-
-    // --- HELPER METHOD FOR ADDED BLACKLIST CONTROL ---
-    /**
-     * NOTE: You need to connect this method to LeanType's actual blacklist logic.
-     * For now, it returns false as an example.
-     */
-    private boolean isWordBlocked(String text) {
-        if (TextUtils.isEmpty(text)) return false;
-        
-        String normalizedWord = text.trim().toLowerCase();
-        
-        // Example usage:
-        // return BlacklistManager.getInstance().isBlocked(normalizedWord);
-        
-        return false; 
     }
 }

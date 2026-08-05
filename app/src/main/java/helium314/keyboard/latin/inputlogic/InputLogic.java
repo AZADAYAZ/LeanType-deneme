@@ -1772,7 +1772,7 @@ public final class InputLogic {
      * @param inputTransaction The transaction in progress.
      */
     private void handleBackspaceEvent(final Event event, final InputTransaction inputTransaction) {
-     final String currentKeyboardScript = inputTransaction.getSettingsValues().mCurrentKeyboardScript;
+        final String currentKeyboardScript = inputTransaction.getSettingsValues().mCurrentKeyboardScript;
         mSpaceState = SpaceState.NONE;
         mDeleteCount++;
 
@@ -1793,10 +1793,6 @@ public final class InputLogic {
                 restartSuggestionsOnWordTouchedByCursor(inputTransaction.getSettingsValues());
             }
             return;
-        }
-
-        if (mConnection.getCodePointBeforeCursor() == ' ') {
-            mSpaceState = SpaceState.NONE;
         }
 
         if (mLastExpandedText != null && !event.isKeyRepeat()
