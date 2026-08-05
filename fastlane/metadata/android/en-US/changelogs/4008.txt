@@ -1,0 +1,1 @@
+- Fixed Translation Plugin loading failure caused by Proguard/R8 interface method optimization.
