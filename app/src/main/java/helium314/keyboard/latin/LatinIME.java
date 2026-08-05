@@ -785,6 +785,7 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onConfigurationChanged(final Configuration conf) {
+        super.onConfigurationChanged(conf);
         ScreenProfileProvider.invalidateCache();
         loadSettings();
         final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
@@ -812,7 +813,6 @@ public class LatinIME extends InputMethodService implements
         // KeyboardSwitcher will check by itself if theme update is necessary
         mKeyboardSwitcher.updateKeyboardTheme(KtxKt.getDisplayContext(this));
         mKeyboardSwitcher.onConfigurationChanged(conf);
-        super.onConfigurationChanged(conf);
     }
 
     @Override
