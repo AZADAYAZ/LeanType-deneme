@@ -308,7 +308,11 @@ object TextExpanderUtils {
                     if (match != null && match.value.isNotEmpty()) {
                         val matchedString = match.value
                         val replaced = regex.replace(matchedString, entry.template)
-                        return ExpandedResult(expand(replaced, context), prefix.length, matchedString)
+                        val extraPrefix = if (word != null && matchedString.endsWith(word, ignoreCase = true)) {
+                            matchedString.length - word.length
+                        } else 0
+                        val effectivePrefixLength = maxOf(prefix.length, extraPrefix)
+                        return ExpandedResult(expand(replaced, context), effectivePrefixLength, matchedString)
                     }
                 } catch (e: java.lang.Exception) {
                     // ignore
