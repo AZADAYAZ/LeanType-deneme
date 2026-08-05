@@ -52,6 +52,7 @@ public class SettingsValues {
         public final boolean mHasHardwareKeyboard;
         public final String mPhysicalKeyboardSuggestionShortcuts;
         public final int mDisplayOrientation;
+        public final helium314.keyboard.latin.utils.ScreenProfile mScreenProfile;
         // From preferences
         public final boolean mAutoCap;
         public final boolean mVibrateOn;
@@ -206,6 +207,7 @@ public class SettingsValues {
                 mLocale = ConfigurationCompatKt.locale(res.getConfiguration());
                 mCurrentKeyboardScript = currentKeyboardScript;
                 mDisplayOrientation = res.getConfiguration().orientation;
+                mScreenProfile = helium314.keyboard.latin.utils.ScreenProfileProvider.getScreenProfile(context, res.getConfiguration());
                 final InputMethodSubtype selectedSubtype = SubtypeSettings.INSTANCE.getSelectedSubtype(prefs);
 
                 // Store the input attributes
@@ -336,7 +338,7 @@ public class SettingsValues {
                 final boolean isLandscape = mDisplayOrientation == Configuration.ORIENTATION_LANDSCAPE;
                 final float displayWidthDp = TypedValueCompat.pxToDp(res.getDisplayMetrics().widthPixels,
                                 res.getDisplayMetrics());
-                mIsSplitKeyboardEnabled = Settings.readSplitKeyboardEnabled(prefs, isLandscape);
+                mIsSplitKeyboardEnabled = Settings.readSplitKeyboardEnabled(prefs, isLandscape, mScreenProfile);
                 // determine spacerWidth from display width and scale setting
                 mSplitKeyboardSpacerRelativeWidth = mIsSplitKeyboardEnabled
                                 ? Math.min(Math.max((displayWidthDp - 600) / 600f + 0.15f, 0.15f), 0.35f)
@@ -390,7 +392,7 @@ public class SettingsValues {
                 mIncognitoModeEnabled = prefs.getBoolean(Settings.PREF_ALWAYS_INCOGNITO_MODE,
                                 Defaults.PREF_ALWAYS_INCOGNITO_MODE) || mInputAttributes.mNoLearning
                                 || mInputAttributes.mIsPasswordField;
-                mKeyboardHeightScale = Settings.readHeightScale(prefs, isLandscape);
+                mKeyboardHeightScale = Settings.readHeightScale(prefs, isLandscape, mScreenProfile);
                 mSpaceSwipeHorizontal = Settings.readHorizontalSpaceSwipe(prefs);
                 mSpaceSwipeVertical = Settings.readVerticalSpaceSwipe(prefs);
                 mLanguageSwipeDistance = prefs.getInt(Settings.PREF_LANGUAGE_SWIPE_DISTANCE,

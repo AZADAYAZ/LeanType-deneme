@@ -82,6 +82,7 @@ import helium314.keyboard.latin.utils.KtxKt;
 import helium314.keyboard.latin.utils.LeakGuardHandlerWrapper;
 import helium314.keyboard.latin.utils.Log;
 import helium314.keyboard.latin.utils.RecapitalizeMode;
+import helium314.keyboard.latin.utils.ScreenProfileProvider;
 import helium314.keyboard.latin.utils.StatsUtils;
 import helium314.keyboard.latin.utils.StatsUtilsManager;
 import helium314.keyboard.latin.utils.SubtypeLocaleUtils;
@@ -784,6 +785,7 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onConfigurationChanged(final Configuration conf) {
+        ScreenProfileProvider.invalidateCache();
         final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
         final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
         if (lang != null && !lang.isEmpty() && !"system".equals(lang)) {
@@ -803,24 +805,15 @@ public class LatinIME extends InputMethodService implements
         }
         if (settingsValues.mHasHardwareKeyboard != Settings.readHasHardwareKeyboard(conf)) {
             // If the state of having a hardware keyboard changed, then we want to reload
-            // the
-            // settings to adjust for that.
-            // TODO: we should probably do this unconditionally here, rather than only when
-            // we
-            // have a change in hardware keyboard configuration.
+            // the settings to adjust for that.
             loadSettings();
             if (isImeSuppressedByHardwareKeyboard()) {
-                // We call cleanupInternalStateForFinishInput() because it's the right thing to
-                // do;
-                // however, it seems at the moment the framework is passing us a seemingly valid
-                // but actually non-functional InputConnection object. So if this bug ever gets
-                // fixed we'll be able to remove the composition, but until it is this code is
-                // actually not doing much.
                 cleanupInternalStateForFinishInput();
             }
         }
         // KeyboardSwitcher will check by itself if theme update is necessary
         mKeyboardSwitcher.updateKeyboardTheme(KtxKt.getDisplayContext(this));
+        mKeyboardSwitcher.onConfigurationChanged(conf);
         super.onConfigurationChanged(conf);
     }
 
