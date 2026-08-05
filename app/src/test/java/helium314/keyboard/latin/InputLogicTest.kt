@@ -306,6 +306,36 @@ class InputLogicTest {
         assertEquals("ภาษา", lastNgramContext)
     }
 
+    @Test fun `immediate regex expansion triggers for symbol typed alone`() {
+        reset()
+        latinIME.prefs().edit().apply {
+            putBoolean(helium314.keyboard.latin.utils.TextExpanderUtils.PREF_ENABLED, true)
+            putBoolean(helium314.keyboard.latin.utils.TextExpanderUtils.PREF_IMMEDIATE, true)
+        }.commit()
+        val shortcuts = mapOf("${helium314.keyboard.latin.utils.TextExpanderUtils.REGEX_PREFIX}∆+" to helium314.keyboard.latin.utils.TextExpanderUtils.ShortcutEntry("Expanded Text", ""))
+        helium314.keyboard.latin.utils.TextExpanderUtils.saveShortcuts(latinIME, shortcuts)
+
+        typeNoAssert("∆")
+
+        assertEquals("Expanded Text", text)
+        assertEquals("", composingText)
+    }
+
+    @Test fun `immediate regex expansion triggers for currency symbol typed alone`() {
+        reset()
+        latinIME.prefs().edit().apply {
+            putBoolean(helium314.keyboard.latin.utils.TextExpanderUtils.PREF_ENABLED, true)
+            putBoolean(helium314.keyboard.latin.utils.TextExpanderUtils.PREF_IMMEDIATE, true)
+        }.commit()
+        val shortcuts = mapOf("${helium314.keyboard.latin.utils.TextExpanderUtils.REGEX_PREFIX}£+" to helium314.keyboard.latin.utils.TextExpanderUtils.ShortcutEntry("Pound Sterling", ""))
+        helium314.keyboard.latin.utils.TextExpanderUtils.saveShortcuts(latinIME, shortcuts)
+
+        typeNoAssert("£")
+
+        assertEquals("Pound Sterling", text)
+        assertEquals("", composingText)
+    }
+
     // see issue 1551 (debug only)
     @Test fun deleteHangul() {
         reset()

@@ -290,16 +290,28 @@ object TextExpanderUtils {
             if (item.isRegex) {
                 val regex = item.regex ?: continue
                 val prefix = entry.prefix
-                val expectedSuffix = if (word != null) prefix + word else item.cleanKey
-                if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
-                    try {
-                        if (regex.matches(expectedSuffix)) {
-                            val replaced = regex.replace(expectedSuffix, entry.template)
-                            return ExpandedResult(expand(replaced, context), prefix.length, expectedSuffix)
+                if (word != null) {
+                    val expectedSuffix = prefix + word
+                    if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
+                        try {
+                            if (regex.matches(expectedSuffix)) {
+                                val replaced = regex.replace(expectedSuffix, entry.template)
+                                return ExpandedResult(expand(replaced, context), prefix.length, expectedSuffix)
+                            }
+                        } catch (e: java.lang.Exception) {
+                            // ignore
                         }
-                    } catch (e: java.lang.Exception) {
-                        // ignore
                     }
+                }
+                try {
+                    val match = regex.findAll(textBeforeCursor).lastOrNull { it.range.last == textBeforeCursor.length - 1 }
+                    if (match != null && match.value.isNotEmpty()) {
+                        val matchedString = match.value
+                        val replaced = regex.replace(matchedString, entry.template)
+                        return ExpandedResult(expand(replaced, context), prefix.length, matchedString)
+                    }
+                } catch (e: java.lang.Exception) {
+                    // ignore
                 }
             } else {
                 val prefix = entry.prefix
