@@ -1,10 +1,14 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources xmlns:ns0="urn:oasis:names:tc:xliff:document:1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (C) 2015 The Android Open Source Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="spoken_use_headphones">"Şifre tuşlarının sesli okunmasını dinlemek için kulaklık takın."</string>
     <string name="spoken_current_text_is">"Mevcut metin: %s"</string>
     <string name="spoken_no_text_entered">"Metin girilmedi"</string>
-    <string name="spoken_auto_correct">"<ns0:g id="KEY_NAME">%1$s</ns0:g>, <ns0:g id="ORIGINAL_WORD">%2$s</ns0:g> kelimesini <ns0:g id="CORRECTED_WORD">%3$s</ns0:g> olarak düzeltir"</string>
-    <string name="spoken_auto_correct_obscured">"<ns0:g id="KEY_NAME">%1$s</ns0:g> otomatik düzeltme yapar"</string>
+    <string name="spoken_auto_correct">"<xliff:g id="KEY_NAME">%1$s</xliff:g>, <xliff:g id="ORIGINAL_WORD">%2$s</xliff:g> kelimesini <xliff:g id="CORRECTED_WORD">%3$s</xliff:g> olarak düzeltir"</string>
+    <string name="spoken_auto_correct_obscured">"<xliff:g id="KEY_NAME">%1$s</xliff:g> otomatik düzeltme yapar"</string>
     <string name="spoken_empty_suggestion">"Öneri yok"</string>
     <string name="spoken_description_unknown">"Bilinmeyen karakter"</string>
     <string name="spoken_description_shift">"Üst karakter"</string>
@@ -35,7 +39,7 @@
     <string name="spoken_description_mode_phone">"Telefon modu"</string>
     <string name="spoken_description_mode_phone_shift">"Telefon sembolleri modu"</string>
     <string name="announce_keyboard_hidden">"Klavye gizli"</string>
-    <string name="announce_keyboard_mode">"<ns0:g id="KEYBOARD_MODE">%s</ns0:g> klavyesi görüntüleniyor"</string>
+    <string name="announce_keyboard_mode">"<xliff:g id="KEYBOARD_MODE">%s</xliff:g> klavyesi görüntüleniyor"</string>
     <string name="keyboard_mode_date">"tarih"</string>
     <string name="keyboard_mode_date_time">"tarih ve saat"</string>
     <string name="keyboard_mode_email">"e-posta"</string>
@@ -55,13 +59,11 @@
     <string name="spoken_description_emoji_category_eight_travel_places">"Seyahat ve Yerler"</string>
     <string name="spoken_description_emoji_category_eight_activity">"Etkinlik"</string>
     <string name="spoken_description_emoji_category_emoticons">"İfadeler"</string>
-    <string name="spoken_description_upper_case">"Büyük Harf <ns0:g id="LOWER_LETTER">%s</ns0:g>"</string>
+    <string name="spoken_description_upper_case">"Büyük Harf <xliff:g id="LOWER_LETTER">%s</xliff:g>"</string>
     <string name="spoken_letter_0049">"Büyük Harf I"</string>
     <string name="spoken_letter_0130">"Büyük Harf I, üst noktalı"</string>
     <string name="spoken_open_popup_keys_keyboard">"Alternatif karakterler kullanılabilir"</string>
     <string name="spoken_close_popup_keys_keyboard">"Alternatif karakterler yoksayılır"</string>
     <string name="spoken_open_more_suggestions">"Alternatif öneriler kullanılabilir"</string>
     <string name="spoken_close_more_suggestions">"Alternatif öneriler yoksayılır"</string>
-    <string name="spoken_clipboard_suggestion">Pano önerisi</string>
-    <string name="spoken_description_emoji_category_eight_smiley">Gülen yüz</string>
 </resources>
