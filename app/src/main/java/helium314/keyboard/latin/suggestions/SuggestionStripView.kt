@@ -428,6 +428,19 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         updateSplitToolbarState()
     }
 
+    fun pickSuggestionByVisualPosition(positionInStrip: Int): Boolean {
+        if (!suggestionsStrip.isVisible) return false
+        val wordView = wordViews.getOrNull(positionInStrip) ?: return false
+        if (!wordView.isEnabled || !wordView.isVisible) return false
+        val tag = wordView.tag as? Int ?: return false
+        if (tag < suggestedWords.size()) {
+            val wordInfo = suggestedWords.getInfo(tag)
+            listener.pickSuggestionManually(wordInfo)
+            return true
+        }
+        return false
+    }
+
     fun setExternalSuggestionView(view: View?, addCloseButton: Boolean) {
         if (isShowingEmojiSuggestions && !helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes) {
             isShowingEmojiSuggestions = false

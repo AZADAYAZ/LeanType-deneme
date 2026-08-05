@@ -50,6 +50,7 @@ public class SettingsValues {
         public final Locale mLocale;
         public final String mCurrentKeyboardScript;
         public final boolean mHasHardwareKeyboard;
+        public final String mPhysicalKeyboardSuggestionShortcuts;
         public final int mDisplayOrientation;
         // From preferences
         public final boolean mAutoCap;
@@ -212,6 +213,7 @@ public class SettingsValues {
 
                 // Get the settings preferences
                 mToolbarMode = Settings.readToolbarMode(prefs);
+                mPhysicalKeyboardSuggestionShortcuts = prefs.getString(Settings.PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS, Defaults.PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS);
                 mToolbarHidingGlobal = prefs.getBoolean(Settings.PREF_TOOLBAR_HIDING_GLOBAL,
                                 Defaults.PREF_TOOLBAR_HIDING_GLOBAL);
                 mSplitToolbar = prefs.getBoolean(Settings.PREF_SPLIT_TOOLBAR, Defaults.PREF_SPLIT_TOOLBAR);

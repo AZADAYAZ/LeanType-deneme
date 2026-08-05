@@ -96,6 +96,7 @@ fun AdvancedSettingsScreen(
         Settings.PREF_SPACE_TO_CHANGE_LANG,
         Settings.PREFS_LONG_PRESS_SYMBOLS_FOR_NUMPAD,
         Settings.PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY,
+        Settings.PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS,
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) Settings.PREF_SHOW_SETUP_WIZARD_ICON else null,
         Settings.PREF_ABC_AFTER_SYMBOL_SPACE,
         Settings.PREF_ABC_AFTER_NUMPAD_SPACE,
@@ -160,6 +161,16 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
         R.string.prefs_enable_emoji_alt_physical_key_summary)
     {
         SwitchPreference(it, Defaults.PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY)
+    },
+    Setting(context, Settings.PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS, R.string.prefs_physical_keyboard_suggestion_shortcuts,
+        R.string.prefs_physical_keyboard_suggestion_shortcuts_summary) { setting ->
+        val items = listOf(
+            stringResource(R.string.physical_keyboard_shortcut_disabled) to "disabled",
+            stringResource(R.string.physical_keyboard_shortcut_alt) to "alt",
+            stringResource(R.string.physical_keyboard_shortcut_ctrl) to "ctrl",
+            stringResource(R.string.physical_keyboard_shortcut_number) to "number",
+        )
+        ListPreference(setting, items, Defaults.PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS)
     },
     Setting(context, Settings.PREF_SHOW_SETUP_WIZARD_ICON, R.string.show_setup_wizard_icon, R.string.show_setup_wizard_icon_summary) {
         val ctx = LocalContext.current

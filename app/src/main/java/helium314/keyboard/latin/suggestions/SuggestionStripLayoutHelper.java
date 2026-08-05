@@ -99,6 +99,7 @@ final class SuggestionStripLayoutHelper {
     private static final int AUTO_CORRECT_BOLD = 0x01;
     private static final int AUTO_CORRECT_UNDERLINE = 0x02;
     private static final int VALID_TYPED_WORD_BOLD = 0x04;
+    private static final String[] SUPERSCRIPT_DIGITS = new String[] { "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹" };
 
     public SuggestionStripLayoutHelper(final Context context, final AttributeSet attrs,
             final int defStyle, final ArrayList<TextView> wordViews,
@@ -524,7 +525,12 @@ final class SuggestionStripLayoutHelper {
             // {@link TextView#getTag()} is used to get the index in suggestedWords at
             // {@link SuggestionStripView#onClick(View)}.
             wordView.setTag(indexInSuggestedWords);
-            wordView.setText(getStyledSuggestedWord(suggestedWords, indexInSuggestedWords));
+            CharSequence label = getStyledSuggestedWord(suggestedWords, indexInSuggestedWords);
+            final boolean showShortcuts = !Settings.getValues().mPhysicalKeyboardSuggestionShortcuts.equals("disabled");
+            if (showShortcuts && positionInStrip >= 0 && positionInStrip < SUPERSCRIPT_DIGITS.length && !TextUtils.isEmpty(label)) {
+                label = label.toString() + " " + SUPERSCRIPT_DIGITS[positionInStrip];
+            }
+            wordView.setText(label);
             wordView.setTextColor(getSuggestionTextColor(suggestedWords, indexInSuggestedWords));
 
             if (emojiTypeface != null && StringUtilsKt.isEmoji(wordView.getText())) {

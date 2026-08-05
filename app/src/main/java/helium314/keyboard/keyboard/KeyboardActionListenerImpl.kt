@@ -80,6 +80,21 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         if (!ProductionFlags.IS_HARDWARE_KEYBOARD_SUPPORTED)
             return false
 
+        val mode = settings.current.mPhysicalKeyboardSuggestionShortcuts
+        if (mode != "disabled" && keyCode >= KeyEvent.KEYCODE_1 && keyCode <= KeyEvent.KEYCODE_9) {
+            val visualPos = keyCode - KeyEvent.KEYCODE_1
+            val isMatchingTrigger = when (mode) {
+                "alt" -> keyEvent.isAltPressed && !keyEvent.isCtrlPressed
+                "ctrl" -> keyEvent.isCtrlPressed && !keyEvent.isAltPressed
+                "number" -> inputLogic.isComposingWord || (keyboardSwitcher.suggestionStripView?.visibility == android.view.View.VISIBLE)
+                else -> false
+            }
+            if (isMatchingTrigger) {
+                val picked = keyboardSwitcher.suggestionStripView?.pickSuggestionByVisualPosition(visualPos) ?: false
+                if (picked) return true
+            }
+        }
+
         val event: Event
         if (settings.current.mLocale.language == "ko") { // todo: this does not appear to be the right place
             val subtype = keyboardSwitcher.keyboard?.mId?.mSubtype ?: RichInputMethodManager.getInstance().currentSubtype

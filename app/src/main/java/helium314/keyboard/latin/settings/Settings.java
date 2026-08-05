@@ -97,6 +97,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_SHOW_EMOJI_KEY = "show_emoji_key";
     public static final String PREF_VARIABLE_TOOLBAR_DIRECTION = "var_toolbar_direction";
     public static final String PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = "only_toolbar_with_hw_keyboard";
+    public static final String PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS = "pref_physical_keyboard_suggestion_shortcuts";
     public static final String PREF_ADDITIONAL_SUBTYPES = "additional_subtypes";
 
     public static final String PREF_ENABLE_SPELL_CHECKER_SERVICE = "enable_spell_checker_service";
