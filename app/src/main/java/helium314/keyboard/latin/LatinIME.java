@@ -786,6 +786,7 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onConfigurationChanged(final Configuration conf) {
         ScreenProfileProvider.invalidateCache();
+        loadSettings();
         final android.content.SharedPreferences prefs = DeviceProtectedUtils.getSharedPreferences(this);
         final String lang = prefs.getString(Settings.PREF_APP_LANGUAGE, Defaults.PREF_APP_LANGUAGE);
         if (lang != null && !lang.isEmpty() && !"system".equals(lang)) {
@@ -804,9 +805,6 @@ public class LatinIME extends InputMethodService implements
             mInputLogic.onOrientationChange(mSettings.getCurrent());
         }
         if (settingsValues.mHasHardwareKeyboard != Settings.readHasHardwareKeyboard(conf)) {
-            // If the state of having a hardware keyboard changed, then we want to reload
-            // the settings to adjust for that.
-            loadSettings();
             if (isImeSuppressedByHardwareKeyboard()) {
                 cleanupInternalStateForFinishInput();
             }
