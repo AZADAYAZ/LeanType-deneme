@@ -375,15 +375,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
      * @param newCursorPosition The new cursor position around the text.
      */
     public void commitText(final CharSequence text, final int newCursorPosition) {
-        // --- ADDED BLACKLIST CONTROL ---
-        if (text != null && isWordBlocked(text.toString())) {
-            mComposingText.setLength(0);
-            if (isConnected()) {
-                mIC.commitText("", 1);
-            }
-            return;
-        }
-        // ------------------------------------
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
@@ -880,15 +871,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     // return whether the text was (probably) set correctly
     // unfortunately this is necessary in some cases
     public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
-        // --- ADDED BLACKLIST CONTROL ---
-        if (text != null && isWordBlocked(text.toString())) {
-            mComposingText.setLength(0);
-            if (isConnected()) {
-                mIC.setComposingText("", 1);
-            }
-            return false;
-        }
-        // ------------------------------------
         if (DEBUG_BATCH_NESTING)
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
@@ -1473,18 +1455,5 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         final int cursorUpdateMode = (enableMonitor ? InputConnection.CURSOR_UPDATE_MONITOR : 0)
                 | (requestImmediateCallback ? InputConnection.CURSOR_UPDATE_IMMEDIATE : 0);
         return mIC.requestCursorUpdates(cursorUpdateMode);
-    }
-
-    // --- HELPER METHOD FOR ADDED BLACKLIST CONTROL ---
-    /**
-     * NOTE: You need to connect this method to LeanType's actual blacklist logic.
-     * For now, it returns false as an example.
-     */
-    private boolean isWordBlocked(String text) {
-        if (android.text.TextUtils.isEmpty(text)) return false;
-        String normalizedWord = text.trim().toLowerCase();
-        // Example usage:
-        // return BlacklistManager.getInstance().isBlocked(normalizedWord);
-        return false;
     }
 }
