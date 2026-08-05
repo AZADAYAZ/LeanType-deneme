@@ -12,6 +12,7 @@
 - **Physical Keyboard Suggestion Shortcuts**: Number hints (`¹`, `²`, `³`) on suggestion strip entries now correctly display only when a physical keyboard is actively in use (soft keyboard hidden), fixing false positives on devices (e.g. POCO/MIUI) where Android framework misreports hardware keyboard presence.
 
 ### 🐛 Bug Fixes & Stability Improvements
+- **Text Expander Regex Expansion**: Fixed immediate text expansion failing for standalone non-letter symbols (e.g. `∆`, `£`) and symbol-prefixed regex patterns.
 - **Translation Plugin Loading**: Fixed `AbstractMethodError` when importing dynamic translation plugin APKs on minified release builds by explicitly preserving `ITranslationProvider` interface methods in Proguard/R8 rules.
 - **Suggestion Shortcut Hints**: Fixed `¹²³` digit hints appearing on suggestion strip even without a physical keyboard connected, caused by unreliable `Configuration.keyboard` / `hardKeyboardHidden` flags on certain OEM devices.
 
