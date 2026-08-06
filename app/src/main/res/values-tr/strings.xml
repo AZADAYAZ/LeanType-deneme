@@ -1166,14 +1166,14 @@ Yeni sözlük:
     <string name="hidden_features_text">cihaz korumalı depolama</string>
     <!-- Hidden features text (might get removed in the future) -->
     <string name="hidden_features_message">► Sabitlenmiş araç çubuğu tuşlarına uzun basmak ek işlevler sağlar: &lt;br&gt;
-\n\t• pano &amp;#65515; yapıştır &lt;br&gt;
-\n\t• sola/sağa taşı &amp;#65515; sözcük sola/sağa &lt;br&gt;
-\n\t• yukarı/aşağı taşı &amp;#65515; sayfa yukarı/aşağı &lt;br&gt;
-\n\t• sözcük sola/sağa &amp;#65515; satır başı/sonu &lt;br&gt;
-\n\t• sayfa yukarı/aşağı &amp;#65515; sayfa başı/sonu &lt;br&gt;
-\n\t• kopyala &amp;#65515; kes &lt;br&gt;
-\n\t• sözcük seç &amp;#8596; tümünü seç &lt;br&gt;
-\n\t• geri al &amp;#8596; yinele &lt;br&gt; &lt;br&gt;
+\n\t• pano ￫ yapıştır &lt;br&gt;
+\n\t• sola/sağa taşı ￫ sözcük sola/sağa &lt;br&gt;
+\n\t• yukarı/aşağı taşı ￫ sayfa yukarı/aşağı &lt;br&gt;
+\n\t• sözcük sola/sağa ￫ satır başı/sonu &lt;br&gt;
+\n\t• sayfa yukarı/aşağı ￫ sayfa başı/sonu &lt;br&gt;
+\n\t• kopyala ￫ kes &lt;br&gt;
+\n\t• sözcük seç ↔ tümünü seç &lt;br&gt;
+\n\t• geri al ↔ yinele &lt;br&gt; &lt;br&gt;
 \n► Öneri şeridi araç çubuğundaki tuşlara uzun basmak, bunları öneri şeridine sabitler. &lt;br&gt; &lt;br&gt;
 \n► Pano Görünümü, Emoji Görünümü, Tek Elle Mod, Ayarlar veya Dil Değiştirme\'ye erişmek için Virgül tuşuna uzun basın: &lt;br&gt;
 \n\t• İlgili tuş etkinse Emoji Görünümü ve Dil Değiştirme kaybolur; &lt;br&gt;
@@ -1215,9 +1215,9 @@ Yeni sözlük:
     <!-- Label for soft enter key when it performs SEARCH action.  Must be short to fit on key. 5 chars or less is preferable. -->
     <string name="label_search_key">Ara</string>
     <!-- Label for "Pause" key of phone number keyboard.  Must be short to fit on key. 5 chars or less is preferable. -->
-    <string name="label_pause_key" tools:keep="@string/label_pause_key">Pause</string>
+    <string name="label_pause_key" tools:keep="@string/label_pause_key">Dur</string>
     <!-- Label for "Wait" key of phone number keyboard.  Must be short to fit on key. 5 chars or less is preferable. -->
-    <string name="label_wait_key" tools:keep="@string/label_wait_key">Wait</string>
+    <string name="label_wait_key" tools:keep="@string/label_wait_key">Bekle</string>
     <!-- Label for enter key, currently used only for showing the icon name -->
     <string name="label_enter_key" tools:keep="@string/label_enter_key">Enter</string>
     <!-- Label for tabulator key, currently used only for showing the icon name -->
@@ -1233,23 +1233,23 @@ Yeni sözlük:
     <!-- Label for the short space key (in number layouts), currently used only for showing the icon name -->
     <string name="label_space_key_for_number_layout" tools:keep="@string/label_space_key_for_number_layout">Space (number layout)</string>
     <!-- Label for key to stop onehanded mode, currently used only for showing the icon name -->
-    <string name="label_stop_onehanded_mode_key" tools:keep="@string/label_stop_onehanded_mode_key">End one-handed mode</string>
+    <string name="label_stop_onehanded_mode_key" tools:keep="@string/label_stop_onehanded_mode_key">Tek elle modunu sonlandır</string>
     <!-- Label for key to resize onehanded mode, currently used only for showing the icon name -->
-    <string name="label_resize_onehanded_key" tools:keep="@string/label_resize_onehanded_key">Resize one-handed mode</string>
+    <string name="label_resize_onehanded_key" tools:keep="@string/label_resize_onehanded_key">Tek elle kullanım modunu yeniden boyutlandır</string>
     <!-- Label for key to switch side of onehanded mode, currently used only for showing the icon name -->
-    <string name="label_switch_onehanded_key" tools:keep="@string/label_switch_onehanded_key">Switch one-handed mode side</string>
+    <string name="label_switch_onehanded_key" tools:keep="@string/label_switch_onehanded_key">Tek elle kullanım tarafını değiştir</string>
     <!-- Label for voice key when disabled, currently used only for showing the icon name -->
-    <string name="label_shortcut_key_disabled" tools:keep="@string/label_shortcut_key_disabled">Voice input disabled</string>
+    <string name="label_shortcut_key_disabled" tools:keep="@string/label_shortcut_key_disabled">Ses girişi devre dışı</string>
     <!-- Label for toolbar key, currently used only for showing the icon name -->
-    <string name="label_toolbar_key" tools:keep="@string/label_toolbar_key">Show / hide toolbar</string>
+    <string name="label_toolbar_key" tools:keep="@string/label_toolbar_key">Araç çubuğunu göster/gizle</string>
     <!-- Label for language switch key, currently used only for showing the icon name -->
     <string name="label_language_switch_key" tools:keep="@string/label_language_switch_key" translatable="false">@string/show_language_switch_key</string>
     <!-- Label for zero-width joiner key, currently used only for showing the icon name -->
-    <string name="label_zwj_key" tools:keep="@string/label_zwj_key">Zero-width joiner</string>
+    <string name="label_zwj_key" tools:keep="@string/label_zwj_key">Sıfır genişlikli bağlantı elemanı</string>
     <!-- Label for zero-width non-joiner key, currently used only for showing the icon name -->
-    <string name="label_zwnj_key" tools:keep="@string/label_zwnj_key">Zero-width non-joiner</string>
+    <string name="label_zwnj_key" tools:keep="@string/label_zwnj_key">Sıfır genişlikli birleştirmeyen</string>
     <!-- Label for bin (delete) key, currently used only for showing the icon name -->
-    <string name="label_bin" tools:keep="@string/label_bin">Bin</string>
+    <string name="label_bin" tools:keep="@string/label_bin">Çöp kutusu</string>
     <!-- Title of the setting for horizontal spacebar swipe gesture -->
     <string name="show_horizontal_space_swipe">Yatay boşluk tuşu kaydırma hareketi</string>
     <!-- Title of the setting for vertical spacebar swipe gesture -->
@@ -1338,8 +1338,6 @@ Yeni sözlük:
     <string name="offline_min_p_summary">En olası token\'a göreli minimum olasılık eşiği</string>
     <string name="offline_show_thinking_title">Düşünme sürecini göster</string>
     <string name="offline_show_thinking_summary">Model üretirse akıl yürütme sürecini ve içsel düşünme token\'larını göster</string>
-    <!-- Placeholder for token options if using a list, but I'll use a Slider or similar if possible. 
-         However the user asked for a "list off options", so I'll create entries and entryValues. -->
     <string-array name="offline_max_tokens_entries">
         <item>Ultra Fast (12 tokens)</item>
         <item>Fast (20 tokens)</item>
