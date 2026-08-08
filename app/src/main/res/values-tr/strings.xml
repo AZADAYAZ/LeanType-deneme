@@ -1027,7 +1027,7 @@ Yeni sözlük:
     <string name="theme_name_holo_white" tools:keep="@string/theme_name_holo_white">Holo White</string>
     <!-- Theme name for dark theme (based on old no-border dark) -->
     <string name="theme_name_dark" tools:keep="@string/theme_name_dark">Dark</string>
-    <!-- Theme name for darker theme (based on old border dark), todo: re-consider that stupid name -->
+    <!-- Theme name for darker theme (based on old border dark) -->
     <string name="theme_name_darker" tools:keep="@string/theme_name_darker">Darker</string>
     <!-- Theme name for black theme (based on old amoled black) -->
     <string name="theme_name_black" tools:keep="@string/theme_name_black">Black</string>
