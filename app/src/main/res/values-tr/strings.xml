@@ -164,7 +164,7 @@
     <!-- Option to undo auto correction with backspace -->
     <string name="backspace_reverts_autocorrect">Geri tuşu otomatik düzeltmeyi geri alır</string>
     <!-- Option to disable auto correction. -->
-    <string name="auto_correction_threshold_mode_off">Kapalı</string> <!-- todo: use it or remove it -->
+    <string name="auto_correction_threshold_mode_off">Kapalı</string>
     <!-- Option to suggest auto correction suggestions modestly. Auto-corrects only to a word which has small edit distance from typed word. -->
     <string name="auto_correction_threshold_mode_modest">Ilımlı</string>
     <!-- Option to suggest auto correction suggestions aggressively. Auto-corrects to a word which has even large edit distance from typed word. -->
@@ -959,8 +959,8 @@ Yeni sözlük:
     <!-- Message when no dictionary is available for the selected language, with no_dictionaries_available as title.
      %1$s will be replaced by dictionary_link_text, %2$s by the language code, %3$s by dictionary_link_text again.
      This string will be interpreted as HTML -->
-    <string name="no_dictionary_message">"Bir sözlük olmadan yalnızca daha önce girdiğiniz metinler için öneriler alırsınız.&lt;br&gt;
-        Sözlükleri %1$s indirebilirsiniz."</string>
+    <string name="no_dictionary_message"><![CDATA["Bir sözlük olmadan yalnızca daha önce girdiğiniz metinler için öneriler alırsınız.<br>
+        Sözlükleri %1$s indirebilirsiniz."]]></string>
     <!-- Button to never show the no_dictionary_message when enabling a language that has no dictionary -->
     <string name="no_dictionary_dont_show_again_button">"Bir daha gösterme"</string>
     <!-- Message for the user dictionary selection dialog, %s will be replaced by dictionary_link_text. -->
@@ -997,7 +997,7 @@ Yeni sözlük:
     <!-- User dictionary settings. The list item to choose to insert a word into the user dictionary for all languages -->
     <string name="user_dict_settings_all_languages">Tüm diller için</string>
     <!-- User dictionary settings. The text to show for the option that shows the entire list of supported locales to choose one -->
-    <string name="user_dict_settings_more_languages">Daha fazla dil…</string> <!-- todo: use it or remove it -->
+    <string name="user_dict_settings_more_languages">Daha fazla dil…</string>
     <!-- Message in user dictionary dialog -->
     <string name="user_dict_word_already_present">Bu kelime zaten %s kullanıcı sözlüğünde mevcut. Lütfen başka bir kelime girin.</string>
     <!-- User dictionary settings. Text button to add a word -->
@@ -1165,42 +1165,42 @@ Yeni sözlük:
     <!-- Title of the link to the web page inserted into messages -->
     <string name="hidden_features_text">cihaz korumalı depolama</string>
     <!-- Hidden features text (might get removed in the future) -->
-    <string name="hidden_features_message">► Sabitlenmiş araç çubuğu tuşlarına uzun basmak ek işlevler sağlar: &lt;br&gt;
-\n\t• pano ￫ yapıştır &lt;br&gt;
-\n\t• sola/sağa taşı ￫ sözcük sola/sağa &lt;br&gt;
-\n\t• yukarı/aşağı taşı ￫ sayfa yukarı/aşağı &lt;br&gt;
-\n\t• sözcük sola/sağa ￫ satır başı/sonu &lt;br&gt;
-\n\t• sayfa yukarı/aşağı ￫ sayfa başı/sonu &lt;br&gt;
-\n\t• kopyala ￫ kes &lt;br&gt;
-\n\t• sözcük seç ↔ tümünü seç &lt;br&gt;
-\n\t• geri al ↔ yinele &lt;br&gt; &lt;br&gt;
-\n► Öneri şeridi araç çubuğundaki tuşlara uzun basmak, bunları öneri şeridine sabitler. &lt;br&gt; &lt;br&gt;
-\n► Pano Görünümü, Emoji Görünümü, Tek Elle Mod, Ayarlar veya Dil Değiştirme\'ye erişmek için Virgül tuşuna uzun basın: &lt;br&gt;
-\n\t• İlgili tuş etkinse Emoji Görünümü ve Dil Değiştirme kaybolur; &lt;br&gt;
-\n\t• Bazı düzenlerde bu, Virgül\\\'ün tuşu değil, aynı konumdaki tuştur (ör. Dvorak\\\'ta \\\'q\\\' kullanılır). &lt;br&gt; &lt;br&gt;
-\n► Gizli mod etkinleştirildiğinde hiçbir sözcük öğrenilmez ve son kullanılanlara emoji eklenmez. &lt;br&gt; &lt;br&gt;
-\n► Araç çubuğuna erişmek için Gizli mod simgesine basın. &lt;br&gt; &lt;br&gt;
-\n► Kaydırmalı tuş girişi: Tek bir büyük harf yazmak için Shift tuşundan başka bir tuşa kaydırın: &lt;br&gt;
-\n\t• Bu, semboller klavyesinden tek bir sembol yazmak üzere \\\'?123\\\' tuşu ve ilgili tuşlar için de geçerlidir. &lt;br&gt; &lt;br&gt;
-\n► Önceki klavyeye dönmek için Shift veya sembol tuşunu basılı tutun, bir ya da daha fazla tuşa basın ve ardından Shift veya sembol tuşunu bırakın. &lt;br&gt; &lt;br&gt;
-\n► Daha fazla öneriyi ve bu öneriyi kaldırmak için silme düğmesini göstermek üzere öneri şeridindeki bir öneriye uzun basın. &lt;br&gt; &lt;br&gt;
-\n► Daha fazla öneriyi açmak için bir öneriden yukarı kaydırın ve onu seçmek için önerinin üzerinde bırakın. &lt;br&gt; &lt;br&gt;
-\n► Pano geçmişindeki bir girişi sabitlemek için ona uzun basın (sabitlemeyi kaldırana kadar panoda tutulur). &lt;br&gt; &lt;br&gt;
-\n► Pano\\\'da bir girdiyi kaldırmak için sola kaydırın (sabitlenmiş değilse). &lt;br&gt; &lt;br&gt;
-\n► Metni seçin ve sözcükleri BÜYÜK HARF, küçük harf ve Baş Harfleri Büyük arasında değiştirmek için Shift tuşuna basın. &lt;br&gt; &lt;br&gt;
-\n► Bir dosya gezgininde açarak sözlük ekleyebilirsiniz: &lt;br&gt;
-\n\t• Bu yalnızca &lt;i&gt;content-uris&lt;/i&gt; ile çalışır; &lt;i&gt;file-uris&lt;/i&gt; ile çalışmaz. Bu nedenle bazı dosya gezginlerinde çalışmayabilir. &lt;br&gt; &lt;br&gt;
-\n► Kök erişimiyle elle yedekleme yapan kullanıcılar için: &lt;br&gt;
-\n\t• Android 7\'den itibaren uygulama %s kullandığından, paylaşılan tercihler dosyası varsayılan konumda değildir. Bu, ayarların cihaz kilidi açılmadan önce, örneğin açılışta, okunabilmesi için gereklidir; &lt;br&gt;
-\n\t• Dosya /data/user_de/0/package_id/shared_prefs/ konumundadır; ancak bu, cihaza ve Android sürümüne bağlı olabilir. &lt;br&gt; &lt;br&gt;
-\n&lt;i&gt;&lt;b&gt;Hata ayıklama modu / hata ayıklama APK\'sı&lt;/b&gt;&lt;/i&gt; &lt;br&gt; &lt;br&gt;
-\n► Kaynak sözlüğü göstermek için bir öneriye uzun basın. &lt;br&gt; &lt;br&gt;
-\n► Hata ayıklama APK\'sı kullanırken, Gelişmiş Tercihler içinde Hata Ayıklama Ayarlarını bulabilirsiniz; ancak günlük dosyasına sözlük dökme dışında faydası sınırlıdır. &lt;br&gt;
-\n\t• Yayın APK\'sında, &lt;i&gt;Hakkında&lt;/i&gt; bölümündeki sürüme birkaç kez dokunmanız gerekir; ardından &lt;i&gt;Gelişmiş Tercihler&lt;/i&gt; içindeki hata ayıklama ayarlarını bulabilirsiniz. &lt;br&gt;
-\n\t• &lt;i&gt;Öneri bilgilerini göster&lt;/i&gt; etkinleştirildiğinde, önerilerin üzerinde bazı iç puanları ve kaynak sözlüğü gösteren küçük sayılar görünür. &lt;br&gt; &lt;br&gt;
-\n► Uygulama çökerse, Ayarlar uygulamasını açtığınızda çökme günlüklerini isteyip istemediğiniz sorulur. &lt;br&gt; &lt;br&gt;
-\n► Çok dilli yazma kullanılırken boşluk çubuğunda, geçerli kullanılan dili belirlemek için kullanılan bir güven değeri gösterilir. &lt;br&gt; &lt;br&gt;
-\n► Önerilerin üzerinde bazı iç puanları ve kaynak sözlüğü gösteren küçük sayılar görünür (devre dışı bırakılabilir).</string>
+    <string name="hidden_features_message"><![CDATA[► Sabitlenmiş araç çubuğu tuşlarına uzun basmak ek işlevler sağlar: <br>
+\n\t• pano ￫ yapıştır <br>
+\n\t• sola/sağa taşı ￫ sözcük sola/sağa <br>
+\n\t• yukarı/aşağı taşı ￫ sayfa yukarı/aşağı <br>
+\n\t• sözcük sola/sağa ￫ satır başı/sonu <br>
+\n\t• sayfa yukarı/aşağı ￫ sayfa başı/sonu <br>
+\n\t• kopyala ￫ kes <br>
+\n\t• sözcük seç ↔ tümünü seç <br>
+\n\t• geri al ↔ yinele <br> <br>
+\n► Öneri şeridi araç çubuğundaki tuşlara uzun basmak, bunları öneri şeridine sabitler. <br> <br>
+\n► Pano Görünümü, Emoji Görünümü, Tek Elle Mod, Ayarlar veya Dil Değiştirme\'ye erişmek için Virgül tuşuna uzun basın: <br>
+\n\t• İlgili tuş etkinse Emoji Görünümü ve Dil Değiştirme kaybolur; <br>
+\n\t• Bazı düzenlerde bu, Virgül\'ün tuşu değil, aynı konumdaki tuştur (ör. Dvorak\'ta \'q\' kullanılır). <br> <br>
+\n► Gizli mod etkinleştirildiğinde hiçbir sözcük öğrenilmez ve son kullanılanlara emoji eklenmez. <br> <br>
+\n► Araç çubuğuna erişmek için Gizli mod simgesine basın. <br> <br>
+\n► Kaydırmalı tuş girişi: Tek bir büyük harf yazmak için Shift tuşundan başka bir tuşa kaydırın: <br>
+\n\t• Bu, semboller klavyesinden tek bir sembol yazmak üzere \'?123\' tuşu ve ilgili tuşlar için de geçerlidir. <br> <br>
+\n► Önceki klavyeye dönmek için Shift veya sembol tuşunu basılı tutun, bir ya da daha fazla tuşa basın ve ardından Shift veya sembol tuşunu bırakın. <br> <br>
+\n► Daha fazla öneriyi ve bu öneriyi kaldırmak için silme düğmesini göstermek üzere öneri şeridindeki bir öneriye uzun basın. <br> <br>
+\n► Daha fazla öneriyi açmak için bir öneriden yukarı kaydırın ve onu seçmek için önerinin üzerinde bırakın. <br> <br>
+\n► Pano geçmişindeki bir girişi sabitlemek için ona uzun basın (sabitlemeyi kaldırana kadar panoda tutulur). <br> <br>
+\n► Pano\'da bir girdiyi kaldırmak için sola kaydırın (sabitlenmiş değilse). <br> <br>
+\n► Metni seçin ve sözcükleri BÜYÜK HARF, küçük harf ve Baş Harfleri Büyük arasında değiştirmek için Shift tuşuna basın. <br> <br>
+\n► Bir dosya gezgininde açarak sözlük ekleyebilirsiniz: <br>
+\n\t• Bu yalnızca <i>content-uris</i> ile çalışır; <i>file-uris</i> ile çalışmaz. Bu nedenle bazı dosya gezginlerinde çalışmayabilir. <br> <br>
+\n► Kök erişimiyle elle yedekleme yapan kullanıcılar için: <br>
+\n\t• Android 7\'den itibaren uygulama %s kullandığından, paylaşılan tercihler dosyası varsayılan konumda değildir. Bu, ayarların cihaz kilidi açılmadan önce, örneğin açılışta, okunabilmesi için gereklidir; <br>
+\n\t• Dosya /data/user_de/0/package_id/shared_prefs/ konumundadır; ancak bu, cihaza ve Android sürümüne bağlı olabilir. <br> <br>
+\n<i><b>Hata ayıklama modu / hata ayıklama APK\'sı</b></i> <br> <br>
+\n► Kaynak sözlüğü göstermek için bir öneriye uzun basın. <br> <br>
+\n► Hata ayıklama APK\'sı kullanırken, Gelişmiş Tercihler içinde Hata Ayıklama Ayarlarını bulabilirsiniz; ancak günlük dosyasına sözlük dökme dışında faydası sınırlıdır. <br>
+\n\t• Yayın APK\'sında, <i>Hakkında</i> bölümündeki sürüme birkaç kez dokunmanız gerekir; ardından <i>Gelişmiş Tercihler</i> içindeki hata ayıklama ayarlarını bulabilirsiniz. <br>
+\n\t• <i>Öneri bilgilerini göster</i> etkinleştirildiğinde, önerilerin üzerinde bazı iç puanları ve kaynak sözlüğü gösteren küçük sayılar görünür. <br> <br>
+\n► Uygulama çökerse, Ayarlar uygulamasını açtığınızda çökme günlüklerini isteyip istemediğiniz sorulur. <br> <br>
+\n► Çok dilli yazma kullanılırken boşluk çubuğunda, geçerli kullanılan dili belirlemek için kullanılan bir güven değeri gösterilir. <br> <br>
+\n► Önerilerin üzerinde bazı iç puanları ve kaynak sözlüğü gösteren küçük sayılar görünür (devre dışı bırakılabilir).]]></string>
     <string name="use_personalized_dicts_summary">Önerileri iyileştirmek için iletişimlerinizden ve yazdığınız verilerden öğrenin</string>
     <!-- Label for soft enter key when it performs GO action.  Must be short to fit on key. 5 chars or less is preferable. -->
     <string name="label_go_key">Git</string>
@@ -1339,11 +1339,11 @@ Yeni sözlük:
     <string name="offline_show_thinking_title">Düşünme sürecini göster</string>
     <string name="offline_show_thinking_summary">Model üretirse akıl yürütme sürecini ve içsel düşünme token\'larını göster</string>
     <string-array name="offline_max_tokens_entries">
-        <item>Ultra Fast (12 tokens)</item>
-        <item>Fast (20 tokens)</item>
-        <item>Balanced (32 tokens)</item>
-        <item>Accurate (64 tokens)</item>
-        <item>Deep (128 tokens)</item>
+        <item>Ultra Hızlı (12 token)</item>
+        <item>Hızlı (20 token)</item>
+        <item>Dengeli (32 token)</item>
+        <item>Hassas (64 token)</item>
+        <item>Derin (128 token)</item>
     </string-array>
     <string-array name="offline_max_tokens_values" translatable="false">
         <item>12</item>
