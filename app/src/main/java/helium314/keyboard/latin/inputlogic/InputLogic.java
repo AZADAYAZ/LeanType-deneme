@@ -2709,6 +2709,10 @@ public final class InputLogic {
      * @return a caps mode from TextUtils.CAP_MODE_* or
      *         Constants.TextUtils.CAP_MODE_OFF.
      */
+    public boolean isComposingWord() {
+        return mWordComposer != null && mWordComposer.isComposingWord();
+    }
+
     public int getCurrentAutoCapsState(final SettingsValues settingsValues) {
         if (!settingsValues.mAutoCap)
             return Constants.TextUtils.CAP_MODE_OFF;

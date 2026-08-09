@@ -659,7 +659,10 @@ class ClipboardHistoryView @JvmOverloads constructor(
             ?: clipboardStrip.width.takeIf { it > 0 }
             ?: clipboardStrip.measuredWidth.takeIf { it > 0 }
             ?: context.resources.displayMetrics.widthPixels
-        val singleKeyWidth = context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
+        val singleKeyWidth = kotlin.math.min(
+            context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
+            context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_height)
+        )
         val totalKeysWidth = count * singleKeyWidth
 
         val isAutoSpan = Settings.getValues().mAutoSpanToolbarKeys
@@ -668,7 +671,7 @@ class ClipboardHistoryView @JvmOverloads constructor(
         clipboardStrip.gravity = if (useEqualSpacing) Gravity.NO_GRAVITY else Gravity.END
 
         val toolbarKeyLayoutParams = LinearLayout.LayoutParams(
-            context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
+            singleKeyWidth,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
 

@@ -97,6 +97,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_SHOW_EMOJI_KEY = "show_emoji_key";
     public static final String PREF_VARIABLE_TOOLBAR_DIRECTION = "var_toolbar_direction";
     public static final String PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = "only_toolbar_with_hw_keyboard";
+    public static final String PREF_PHYSICAL_KEYBOARD_SUGGESTION_SHORTCUTS = "pref_physical_keyboard_suggestion_shortcuts";
     public static final String PREF_ADDITIONAL_SUBTYPES = "additional_subtypes";
 
     public static final String PREF_ENABLE_SPELL_CHECKER_SERVICE = "enable_spell_checker_service";
@@ -496,14 +497,19 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public void writeSplitKeyboardEnabled(final boolean enabled, final boolean isLandscape) {
-        final String pref = isLandscape ? PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE : PREF_ENABLE_SPLIT_KEYBOARD;
-        mPrefs.edit().putBoolean(pref, enabled).apply();
+        final String basePref = isLandscape ? PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE : PREF_ENABLE_SPLIT_KEYBOARD;
+        final String profilePref = SettingsKt.getProfileAwarePrefKey(basePref, mSettingsValues.mScreenProfile);
+        mPrefs.edit().putBoolean(profilePref, enabled).apply();
     }
 
     public static boolean readSplitKeyboardEnabled(final SharedPreferences prefs, final boolean isLandscape) {
-        final String pref = isLandscape ? PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE : PREF_ENABLE_SPLIT_KEYBOARD;
-        return prefs.getBoolean(pref,
-                isLandscape ? Defaults.PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE : Defaults.PREF_ENABLE_SPLIT_KEYBOARD);
+        return readSplitKeyboardEnabled(prefs, isLandscape, helium314.keyboard.latin.utils.ScreenProfile.COMPACT);
+    }
+
+    public static boolean readSplitKeyboardEnabled(final SharedPreferences prefs, final boolean isLandscape, final helium314.keyboard.latin.utils.ScreenProfile profile) {
+        final String basePref = isLandscape ? PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE : PREF_ENABLE_SPLIT_KEYBOARD;
+        final boolean defaultValue = profile.isLarge() || (isLandscape ? Defaults.PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE : Defaults.PREF_ENABLE_SPLIT_KEYBOARD);
+        return SettingsKt.getProfileAwareBoolean(prefs, basePref, profile, defaultValue);
     }
 
     public static float readSplitSpacerScale(final SharedPreferences prefs, final boolean landscape) {
@@ -532,11 +538,15 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public static float readHeightScale(final SharedPreferences prefs, final boolean landscape) {
+        return readHeightScale(prefs, landscape, helium314.keyboard.latin.utils.ScreenProfile.COMPACT);
+    }
+
+    public static float readHeightScale(final SharedPreferences prefs, final boolean landscape, final helium314.keyboard.latin.utils.ScreenProfile profile) {
         final int index = SettingsKt.findIndexOfDefaultSetting(landscape);
         final Float[] defaults = Defaults.PREF_KEYBOARD_HEIGHT_SCALE;
         final float defaultValue = defaults[index];
-        return prefs.getFloat(SettingsKt.createPrefKeyForBooleanSettings(PREF_KEYBOARD_HEIGHT_SCALE_PREFIX, index, 1),
-                defaultValue);
+        final String basePref = SettingsKt.createPrefKeyForBooleanSettings(PREF_KEYBOARD_HEIGHT_SCALE_PREFIX, index, 1);
+        return SettingsKt.getProfileAwareFloat(prefs, basePref, profile, defaultValue);
     }
 
     public static boolean readHasHardwareKeyboard(final Configuration conf) {

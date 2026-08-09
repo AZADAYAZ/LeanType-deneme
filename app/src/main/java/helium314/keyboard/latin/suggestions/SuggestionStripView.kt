@@ -91,6 +91,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val debugInfoViews = ArrayList<TextView>()
     private val dividerViews = ArrayList<View>()
     private lateinit var layoutHelper: SuggestionStripLayoutHelper
+    private val deleteModeRunnables = mutableMapOf<TextView, Runnable>()
 
     init {
         val inflater = LayoutInflater.from(context)
@@ -154,10 +155,16 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
     private var isLoadingAnimationActive = false
 
-    private val toolbarKeyLayoutParams = LinearLayout.LayoutParams(
-        resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
-        resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
-    ).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
+    private val keyDimension: Int
+        get() = kotlin.math.min(
+            resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width),
+            resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_height)
+        )
+
+    private val toolbarKeyLayoutParams: LinearLayout.LayoutParams
+        get() = LinearLayout.LayoutParams(keyDimension, keyDimension).apply {
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
 
     init {
         val settingsValues = Settings.getValues()
@@ -422,6 +429,19 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         updateSplitToolbarState()
     }
 
+    fun pickSuggestionByVisualPosition(positionInStrip: Int): Boolean {
+        if (suggestedWords.isEmpty || suggestedWords.isPunctuationSuggestions) return false
+
+        val wordView = wordViews.getOrNull(positionInStrip) ?: return false
+        if (!wordView.isEnabled) return false
+
+        val tag = wordView.tag as? Int ?: return false
+        if (tag >= suggestedWords.size()) return false
+
+        listener.pickSuggestionManually(suggestedWords.getInfo(tag))
+        return true
+    }
+
     fun setExternalSuggestionView(view: View?, addCloseButton: Boolean) {
         if (isShowingEmojiSuggestions && !helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes) {
             isShowingEmojiSuggestions = false
@@ -676,34 +696,38 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     @SuppressLint("ClickableViewAccessibility") // no need for View#performClick, we only return false mostly anyway
     private fun onLongClickSuggestion(wordView: TextView): Boolean {
+        // Cancel any pending restore for this recycled view
+        deleteModeRunnables.remove(wordView)?.let(wordView::removeCallbacks)
+
         var showIcon = true
         if (wordView.tag is Int) {
             val index = wordView.tag as Int
             if (index < suggestedWords.size() && suggestedWords.getInfo(index).mSourceDict == Dictionary.DICTIONARY_USER_TYPED)
                 showIcon = false
         }
+
         if (showIcon) {
             val icon = KeyboardIconsSet.instance.getNewDrawable(KeyboardIconsSet.NAME_BIN, context)
-            if (icon == null) {
-                return true
-            }
+            if (icon == null) return true
+
             Settings.getValues().mColors.setColor(icon, ColorType.REMOVE_SUGGESTION_ICON)
             wordView.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
             wordView.ellipsize = TextUtils.TruncateAt.END
-            // ponytail: entire word view is now the delete target, not just the tiny icon
+
             val savedTag = wordView.tag
-            // Replace click listener to delete on any tap
-            wordView.setOnClickListener {
-                removeSuggestion(wordView)
-            }
-            // Auto-dismiss delete mode after 3s, restore normal behavior
-            wordView.postDelayed({
+            val restoreRunnable = Runnable {
                 wordView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
                 wordView.setOnTouchListener(null)
                 wordView.tag = savedTag
                 wordView.setOnClickListener(this)
-            }, 3000)
+                deleteModeRunnables.remove(wordView)
+            }
+
+            deleteModeRunnables[wordView] = restoreRunnable
+            wordView.setOnClickListener { removeSuggestion(wordView) }
+            wordView.postDelayed(restoreRunnable, 3000)
         }
+
         if (DebugFlags.DEBUG_ENABLED && (isShowingMoreSuggestionPanel || !showMoreSuggestions())) {
             showSourceDict(wordView)
             return true
@@ -771,9 +795,15 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         if (!toolbarContainer.isVisible)
             suggestionsStrip.isVisible = true
         dismissMoreSuggestionsPanel()
+
         for (word in wordViews) {
+            deleteModeRunnables.remove(word)?.let(word::removeCallbacks)
+            word.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
             word.setOnTouchListener(null)
+            word.setOnClickListener(this)
         }
+        deleteModeRunnables.clear()
+
         updateSplitToolbarState()
     }
 
@@ -1076,7 +1106,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private fun applyToolbarKeyLayoutParams(isExpanded: Boolean) {
         val count = toolbar.childCount
         if (count == 0) return
-        val singleKeyWidth = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
+        val singleKeyWidth = keyDimension
         val containerWidth = toolbarContainer.width.takeIf { it > 0 }
             ?: toolbarContainer.measuredWidth.takeIf { it > 0 }
             ?: (width - toolbarExpandKey.width - pinnedKeys.width).takeIf { it > 0 }

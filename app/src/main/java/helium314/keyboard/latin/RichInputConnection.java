@@ -306,6 +306,9 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         // always empty, but looks like things still work normally
         mComposingText.setLength(0);
         mIC = mParent.getCurrentInputConnection();
+        if (!isConnected()) {
+            return false;
+        }
         // Call upon the inputconnection directly since our own method is using the
         // cache, and
         // we want to refresh it.
@@ -733,9 +736,15 @@ public final class RichInputConnection implements PrivateCommandPerformer {
 
     public void performEditorAction(final int actionId) {
         mIC = mParent.getCurrentInputConnection();
-        if (isConnected()) {
-            mIC.performEditorAction(actionId);
+        if (!isConnected()) {
+            return;
         }
+
+        if (mComposingText.length() > 0) {
+            finishComposingText();
+        }
+
+        mIC.performEditorAction(actionId);
     }
 
     public void sendKeyEvent(final KeyEvent keyEvent) {

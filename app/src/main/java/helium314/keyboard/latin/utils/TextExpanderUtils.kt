@@ -121,7 +121,7 @@ object TextExpanderUtils {
                 json.put(key, obj)
             }
             val jsonStr = json.toString()
-            context.prefs().edit().putString(PREF_DATA, jsonStr).apply()
+            context.prefs().edit().putString(PREF_DATA, jsonStr).commit()
             clearCache()
         } catch (e: java.lang.Exception) {
             // fail silently
@@ -284,22 +284,41 @@ object TextExpanderUtils {
         if (textBeforeCursor == null || !isEnabled(context)) return null
         getShortcuts(context)
         val compiledList = cachedCompiledList ?: return null
+        val fullText = if (word != null && !textBeforeCursor.endsWith(word, ignoreCase = true)) {
+            textBeforeCursor + word
+        } else {
+            textBeforeCursor
+        }
         
         for (item in compiledList) {
             val entry = item.entry
             if (item.isRegex) {
                 val regex = item.regex ?: continue
                 val prefix = entry.prefix
-                val expectedSuffix = if (word != null) prefix + word else item.cleanKey
-                if (textBeforeCursor.endsWith(expectedSuffix, ignoreCase = true)) {
-                    try {
-                        if (regex.matches(expectedSuffix)) {
-                            val replaced = regex.replace(expectedSuffix, entry.template)
-                            return ExpandedResult(expand(replaced, context), prefix.length, expectedSuffix)
+                if (word != null) {
+                    if (regex.matches(fullText)) {
+                        try {
+                            val replaced = regex.replace(fullText, entry.template)
+                            val prefixLength = if (fullText.length > word.length) fullText.length - word.length else prefix.length
+                            return ExpandedResult(expand(replaced, context), prefixLength, fullText)
+                        } catch (e: java.lang.Exception) {
+                            // ignore
                         }
-                    } catch (e: java.lang.Exception) {
-                        // ignore
                     }
+                }
+                try {
+                    val match = regex.findAll(fullText).lastOrNull { it.range.last == fullText.length - 1 }
+                    if (match != null && match.value.isNotEmpty()) {
+                        val matchedString = match.value
+                        val replaced = regex.replace(matchedString, entry.template)
+                        val extraPrefix = if (word != null && matchedString.endsWith(word, ignoreCase = true)) {
+                            matchedString.length - word.length
+                        } else 0
+                        val effectivePrefixLength = maxOf(prefix.length, extraPrefix)
+                        return ExpandedResult(expand(replaced, context), effectivePrefixLength, matchedString)
+                    }
+                } catch (e: java.lang.Exception) {
+                    // ignore
                 }
             } else {
                 val prefix = entry.prefix
